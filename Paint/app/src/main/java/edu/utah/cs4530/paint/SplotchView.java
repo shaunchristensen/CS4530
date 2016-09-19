@@ -9,7 +9,7 @@ import android.graphics.drawable.Animatable;
 import android.view.View;
 
 /**
- * Created by Shaun on 2016.09.19.
+ * Created by Shaun Christensen on 2016.09.19.
  */
 public class SplotchView extends View
 {
