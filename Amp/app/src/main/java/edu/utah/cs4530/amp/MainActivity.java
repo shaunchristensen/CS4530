@@ -8,7 +8,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 
-public class MainActivity extends AppCompatActivity implements Knob.OnAngleChangedListener, View.OnClickListener
+public class MainActivity extends AppCompatActivity implements Knob.OnKnobAngleChangedListener, View.OnClickListener
 {
     Button buttonAdd;
     Button buttonRemove;
@@ -51,9 +51,9 @@ public class MainActivity extends AppCompatActivity implements Knob.OnAngleChang
         setContentView(linearLayoutHorizontal);
     }
 
-    public void onAngleChanged(float theta)
+    public void onKnobAngleChanged(float theta)
     {
-        Log.i("Tag", "Angle changed to " + theta);
+        Log.i("Tag", "Knob angle changed to " + theta);
     }
 
     @Override
