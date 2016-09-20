@@ -1,50 +1,64 @@
 package edu.utah.cs4530.amp;
 
 import android.graphics.Color;
-import android.graphics.PointF;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Gravity;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.LinearLayout;
 
-public class MainActivity extends AppCompatActivity implements KnobView.OnAngleChangedListener
+public class MainActivity extends AppCompatActivity implements Knob.OnAngleChangedListener, View.OnClickListener
 {
+    Button buttonAdd;
+    Button buttonRemove;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
 
-        LinearLayout linearLayout = new LinearLayout(this);
+        LinearLayout linearLayoutHorizontal = new LinearLayout(this);
 
-        final KnobView knobViewVolume = new KnobView(this);
-        knobViewVolume.setBackgroundColor(Color.RED);
-        knobViewVolume.setOnAngleChangedListener(this);
-        linearLayout.addView(knobViewVolume, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, 500, 0));
+        LinearLayout linearLayoutVertical = new LinearLayout(this);
+        linearLayoutVertical.setOrientation(LinearLayout.VERTICAL);
 
-        final KnobView knobViewBass = new KnobView(this);
-        knobViewBass.setBackgroundColor(Color.GRAY);
-        knobViewBass.setOnAngleChangedListener(this);
-        linearLayout.addView(knobViewBass, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, 500, 0));
+        buttonAdd = new Button(this);
+        buttonAdd.setOnClickListener(this);
+        buttonAdd.setText("+");
 
-        final KnobView knobViewFade = new KnobView(this);
-        knobViewFade.setBackgroundColor(Color.BLUE);
-        knobViewFade.setOnAngleChangedListener(this);
-        linearLayout.addView(knobViewFade, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, 500, 0));
+        buttonRemove = new Button(this);
+        buttonRemove.setOnClickListener(this);
+        buttonRemove.setText("-");
 
-//        knobView.setPadding(20, 40, 60, 80);
-//        knobView.setTheta((float) Math.PI * 1.25f);
-//        view.setGravity(Gravity.CENTER_VERTICAL);
+        linearLayoutVertical.addView(buttonAdd, new LinearLayout.LayoutParams(150, 150));
+        linearLayoutVertical.addView(buttonRemove, new LinearLayout.LayoutParams(150, 150));
 
-        setContentView(linearLayout);
+        Knob knobRed = new Knob(this, Color.RED);
+        knobRed.setOnAngleChangedListener(this);
+
+        Knob knobGreen = new Knob(this, Color.GREEN);
+        knobGreen.setOnAngleChangedListener(this);
+
+        Knob knobBlue = new Knob(this, Color.BLUE);
+        knobBlue.setOnAngleChangedListener(this);
+
+        linearLayoutHorizontal.addView(knobRed, new LinearLayout.LayoutParams(250, 250));
+        linearLayoutHorizontal.addView(knobGreen, new LinearLayout.LayoutParams(250, 250));
+        linearLayoutHorizontal.addView(knobBlue, new LinearLayout.LayoutParams(250, 250));
+        linearLayoutHorizontal.addView(linearLayoutVertical);
+
+        setContentView(linearLayoutHorizontal);
     }
 
     public void onAngleChanged(float theta)
     {
-        float volume = theta;
-        Log.i("Tag", "Volume changed to: " + volume);
+        Log.i("Tag", "Angle changed to " + theta);
+    }
+
+    @Override
+    public void onClick(View view)
+    {
+        buttonRemove.setEnabled(false);
     }
 }
