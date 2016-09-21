@@ -21,11 +21,11 @@ public class ViewKnob extends View
 
     final private float floatTau;
     private float floatTheta;
-    private int intAlpha;
+    private float floatX;
+    private float floatY;
     final private int intColor;
-    private OnKnobAngleChangedListener onKnobAngleChangedListener;
-    private Paint paint;
-    private RectF rectF;
+    private int intValue;
+    private OnValueChangeListener onValueChangeListener;
 
     // constructors
 
@@ -34,39 +34,37 @@ public class ViewKnob extends View
         super(context);
 
         floatTau = (float)(Math.PI * 2);
-        floatTheta = 0;
-        intAlpha = 255;
+        floatTheta = floatX = floatY = 0;
         intColor = color;
-        onKnobAngleChangedListener = null;
-        paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        rectF = new RectF();
+        intValue = 255;
+        onValueChangeListener = null;
     }
 
     // interfaces
 
-    public interface OnKnobAngleChangedListener
+    public interface OnValueChangeListener
     {
-        void onKnobAngleChanged();
+        void onValueChange();
     }
 
     // methods
 
     public int getValue()
     {
-        return intAlpha;
+        return intValue;
     }
 
-    public void setAngle(double x, double y)
+    public void setValue(double x, double y)
     {
-        floatTheta = (float)Math.atan2(y - rectF.centerY(), x - rectF.centerX()) + floatTau / 4;
-        intAlpha = (int)(255 * (1 - floatTheta / floatTau));
+        floatTheta = (float)Math.atan2(y - floatY, x - floatX) + floatTau / 4;
+        intValue = (int)(255 * (1 - floatTheta / floatTau));
 
         invalidate();
     }
 
-    public void setOnKnobAngleChangedListener(OnKnobAngleChangedListener listener)
+    public void setOnValueChangeListener(OnValueChangeListener listener)
     {
-        onKnobAngleChangedListener = listener;
+        onValueChangeListener = listener;
     }
 
     @Override
@@ -74,24 +72,33 @@ public class ViewKnob extends View
     {
         super.onDraw(canvas);
 
+        RectF rectF = new RectF();
         rectF.bottom = getHeight() * 11 / 12;
         rectF.left = getWidth() / 10;
         rectF.right = getWidth() * .9f;
         rectF.top = getHeight() / 4;
 
+        floatX = rectF.centerX();
+        floatY = rectF.centerY();
+
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         paint.setColor(intColor);
         paint.setStrokeWidth(rectF.width() / 10);
+
         canvas.drawLine(rectF.centerX(), getHeight() / 12, rectF.centerX(), getHeight() / 4, paint);
 
         paint.setColor(Color.BLACK);
         paint.setStyle(Paint.Style.FILL);
+
         canvas.drawCircle(rectF.centerX(), rectF.centerY(), rectF.width() / 2, paint);
 
-        paint.setARGB(intAlpha, red(intColor), green(intColor), blue(intColor));
+        paint.setARGB(intValue, red(intColor), green(intColor), blue(intColor));
+
         canvas.drawCircle(rectF.centerX(), rectF.centerY(), rectF.width() / 2, paint);
 
         paint.setColor(Color.WHITE);
         paint.setStyle(Paint.Style.STROKE);
+
         canvas.drawLine(rectF.centerX() + (rectF.width() / 4) * (float)Math.cos((double)floatTheta - floatTau / 4), rectF.centerY() + (rectF.height() / 4) * (float)Math.sin((double)floatTheta - floatTau / 4), rectF.centerX() + (rectF.width() / 2) * (float)Math.cos((double)floatTheta - floatTau / 4), rectF.centerY() + (rectF.height() / 2) * (float)Math.sin((double)floatTheta - floatTau / 4), paint);
     }
 
@@ -100,33 +107,31 @@ public class ViewKnob extends View
     {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
-        int height = getSuggestedMinimumHeight();
-        int heightMode = MeasureSpec.getMode(heightMeasureSpec);
-        int heightSpec = MeasureSpec.getSize(heightMeasureSpec);
-        int width = getSuggestedMinimumWidth();
-        int widthMode = MeasureSpec.getMode(widthMeasureSpec);
-        int widthSpec = MeasureSpec.getSize(widthMeasureSpec);
+        int modeHeight = MeasureSpec.getMode(heightMeasureSpec);
+        int modeWidth = MeasureSpec.getMode(widthMeasureSpec);
+        int sizeHeight = MeasureSpec.getSize(heightMeasureSpec);
+        int sizeWidth = MeasureSpec.getSize(widthMeasureSpec);
+        int suggestedMinimumHeight = getSuggestedMinimumHeight();
+        int suggestedMinimumWidth = getSuggestedMinimumWidth();
 
-        if (heightMode == MeasureSpec.EXACTLY)
+        if (modeHeight == MeasureSpec.EXACTLY)
         {
-            height = heightSpec;
-            width = height;
+            suggestedMinimumHeight = suggestedMinimumWidth = sizeHeight;
         }
 
-        if (widthMode == MeasureSpec.EXACTLY)
+        if (modeWidth == MeasureSpec.EXACTLY)
         {
-            height = width;
-            width = widthSpec;
+            suggestedMinimumHeight = suggestedMinimumWidth = sizeWidth;
         }
 
-        setMeasuredDimension(resolveSize(width, widthMeasureSpec), resolveSize(height, heightMeasureSpec));
+        setMeasuredDimension(resolveSize(suggestedMinimumWidth, widthMeasureSpec), resolveSize(suggestedMinimumHeight, heightMeasureSpec));
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event)
     {
-        setAngle(event.getX(), event.getY());
-        onKnobAngleChangedListener.onKnobAngleChanged();
+        setValue(event.getX(), event.getY());
+        onValueChangeListener.onValueChange();
 
         return true;
     }

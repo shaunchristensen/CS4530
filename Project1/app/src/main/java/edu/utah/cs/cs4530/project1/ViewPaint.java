@@ -5,11 +5,8 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.view.MotionEvent;
 import android.view.View;
-
-import static android.graphics.Color.blue;
-import static android.graphics.Color.green;
-import static android.graphics.Color.red;
 
 /**
  * Created by Shaun Christensen on 2016.09.20.
@@ -18,10 +15,8 @@ public class ViewPaint extends View
 {
     // fields
 
+    private boolean booleanActive;
     private final int intColor;
-    private boolean booleanSelected;
-    private Paint paint;
-    private RectF rectF;
 
     // constructors
 
@@ -29,24 +24,23 @@ public class ViewPaint extends View
    {
         super(context);
 
-        booleanSelected = true;
+        booleanActive = false;
         intColor = color;
-        paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        rectF = new RectF();
    }
 
     // methods
 
-    public boolean getSelected()
+    public int getColor()
     {
-        return booleanSelected;
+        return intColor;
     }
 
-    public void setSelected(boolean selected)
+    public void setActive(boolean active)
     {
-        if (booleanSelected != selected)
+        if (booleanActive != active)
         {
-            booleanSelected = selected;
+            booleanActive = active;
+
             invalidate();
         }
     }
@@ -56,20 +50,24 @@ public class ViewPaint extends View
     {
         super.onDraw(canvas);
 
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint.setColor(intColor);
+        paint.setStyle(Paint.Style.FILL);
+
+        RectF rectF = new RectF();
         rectF.bottom = getHeight() * .8f;
         rectF.left = getWidth() * .2f;
         rectF.right = getWidth() * .8f;
         rectF.top = getHeight() * .2f;
 
-        paint.setColor(intColor);
-        paint.setStyle(Paint.Style.FILL);
         canvas.drawCircle(rectF.centerX(), rectF.centerY(), rectF.width() / 2, paint);
 
-        if (booleanSelected)
+        if (booleanActive)
         {
             paint.setColor(Color.BLACK);
             paint.setStrokeWidth(rectF.width() * .1f);
             paint.setStyle(Paint.Style.STROKE);
+
             canvas.drawCircle(rectF.centerX(), rectF.centerY(), rectF.width() * .6f, paint);
         }
     }
@@ -79,25 +77,23 @@ public class ViewPaint extends View
     {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
-        int height = getSuggestedMinimumHeight();
-        int heightMode = MeasureSpec.getMode(heightMeasureSpec);
-        int heightSpec = MeasureSpec.getSize(heightMeasureSpec);
-        int width = getSuggestedMinimumWidth();
-        int widthMode = MeasureSpec.getMode(widthMeasureSpec);
-        int widthSpec = MeasureSpec.getSize(widthMeasureSpec);
+        int modeHeight = MeasureSpec.getMode(heightMeasureSpec);
+        int modeWidth = MeasureSpec.getMode(widthMeasureSpec);
+        int sizeHeight = MeasureSpec.getSize(heightMeasureSpec);
+        int sizeWidth = MeasureSpec.getSize(widthMeasureSpec);
+        int suggestedMinimumHeight = getSuggestedMinimumHeight();
+        int suggestedMinimumWidth = getSuggestedMinimumWidth();
 
-        if (heightMode == MeasureSpec.EXACTLY)
+        if (modeHeight == MeasureSpec.EXACTLY)
         {
-            height = heightSpec;
-            width = height;
+            suggestedMinimumHeight = suggestedMinimumWidth = sizeHeight;
         }
 
-        if (widthMode == MeasureSpec.EXACTLY)
+        if (modeWidth == MeasureSpec.EXACTLY)
         {
-            height = width;
-            width = widthSpec;
+            suggestedMinimumHeight = suggestedMinimumWidth = sizeWidth;
         }
 
-        setMeasuredDimension(resolveSize(width, widthMeasureSpec), resolveSize(height, heightMeasureSpec));
+        setMeasuredDimension(resolveSize(suggestedMinimumWidth, widthMeasureSpec), resolveSize(suggestedMinimumHeight, heightMeasureSpec));
     }
 }

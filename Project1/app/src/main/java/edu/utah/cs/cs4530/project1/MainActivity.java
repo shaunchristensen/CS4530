@@ -17,29 +17,19 @@ public class MainActivity extends AppCompatActivity// implements Knob.OnKnobAngl
         super.onCreate(savedInstanceState);
 
         Button b = new Button(this);
-/*
-        ViewPaint viewPaintRed = new ViewPaint(this, Color.RED);
-        ViewPaint viewPaintBlue = new ViewPaint(this, Color.GREEN);
-        ViewPaint viewPaintGreen = new ViewPaint(this, Color.BLUE);
-        ViewPaint viewPaintYellow = new ViewPaint(this, Color.YELLOW);
-        ViewPaint viewPaintPurple = new ViewPaint(this, Color.argb(255, 128, 0, 128));
 
-        ViewGroupPalette viewGroupPalette = new ViewGroupPalette(this);
-        viewGroupPalette.addView(viewPaintRed);
-        viewGroupPalette.addView(viewPaintBlue);
-        viewGroupPalette.addView(viewPaintGreen);
-        viewGroupPalette.addView(viewPaintYellow);
-        viewGroupPalette.addView(viewPaintPurple);
-*/
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 2);
 
         LinearLayout linearLayout = new LinearLayout(this);
         linearLayout.addView(b);
-/*
+        linearLayout.setOrientation(LinearLayout.VERTICAL);
+
         layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1);
 
+        ViewGroupPalette viewGroupPalette = new ViewGroupPalette(this);
+
         linearLayout.addView(viewGroupPalette);
-*/
+
         setContentView(linearLayout);
     }
 }
