@@ -15,7 +15,7 @@ import static android.graphics.Color.red;
 /**
  * Created by Shaun Christensen on 2016.09.17.
  */
-public class Knob extends View
+public class ViewKnob extends View
 {
     // fields
 
@@ -29,7 +29,7 @@ public class Knob extends View
 
     // constructors
 
-    public Knob(Context context, int color)
+    public ViewKnob(Context context, int color)
     {
         super(context);
 
@@ -46,15 +46,10 @@ public class Knob extends View
 
     public interface OnKnobAngleChangedListener
     {
-        void onKnobAngleChanged(float theta);
+        void onKnobAngleChanged();
     }
 
     // methods
-
-    public float getAngle()
-    {
-        return floatTheta;
-    }
 
     public int getValue()
     {
@@ -64,27 +59,14 @@ public class Knob extends View
     public void setAngle(double x, double y)
     {
         floatTheta = (float)Math.atan2(y - rectF.centerY(), x - rectF.centerX()) + floatTau / 4;
-        setValue();
-        invalidate();
-    }
-
-    public void setValue()
-    {
         intAlpha = (int)(255 * (1 - floatTheta / floatTau));
+
+        invalidate();
     }
 
     public void setOnKnobAngleChangedListener(OnKnobAngleChangedListener listener)
     {
         onKnobAngleChangedListener = listener;
-    }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event)
-    {
-        setAngle(event.getX(), event.getY());
-        onKnobAngleChangedListener.onKnobAngleChanged(floatTheta);
-
-        return true;
     }
 
     @Override
@@ -94,26 +76,22 @@ public class Knob extends View
 
         rectF.bottom = getHeight() * 11 / 12;
         rectF.left = getWidth() / 10;
-        rectF.right = getWidth() * 9 / 10;
-        rectF.top = getHeight() * 3 / 12;
+        rectF.right = getWidth() * .9f;
+        rectF.top = getHeight() / 4;
 
         paint.setColor(intColor);
-        paint.setStrokeWidth(rectF.width() / 20);
-
-        canvas.drawLine(rectF.centerX(), 25, rectF.centerX(), 75, paint);
+        paint.setStrokeWidth(rectF.width() / 10);
+        canvas.drawLine(rectF.centerX(), getHeight() / 12, rectF.centerX(), getHeight() / 4, paint);
 
         paint.setColor(Color.BLACK);
         paint.setStyle(Paint.Style.FILL);
-
         canvas.drawCircle(rectF.centerX(), rectF.centerY(), rectF.width() / 2, paint);
 
         paint.setARGB(intAlpha, red(intColor), green(intColor), blue(intColor));
-
         canvas.drawCircle(rectF.centerX(), rectF.centerY(), rectF.width() / 2, paint);
 
         paint.setColor(Color.WHITE);
         paint.setStyle(Paint.Style.STROKE);
-
         canvas.drawLine(rectF.centerX() + (rectF.width() / 4) * (float)Math.cos((double)floatTheta - floatTau / 4), rectF.centerY() + (rectF.height() / 4) * (float)Math.sin((double)floatTheta - floatTau / 4), rectF.centerX() + (rectF.width() / 2) * (float)Math.cos((double)floatTheta - floatTau / 4), rectF.centerY() + (rectF.height() / 2) * (float)Math.sin((double)floatTheta - floatTau / 4), paint);
     }
 
@@ -122,13 +100,12 @@ public class Knob extends View
     {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
+        int height = getSuggestedMinimumHeight();
         int heightMode = MeasureSpec.getMode(heightMeasureSpec);
         int heightSpec = MeasureSpec.getSize(heightMeasureSpec);
+        int width = getSuggestedMinimumWidth();
         int widthMode = MeasureSpec.getMode(widthMeasureSpec);
         int widthSpec = MeasureSpec.getSize(widthMeasureSpec);
-
-        int height = getSuggestedMinimumHeight();
-        int width = getSuggestedMinimumWidth();
 
         if (heightMode == MeasureSpec.EXACTLY)
         {
@@ -143,5 +120,14 @@ public class Knob extends View
         }
 
         setMeasuredDimension(resolveSize(width, widthMeasureSpec), resolveSize(height, heightMeasureSpec));
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event)
+    {
+        setAngle(event.getX(), event.getY());
+        onKnobAngleChangedListener.onKnobAngleChanged();
+
+        return true;
     }
 }

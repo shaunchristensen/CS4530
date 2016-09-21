@@ -12,13 +12,14 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Switch;
 
-public class MainActivity extends AppCompatActivity implements CompoundButton.OnCheckedChangeListener
+public class MainActivity extends AppCompatActivity implements CompoundButton.OnCheckedChangeListener, View.OnClickListener
 {
     ImageView imageView = null;
 
@@ -61,5 +62,10 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
             imageView.setImageResource(R.drawable.off);
             Log.i("Tag", "Toggle Light Switch Off");
         }
+    }
+
+    @Override
+    public void onClick(View view) {
+
     }
 }
