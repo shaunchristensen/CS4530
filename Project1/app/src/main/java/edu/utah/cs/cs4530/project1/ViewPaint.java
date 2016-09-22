@@ -17,6 +17,7 @@ public class ViewPaint extends View
 
     private boolean booleanActive;
     private final int intColor;
+    private OnActiveChangeListener onActiveChangeListener;
 
     // constructors
 
@@ -26,7 +27,15 @@ public class ViewPaint extends View
 
         booleanActive = false;
         intColor = color;
+        onActiveChangeListener = null;
    }
+
+    // interfaces
+
+    public interface OnActiveChangeListener
+    {
+        void onActiveChange(ViewPaint viewPaint);
+    }
 
     // methods
 
@@ -45,6 +54,11 @@ public class ViewPaint extends View
         }
     }
 
+    public void setOnActiveChangeListener(OnActiveChangeListener listener)
+    {
+        onActiveChangeListener = listener;
+    }
+
     @Override
     protected void onDraw(Canvas canvas)
     {
@@ -60,7 +74,7 @@ public class ViewPaint extends View
         rectF.right = getWidth() * .8f;
         rectF.top = getHeight() * .2f;
 
-        canvas.drawCircle(rectF.centerX(), rectF.centerY(), rectF.width() / 2, paint);
+        canvas.drawCircle(rectF.centerX(), rectF.centerY(), rectF.width() * .3f, paint);
 
         if (booleanActive)
         {
@@ -68,7 +82,7 @@ public class ViewPaint extends View
             paint.setStrokeWidth(rectF.width() * .1f);
             paint.setStyle(Paint.Style.STROKE);
 
-            canvas.drawCircle(rectF.centerX(), rectF.centerY(), rectF.width() * .6f, paint);
+            canvas.drawCircle(rectF.centerX(), rectF.centerY(), rectF.width() * .4f, paint);
         }
     }
 
@@ -95,5 +109,14 @@ public class ViewPaint extends View
         }
 
         setMeasuredDimension(resolveSize(suggestedMinimumWidth, widthMeasureSpec), resolveSize(suggestedMinimumHeight, heightMeasureSpec));
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event)
+    {
+        setActive(true);
+        onActiveChangeListener.onActiveChange(this);
+
+        return true;
     }
 }

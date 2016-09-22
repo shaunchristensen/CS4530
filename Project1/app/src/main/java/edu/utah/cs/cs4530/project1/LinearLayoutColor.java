@@ -1,10 +1,9 @@
 package edu.utah.cs.cs4530.project1;
 
 import android.content.Context;
-import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 
@@ -42,11 +41,6 @@ public class LinearLayoutColor extends LinearLayout implements View.OnClickListe
 
         intBlue = intGreen = intRed = 255;
 
-        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1);
-
-        LinearLayout linearLayout = new LinearLayout(context);
-        linearLayout.setOrientation(LinearLayout.VERTICAL);
-
         onColorAddClickListener = null;
         onColorRemoveClickListener = null;
 
@@ -59,15 +53,15 @@ public class LinearLayoutColor extends LinearLayout implements View.OnClickListe
         viewKnobRed = new ViewKnob(context, Color.RED);
         viewKnobRed.setOnValueChangeListener(this);
 
-        linearLayout.addView(buttonColorAdd, layoutParams);
-        linearLayout.addView(buttonColorRemove, layoutParams);
+        LinearLayout linearLayout = new LinearLayout(context);
+        linearLayout.addView(buttonColorAdd, new LayoutParams(LayoutParams.MATCH_PARENT, 0, 1));
+        linearLayout.addView(buttonColorRemove, new LayoutParams(LayoutParams.MATCH_PARENT, 0, 1));
+        linearLayout.setOrientation(LinearLayout.VERTICAL);
 
-        layoutParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1);
-
-        this.addView(viewKnobRed, layoutParams);
-        this.addView(viewKnobGreen, layoutParams);
-        this.addView(viewKnobBlue, layoutParams);
-        this.addView(linearLayout);
+        this.addView(viewKnobRed, new LayoutParams(0, LayoutParams.MATCH_PARENT, 2));
+        this.addView(viewKnobGreen, new LayoutParams(0, LayoutParams.MATCH_PARENT, 2));
+        this.addView(viewKnobBlue, new LayoutParams(0, LayoutParams.MATCH_PARENT, 2));
+        this.addView(linearLayout, new LayoutParams(0, LayoutParams.MATCH_PARENT, 1));
     }
 
     // interfaces
@@ -84,14 +78,13 @@ public class LinearLayoutColor extends LinearLayout implements View.OnClickListe
 
     // methods
 
-    public void setEnabled(boolean enabled)
+    public void setColorRemoveEnabled(boolean enabled)
     {
         buttonColorRemove.setEnabled(enabled);
     }
 
     public void setOnColorAddClickListener(OnColorAddClickListener listener)
     {
-        buttonColorRemove.setEnabled(true);
         onColorAddClickListener = listener;
     }
 
@@ -110,6 +103,25 @@ public class LinearLayoutColor extends LinearLayout implements View.OnClickListe
         else if (view == buttonColorRemove)
         {
             onColorRemoveClickListener.onColorRemoveClick();
+        }
+    }
+
+    @Override
+    protected void onLayout(boolean b, int i, int i1, int i2, int i3)
+    {
+        Rect rect;
+        View view;
+
+        for (int index = 0; index < getChildCount(); index++)
+        {
+            rect = new Rect();
+            rect.bottom = getHeight();
+            rect.left = (int)(index * getWidth() * .25f);
+            rect.right = (int)((index + 1) * getWidth() * .25f);
+            rect.top = 0;
+
+            view = getChildAt(index);
+            view.layout(rect.left, rect.top, rect.right, rect.bottom);
         }
     }
 

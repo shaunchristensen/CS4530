@@ -56,7 +56,7 @@ public class ViewKnob extends View
 
     public void setValue(double x, double y)
     {
-        floatTheta = (float)Math.atan2(y - floatY, x - floatX) + floatTau / 4;
+        floatTheta = (float)Math.atan2(y - floatY, x - floatX) + floatTau * .25f;
         intValue = (int)(255 * (1 - floatTheta / floatTau));
 
         invalidate();
@@ -73,33 +73,33 @@ public class ViewKnob extends View
         super.onDraw(canvas);
 
         RectF rectF = new RectF();
-        rectF.bottom = getHeight() * 11 / 12;
-        rectF.left = getWidth() / 10;
-        rectF.right = getWidth() * .9f;
-        rectF.top = getHeight() / 4;
+        rectF.bottom = getHeight() * .875f;
+        rectF.left = getWidth() * .125f;
+        rectF.right = getWidth() * .875f;
+        rectF.top = getHeight() * .375f;
 
         floatX = rectF.centerX();
         floatY = rectF.centerY();
 
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         paint.setColor(intColor);
-        paint.setStrokeWidth(rectF.width() / 10);
+        paint.setStrokeWidth(rectF.width() * .1f);
 
-        canvas.drawLine(rectF.centerX(), getHeight() / 12, rectF.centerX(), getHeight() / 4, paint);
+        canvas.drawLine(rectF.centerX(), getHeight() * .12f, rectF.centerX(), getHeight() * .375f, paint);
 
         paint.setColor(Color.BLACK);
         paint.setStyle(Paint.Style.FILL);
 
-        canvas.drawCircle(rectF.centerX(), rectF.centerY(), rectF.width() / 2, paint);
+        canvas.drawCircle(rectF.centerX(), rectF.centerY(), rectF.width() * .5f, paint);
 
         paint.setARGB(intValue, red(intColor), green(intColor), blue(intColor));
 
-        canvas.drawCircle(rectF.centerX(), rectF.centerY(), rectF.width() / 2, paint);
+        canvas.drawCircle(rectF.centerX(), rectF.centerY(), rectF.width() * .5f, paint);
 
         paint.setColor(Color.WHITE);
         paint.setStyle(Paint.Style.STROKE);
 
-        canvas.drawLine(rectF.centerX() + (rectF.width() / 4) * (float)Math.cos((double)floatTheta - floatTau / 4), rectF.centerY() + (rectF.height() / 4) * (float)Math.sin((double)floatTheta - floatTau / 4), rectF.centerX() + (rectF.width() / 2) * (float)Math.cos((double)floatTheta - floatTau / 4), rectF.centerY() + (rectF.height() / 2) * (float)Math.sin((double)floatTheta - floatTau / 4), paint);
+        canvas.drawLine(rectF.centerX() + (rectF.width() * .25f) * (float)Math.cos((double)floatTheta - floatTau * .25f), rectF.centerY() + (rectF.height() * .25f) * (float)Math.sin((double)floatTheta - floatTau * .25f), rectF.centerX() + (rectF.width() * .5f) * (float)Math.cos((double)floatTheta - floatTau * .25f), rectF.centerY() + (rectF.height() * .5f) * (float)Math.sin((double)floatTheta - floatTau * .25f), paint);
     }
 
     @Override

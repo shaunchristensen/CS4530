@@ -15,11 +15,12 @@ import java.util.ArrayList;
 /**
  * Created by Shaun Christensen on 2016.09.21.
  */
-public class ViewGroupPalette extends ViewGroup implements View.OnClickListener
+public class ViewGroupPalette extends ViewGroup implements ViewPaint.OnActiveChangeListener
 {
     // fields
 
-    private final ArrayList<ViewPaint> arrayList;
+    private final ArrayList<ViewPaint> arrayListViewPaint;
+    private int intIndex;
     private OnColorChangeListener onColorChangeListener;
 
     // constructors
@@ -28,22 +29,22 @@ public class ViewGroupPalette extends ViewGroup implements View.OnClickListener
     {
         super(context);
 
-        arrayList = new ArrayList<ViewPaint>();
-        arrayList.add(new ViewPaint(context, Color.RED));
-        arrayList.add(new ViewPaint(context, Color.BLUE));
-        arrayList.add(new ViewPaint(context, Color.GREEN));
-        arrayList.add(new ViewPaint(context, Color.YELLOW));
-        arrayList.add(new ViewPaint(context, Color.argb(255, 128, 0, 128)));
+        arrayListViewPaint = new ArrayList<ViewPaint>();
+        arrayListViewPaint.add(new ViewPaint(context, Color.RED));
+        arrayListViewPaint.add(new ViewPaint(context, Color.BLUE));
+        arrayListViewPaint.add(new ViewPaint(context, Color.GREEN));
+        arrayListViewPaint.add(new ViewPaint(context, Color.YELLOW));
+        arrayListViewPaint.add(new ViewPaint(context, Color.argb(255, 128, 0, 128)));
 
-        for (ViewPaint v: arrayList)
+        ((ViewPaint)arrayListViewPaint.get(0)).setActive(true);
+
+        for (ViewPaint v: arrayListViewPaint)
         {
             this.addView(v);
-
-            v.setOnClickListener(this);
+            v.setOnActiveChangeListener(this);
         }
 
-        ((ViewPaint)arrayList.get(0)).performClick();
-
+        intIndex = 0;
         onColorChangeListener = null;
 
         setWillNotDraw(false);
@@ -58,20 +59,71 @@ public class ViewGroupPalette extends ViewGroup implements View.OnClickListener
 
     // methods
 
-    @Override
-    public void onClick(View view)
+    public void addColor(int color)
     {
-        if (view instanceof ViewPaint)
+        ViewPaint viewPaint = new ViewPaint(this.getContext(), color);
+        viewPaint.setActive(true);
+        viewPaint.setOnActiveChangeListener(this);
+
+        arrayListViewPaint.add(viewPaint);
+
+        this.addView(viewPaint);
+
+        onActiveChange(viewPaint);
+        requestLayout();
+    }
+
+    public int removeColor()
+    {
+        if (arrayListViewPaint.size() > 1)
         {
-            for (int i = 0; i < arrayList.size(); i++)
+            ViewPaint viewPaint = ((ViewPaint)arrayListViewPaint.get(intIndex));
+            viewPaint.setOnActiveChangeListener(null);
+
+            arrayListViewPaint.remove(intIndex);
+
+            this.removeView(viewPaint);
+
+            if (intIndex > 0)
             {
-                ((ViewPaint)arrayList.get(i)).setActive(false);
+                intIndex--;
+            }
+            else
+            {
+                intIndex = 0;
             }
 
-            ((ViewPaint)view).setActive(true);
+            viewPaint = ((ViewPaint)arrayListViewPaint.get(intIndex));
+            viewPaint.setActive(true);
 
-            onColorChangeListener.onColorChange(((ViewPaint)view).getColor());
+            onActiveChange(viewPaint);
+            requestLayout();
         }
+
+        return arrayListViewPaint.size();
+    }
+
+    public void setOnColorChangeListener(OnColorChangeListener listener)
+    {
+        onColorChangeListener = listener;
+    }
+
+    @Override
+    public void onActiveChange(ViewPaint viewPaint)
+    {
+        for (int i = 0; i < arrayListViewPaint.size(); i++)
+        {
+            if (((ViewPaint)arrayListViewPaint.get(i)) == viewPaint)
+            {
+                intIndex = i;
+            }
+            else
+            {
+                ((ViewPaint)arrayListViewPaint.get(i)).setActive(false);
+            }
+        }
+
+        onColorChangeListener.onColorChange(viewPaint.getColor());
     }
 
     @Override
@@ -84,10 +136,10 @@ public class ViewGroupPalette extends ViewGroup implements View.OnClickListener
         paint.setStyle(Paint.Style.FILL);
 
         RectF rectF = new RectF();
-        rectF.bottom = getHeight() * .9f;
-        rectF.left = getWidth() * .1f;
-        rectF.right = getWidth() * .9f;
-        rectF.top = getHeight() * .1f;
+        rectF.bottom = getHeight() * .99f;
+        rectF.left = getWidth() * .06f;
+        rectF.right = getWidth() * .94f;
+        rectF.top = getHeight() * .01f;
 
         canvas.drawOval(rectF, paint);
 
@@ -101,8 +153,8 @@ public class ViewGroupPalette extends ViewGroup implements View.OnClickListener
     @Override
     protected void onLayout(boolean b, int i, int i1, int i2, int i3)
     {
-        int radius = (getHeight() < getWidth() ? getHeight() : getWidth()) / 20;
-
+        // fix
+        int radius = (int)((getHeight() < getWidth() ? getHeight() : getWidth()) * 1.8f / arrayListViewPaint.size());
         float theta = (float)(2 * Math.PI / getChildCount());
 
         PointF pointF;
@@ -112,8 +164,8 @@ public class ViewGroupPalette extends ViewGroup implements View.OnClickListener
         for (int index = 0; index < getChildCount(); index++)
         {
             pointF = new PointF();
-            pointF.x = getWidth() * .5f - (getWidth() * .375f - radius) * (float)Math.cos(index * theta);
-            pointF.y = getHeight() * .5f - (getHeight() * .375f - radius) * (float)Math.sin(index * theta);
+            pointF.x = getWidth() * .5f - (getWidth() * .40f - radius) * (float)Math.cos(index * theta);
+            pointF.y = getHeight() * .5f - (getHeight() * .45f - radius) * (float)Math.sin(index * theta);
 
             rect = new Rect();
             rect.bottom = (int)(pointF.y + radius);
@@ -125,10 +177,4 @@ public class ViewGroupPalette extends ViewGroup implements View.OnClickListener
             view.layout(rect.left, rect.top, rect.right, rect.bottom);
         }
     }
-
-    public void setOnColorChangeListener(OnColorChangeListener listener)
-    {
-        onColorChangeListener = listener;
-    }
-
 }
