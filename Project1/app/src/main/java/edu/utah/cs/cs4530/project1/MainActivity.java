@@ -1,3 +1,10 @@
+/**
+ * Author:     Shaun Christensen
+ * Course:     CS 4530 - Mobile Application Programming: Android
+ * Date:       2016.09.22
+ * Assignment: Project 1 - Palette Paint
+ */
+
 package edu.utah.cs.cs4530.project1;
 
 import android.os.Bundle;
@@ -30,7 +37,7 @@ public class MainActivity extends AppCompatActivity implements LinearLayoutColor
     @Override
     public void onColorRemoveClick()
     {
-        if (viewGroupPalette.removeColor() > 0)
+        if (viewGroupPalette.removeColor() > 1)
         {
             linearLayoutColor.setColorRemoveEnabled(true);
         }
@@ -47,8 +54,8 @@ public class MainActivity extends AppCompatActivity implements LinearLayoutColor
         int height = this.getResources().getDisplayMetrics().heightPixels;
         int width = this.getResources().getDisplayMetrics().widthPixels;
 
-        LayoutParams layoutParmsColor = new LayoutParams((int)(width * .75f), 0, 15);
-        layoutParmsColor.setMargins((int)(width * .125f), (int)(height * .05f), (int)(width * .125f), (int)(height * .05f));
+        LayoutParams layoutParmsColor = new LayoutParams((int)(width * .6f), 0, 15);
+        layoutParmsColor.setMargins((int)(width * .2f), (int)(height * .01f), (int)(width * .2f), (int)(height * .01f));
 
         linearLayoutColor = new LinearLayoutColor(this);
         linearLayoutColor.setOnColorAddClickListener(this);
@@ -61,7 +68,7 @@ public class MainActivity extends AppCompatActivity implements LinearLayoutColor
 
         LinearLayout linearLayout = new LinearLayout(this);
         linearLayout.addView(viewCanvas, new LayoutParams(width, 0, 50));
-        linearLayout.addView(viewGroupPalette, new LayoutParams(width, 0, 30));
+        linearLayout.addView(viewGroupPalette, new LayoutParams(width, 0, 33));
         linearLayout.addView(linearLayoutColor, layoutParmsColor);
         linearLayout.setOrientation(LinearLayout.VERTICAL);
 

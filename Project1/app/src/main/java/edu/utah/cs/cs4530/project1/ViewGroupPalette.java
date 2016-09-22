@@ -1,3 +1,10 @@
+/**
+ * Author:     Shaun Christensen
+ * Course:     CS 4530 - Mobile Application Programming: Android
+ * Date:       2016.09.22
+ * Assignment: Project 1 - Palette Paint
+ */
+
 package edu.utah.cs.cs4530.project1;
 
 import android.content.Context;
@@ -7,6 +14,7 @@ import android.graphics.Paint;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -75,7 +83,7 @@ public class ViewGroupPalette extends ViewGroup implements ViewPaint.OnActiveCha
 
     public int removeColor()
     {
-        if (arrayListViewPaint.size() > 1)
+        try
         {
             ViewPaint viewPaint = ((ViewPaint)arrayListViewPaint.get(intIndex));
             viewPaint.setOnActiveChangeListener(null);
@@ -86,18 +94,21 @@ public class ViewGroupPalette extends ViewGroup implements ViewPaint.OnActiveCha
 
             if (intIndex > 0)
             {
-                intIndex--;
+                viewPaint = ((ViewPaint)arrayListViewPaint.get(intIndex - 1));
             }
             else
             {
-                intIndex = 0;
+                viewPaint = ((ViewPaint)arrayListViewPaint.get(0));
             }
 
-            viewPaint = ((ViewPaint)arrayListViewPaint.get(intIndex));
             viewPaint.setActive(true);
 
             onActiveChange(viewPaint);
             requestLayout();
+        }
+        catch (Exception e)
+        {
+            Log.e("ViewGroupPalette.removeColor", "Error: Unable to remove the color." + e.getMessage());
         }
 
         return arrayListViewPaint.size();
@@ -153,8 +164,7 @@ public class ViewGroupPalette extends ViewGroup implements ViewPaint.OnActiveCha
     @Override
     protected void onLayout(boolean b, int i, int i1, int i2, int i3)
     {
-        // fix
-        int radius = (int)((getHeight() < getWidth() ? getHeight() : getWidth()) * 1.8f / arrayListViewPaint.size());
+        int radius = (int)((getHeight() < getWidth() ? getHeight() : getWidth()) / (3 + Math.sqrt(arrayListViewPaint.size())));
         float theta = (float)(2 * Math.PI / getChildCount());
 
         PointF pointF;
@@ -164,14 +174,14 @@ public class ViewGroupPalette extends ViewGroup implements ViewPaint.OnActiveCha
         for (int index = 0; index < getChildCount(); index++)
         {
             pointF = new PointF();
-            pointF.x = getWidth() * .5f - (getWidth() * .40f - radius) * (float)Math.cos(index * theta);
-            pointF.y = getHeight() * .5f - (getHeight() * .45f - radius) * (float)Math.sin(index * theta);
+            pointF.x = getWidth() * .5f - (getWidth() * .45f - radius) * (float)Math.cos(index * theta);
+            pointF.y = getHeight() * .5f - (getHeight() * .5f - radius) * (float)Math.sin(index * theta);
 
             rect = new Rect();
             rect.bottom = (int)(pointF.y + radius);
             rect.left = (int)(pointF.x - radius);
             rect.right = (int)(pointF.x + radius);
-            rect.top = (int)(pointF.y - radius);
+            rect.top = (int)(pointF.y - radius) + getPaddingTop();
 
             view = getChildAt(index);
             view.layout(rect.left, rect.top, rect.right, rect.bottom);

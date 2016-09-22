@@ -1,10 +1,16 @@
+/**
+ * Author:     Shaun Christensen
+ * Course:     CS 4530 - Mobile Application Programming: Android
+ * Date:       2016.09.22
+ * Assignment: Project 1 - Palette Paint
+ */
+
 package edu.utah.cs.cs4530.project1;
 
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.RectF;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -72,34 +78,36 @@ public class ViewKnob extends View
     {
         super.onDraw(canvas);
 
-        RectF rectF = new RectF();
-        rectF.bottom = getHeight() * .875f;
-        rectF.left = getWidth() * .125f;
-        rectF.right = getWidth() * .875f;
-        rectF.top = getHeight() * .375f;
+        float height = getHeight() - getPaddingBottom() - getPaddingTop();
+        float width = getWidth() - getPaddingLeft() - getPaddingRight();
+        float radius = (height < width ? height : width) * .5f;
+        float y = (height - radius * 2 < radius * .5f ? height - radius * 2 : radius) * .5f;
 
-        floatX = rectF.centerX();
-        floatY = rectF.centerY();
+        floatX = width * .5f + getPaddingLeft();
+        floatY = height - ((height - (radius * 2) - y) * .5f) - radius + getPaddingTop();
 
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         paint.setColor(intColor);
-        paint.setStrokeWidth(rectF.width() * .1f);
+        paint.setStrokeWidth(radius * .145f);
 
-        canvas.drawLine(rectF.centerX(), getHeight() * .12f, rectF.centerX(), getHeight() * .375f, paint);
+        canvas.drawLine(floatX, floatY, floatX, floatY - radius * .9f - y, paint);
 
         paint.setColor(Color.BLACK);
         paint.setStyle(Paint.Style.FILL);
 
-        canvas.drawCircle(rectF.centerX(), rectF.centerY(), rectF.width() * .5f, paint);
+        canvas.drawCircle(floatX, floatY, radius * .9f, paint);
 
         paint.setARGB(intValue, red(intColor), green(intColor), blue(intColor));
 
-        canvas.drawCircle(rectF.centerX(), rectF.centerY(), rectF.width() * .5f, paint);
+       canvas.drawCircle(floatX, floatY, radius * .9f, paint);
 
         paint.setColor(Color.WHITE);
         paint.setStyle(Paint.Style.STROKE);
 
-        canvas.drawLine(rectF.centerX() + (rectF.width() * .25f) * (float)Math.cos((double)floatTheta - floatTau * .25f), rectF.centerY() + (rectF.height() * .25f) * (float)Math.sin((double)floatTheta - floatTau * .25f), rectF.centerX() + (rectF.width() * .5f) * (float)Math.cos((double)floatTheta - floatTau * .25f), rectF.centerY() + (rectF.height() * .5f) * (float)Math.sin((double)floatTheta - floatTau * .25f), paint);
+        canvas.drawLine(floatX + (radius * .45f) * (float)Math.cos((double)floatTheta - floatTau * .25f),
+            floatY + (radius * .45f) * (float)Math.sin((double)floatTheta - floatTau * .25f),
+            floatX + (radius * .9f) * (float)Math.cos((double)floatTheta - floatTau * .25f),
+            floatY + (radius * .9f) * (float)Math.sin((double)floatTheta - floatTau * .25f), paint);
     }
 
     @Override

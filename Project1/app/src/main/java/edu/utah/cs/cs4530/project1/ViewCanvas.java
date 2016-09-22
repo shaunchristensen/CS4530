@@ -1,3 +1,10 @@
+/**
+ * Author:     Shaun Christensen
+ * Course:     CS 4530 - Mobile Application Programming: Android
+ * Date:       2016.09.22
+ * Assignment: Project 1 - Palette Paint
+ */
+
 package edu.utah.cs.cs4530.project1;
 
 import android.content.Context;
@@ -20,8 +27,11 @@ public class ViewCanvas extends View
     // fields
 
     private final ArrayList<Pair<Integer, ArrayList<PointF>>> arrayListPair;
-    private final ArrayList<PointF> arrayListPointF;
+    private ArrayList<PointF> arrayListPointF;
     private int intColor;
+    private final Paint paint;
+    private Path path;
+    private PointF pointF;
 
     // constructors
 
@@ -30,8 +40,11 @@ public class ViewCanvas extends View
         super(context);
 
         arrayListPair = new ArrayList<Pair<Integer, ArrayList<PointF>>>();
-        arrayListPointF = new ArrayList<PointF>();
+        arrayListPointF = null;
         intColor = Color.RED;
+        paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        path = null;
+        pointF = null;
     }
 
     // methods
@@ -46,25 +59,19 @@ public class ViewCanvas extends View
     {
         super.onDraw(canvas);
 
-        ArrayList<PointF> arrayList;
-
-        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         paint.setStrokeWidth((getHeight() < getWidth() ? getHeight() : getWidth()) * .01f);
         paint.setStyle(Paint.Style.STROKE);
 
-        Path path;
-        PointF pointF;
-
         for (int i = 0; i < arrayListPair.size(); i++)
         {
+            paint.setColor(arrayListPair.get(i).first);
+            arrayListPointF = arrayListPair.get(i).second;
+
             path = new Path();
 
-            paint.setColor(arrayListPair.get(i).first);
-            arrayList = arrayListPair.get(i).second;
-
-            for (int j = 0; j < arrayList.size(); j++)
+            for (int j = 0; j < arrayListPointF.size(); j++)
             {
-                pointF = arrayList.get(j);
+                pointF = arrayListPointF.get(j);
 
                 if (j > 0)
                 {
@@ -83,13 +90,12 @@ public class ViewCanvas extends View
     @Override
     public boolean onTouchEvent(MotionEvent event)
     {
-        arrayListPointF.add(new PointF(event.getX(), event.getY()));
-
-        if (event.getAction() == MotionEvent.ACTION_UP)
+        if (event.getAction() == MotionEvent.ACTION_DOWN)
         {
-            arrayListPair.add(new Pair(intColor, new ArrayList<PointF>(arrayListPointF)));
-            arrayListPointF.clear();
+            arrayListPair.add(new Pair(intColor, new ArrayList<PointF>()));
         }
+
+        arrayListPair.get(arrayListPair.size() - 1).second.add(new PointF(event.getX(), event.getY()));
 
         invalidate();
 

@@ -1,3 +1,10 @@
+/**
+ * Author:     Shaun Christensen
+ * Course:     CS 4530 - Mobile Application Programming: Android
+ * Date:       2016.09.22
+ * Assignment: Project 1 - Palette Paint
+ */
+
 package edu.utah.cs.cs4530.project1;
 
 import android.content.Context;
@@ -69,10 +76,10 @@ public class ViewPaint extends View
         paint.setStyle(Paint.Style.FILL);
 
         RectF rectF = new RectF();
-        rectF.bottom = getHeight() * .8f;
-        rectF.left = getWidth() * .2f;
-        rectF.right = getWidth() * .8f;
-        rectF.top = getHeight() * .2f;
+        rectF.bottom = getHeight() * .8f - getPaddingBottom();
+        rectF.left = getWidth() * .2f + getPaddingLeft();
+        rectF.right = getWidth() * .8f - getPaddingRight();
+        rectF.top = getHeight() * .2f + getPaddingTop();
 
         canvas.drawCircle(rectF.centerX(), rectF.centerY(), rectF.width() * .3f, paint);
 

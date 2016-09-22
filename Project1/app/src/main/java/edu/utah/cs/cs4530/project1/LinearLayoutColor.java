@@ -1,3 +1,10 @@
+/**
+ * Author:     Shaun Christensen
+ * Course:     CS 4530 - Mobile Application Programming: Android
+ * Date:       2016.09.22
+ * Assignment: Project 1 - Palette Paint
+ */
+
 package edu.utah.cs.cs4530.project1;
 
 import android.content.Context;
@@ -98,7 +105,7 @@ public class LinearLayoutColor extends LinearLayout implements View.OnClickListe
     {
         if (view == buttonColorAdd)
         {
-            onColorAddClickListener.onColorAddClick(Color.argb(255, intRed, intBlue, intGreen));
+            onColorAddClickListener.onColorAddClick(Color.argb(255, intRed, intGreen, intBlue));
         }
         else if (view == buttonColorRemove)
         {
@@ -116,8 +123,18 @@ public class LinearLayoutColor extends LinearLayout implements View.OnClickListe
         {
             rect = new Rect();
             rect.bottom = getHeight();
-            rect.left = (int)(index * getWidth() * .25f);
-            rect.right = (int)((index + 1) * getWidth() * .25f);
+
+            if (index < getChildCount() - 1)
+            {
+                rect.left = (int)(index * getWidth() * 2 / 7);
+                rect.right = (int)((index + 1) * getWidth() * 2 / 7);
+            }
+            else
+            {
+                rect.left = (int)(getWidth() * 6 / 7);
+                rect.right = (int)getWidth();
+            }
+
             rect.top = 0;
 
             view = getChildAt(index);
