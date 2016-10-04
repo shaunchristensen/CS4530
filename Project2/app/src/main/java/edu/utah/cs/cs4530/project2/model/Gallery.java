@@ -7,18 +7,19 @@
 
 package edu.utah.cs.cs4530.project2.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by Shaun Christensen on 2016.09.30.
  */
-
-public class Gallery
+public class Gallery implements Serializable
 {
     // fields
 
     private static Gallery gallery;
+    private int intPaintingIndex;
     private final List<Painting> listPaintings;
 
     // constructors
@@ -53,5 +54,15 @@ public class Gallery
     public int getPaintingCount()
     {
         return listPaintings.size();
+    }
+
+    public int getPaintingIndex()
+    {
+        return intPaintingIndex;
+    }
+
+    public void setPaintingIndex(int index)
+    {
+        intPaintingIndex = index;
     }
 }

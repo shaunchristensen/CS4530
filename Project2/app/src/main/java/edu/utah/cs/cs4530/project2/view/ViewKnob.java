@@ -17,9 +17,10 @@ import android.view.View;
 import static android.graphics.Color.blue;
 import static android.graphics.Color.green;
 import static android.graphics.Color.red;
+import static android.graphics.Paint.ANTI_ALIAS_FLAG;
 
 /**
- * Created by Shaun Christensen on 2016.09.30.
+ * Created by Shaun Christensen on 2016.09.30
  */
 public class ViewKnob extends View
 {
@@ -31,7 +32,7 @@ public class ViewKnob extends View
     private float floatY;
     final private int intColor;
     private int intValue;
-    private OnValueChangeListener onValueChangeListener;
+    private OnViewKnobTouchListener onViewKnobTouchListener;
 
     // constructors
 
@@ -43,34 +44,49 @@ public class ViewKnob extends View
         floatTheta = floatX = floatY = 0;
         intColor = color;
         intValue = 255;
-        onValueChangeListener = null;
+        onViewKnobTouchListener = null;
     }
 
     // interfaces
 
-    public interface OnValueChangeListener
+    public interface OnViewKnobTouchListener
     {
-        void onValueChange();
+        void onViewKnobTouch();
     }
 
     // methods
+
+    public float getAngle()
+    {
+        return floatTheta;
+    }
 
     public int getValue()
     {
         return intValue;
     }
 
-    public void setValue(double x, double y)
+    public void setOnViewKnobTouchListener(OnViewKnobTouchListener listener)
     {
-        floatTheta = (float)Math.atan2(y - floatY, x - floatX) + floatTau * .25f;
-        intValue = (int)(255 * (1 - floatTheta / floatTau));
+        onViewKnobTouchListener = listener;
+    }
+
+    public void setAngle(float theta)
+    {
+        floatTheta = theta;
+        setValue();
 
         invalidate();
     }
 
-    public void setOnValueChangeListener(OnValueChangeListener listener)
+    public void setAngle(double x, double y)
     {
-        onValueChangeListener = listener;
+        setAngle((float)Math.atan2(y - floatY, x - floatX) + floatTau * .25f);
+    }
+
+    public void setValue()
+    {
+        intValue = (int)(255 * (1 - floatTheta / floatTau));
     }
 
     @Override
@@ -86,28 +102,25 @@ public class ViewKnob extends View
         floatX = width * .5f + getPaddingLeft();
         floatY = height - ((height - (radius * 2) - y) * .5f) - radius + getPaddingTop();
 
-        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        Paint paint = new Paint(ANTI_ALIAS_FLAG);
         paint.setColor(intColor);
-        paint.setStrokeWidth(radius * .145f);
+        paint.setStrokeWidth((int)radius / 5);
 
-        canvas.drawLine(floatX, floatY, floatX, floatY - radius * .9f - y, paint);
+        canvas.drawLine(floatX, floatY, floatX, floatY - radius - y, paint);
 
         paint.setColor(Color.BLACK);
         paint.setStyle(Paint.Style.FILL);
 
-        canvas.drawCircle(floatX, floatY, radius * .9f, paint);
+        canvas.drawCircle(floatX, floatY, radius, paint);
 
         paint.setARGB(intValue, red(intColor), green(intColor), blue(intColor));
 
-        canvas.drawCircle(floatX, floatY, radius * .9f, paint);
+        canvas.drawCircle(floatX, floatY, radius, paint);
 
         paint.setColor(Color.WHITE);
         paint.setStyle(Paint.Style.STROKE);
 
-        canvas.drawLine(floatX + (radius * .45f) * (float)Math.cos((double)floatTheta - floatTau * .25f),
-                floatY + (radius * .45f) * (float)Math.sin((double)floatTheta - floatTau * .25f),
-                floatX + (radius * .9f) * (float)Math.cos((double)floatTheta - floatTau * .25f),
-                floatY + (radius * .9f) * (float)Math.sin((double)floatTheta - floatTau * .25f), paint);
+        canvas.drawLine(floatX + (radius * .5f) * (float)Math.cos((double)floatTheta - floatTau * .25f), floatY + (radius * .5f) * (float)Math.sin((double)floatTheta - floatTau * .25f), floatX + radius * (float)Math.cos((double)floatTheta - floatTau * .25f), floatY + radius * (float)Math.sin((double)floatTheta - floatTau * .25f), paint);
     }
 
     @Override
@@ -138,8 +151,8 @@ public class ViewKnob extends View
     @Override
     public boolean onTouchEvent(MotionEvent event)
     {
-        setValue(event.getX(), event.getY());
-        onValueChangeListener.onValueChange();
+        setAngle(event.getX(), event.getY());
+        onViewKnobTouchListener.onViewKnobTouch();
 
         return true;
     }

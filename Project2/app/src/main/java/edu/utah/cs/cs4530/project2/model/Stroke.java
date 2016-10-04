@@ -7,11 +7,12 @@
 
 package edu.utah.cs.cs4530.project2.model;
 
+import java.io.Serializable;
+
 /**
  * Created by Shaun Christensen on 2016.09.30.
  */
-
-public class Stroke
+public class Stroke implements Serializable
 {
     // fields
 

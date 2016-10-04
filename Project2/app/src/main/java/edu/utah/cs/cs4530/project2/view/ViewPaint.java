@@ -15,6 +15,11 @@ import android.graphics.RectF;
 import android.view.MotionEvent;
 import android.view.View;
 
+import static android.graphics.Color.BLACK;
+import static android.graphics.Paint.ANTI_ALIAS_FLAG;
+import static android.graphics.Paint.Style.FILL;
+import static android.graphics.Paint.Style.STROKE;
+
 /**
  * Created by Shaun Christensen on 2016.09.30.
  */
@@ -24,7 +29,6 @@ public class ViewPaint extends View
 
     private boolean booleanActive;
     private final int intColor;
-//    private OnActiveChangeListener onActiveChangeListener;
 
     // constructors
 
@@ -34,22 +38,9 @@ public class ViewPaint extends View
 
         booleanActive = false;
         intColor = color;
-//        onActiveChangeListener = null;
     }
-/*
-    // interfaces
-
-    public interface OnActiveChangeListener
-    {
-        void onActiveChange(ViewPaint viewPaint);
-    }*/
 
     // methods
-
-    public int getColor()
-    {
-        return intColor;
-    }
 
     public void setActive(boolean active)
     {
@@ -61,19 +52,14 @@ public class ViewPaint extends View
         }
     }
 
-    /*    public void setOnActiveChangeListener(OnActiveChangeListener listener)
-        {
-            onActiveChangeListener = listener;
-        }
-    */
     @Override
     protected void onDraw(Canvas canvas)
     {
         super.onDraw(canvas);
 
-        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        Paint paint = new Paint(ANTI_ALIAS_FLAG);
         paint.setColor(intColor);
-        paint.setStyle(Paint.Style.FILL);
+        paint.setStyle(FILL);
 
         RectF rectF = new RectF();
         rectF.bottom = getHeight() * .8f - getPaddingBottom();
@@ -85,9 +71,9 @@ public class ViewPaint extends View
 
         if (booleanActive)
         {
-            paint.setColor(Color.BLACK);
+            paint.setColor(BLACK);
             paint.setStrokeWidth(rectF.width() * .1f);
-            paint.setStyle(Paint.Style.STROKE);
+            paint.setStyle(STROKE);
 
             canvas.drawCircle(rectF.centerX(), rectF.centerY(), rectF.width() * .4f, paint);
         }
@@ -117,13 +103,4 @@ public class ViewPaint extends View
 
         setMeasuredDimension(resolveSize(suggestedMinimumWidth, widthMeasureSpec), resolveSize(suggestedMinimumHeight, heightMeasureSpec));
     }
-/*
-    @Override
-    public boolean onTouchEvent(MotionEvent event)
-    {
-        setActive(true);
-//        onActiveChangeListener.onActiveChange(this);
-
-        return true;
-    }*/
 }

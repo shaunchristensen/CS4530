@@ -16,150 +16,155 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.Log;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 
 import java.util.ArrayList;
+import java.util.List;
+
+import static android.graphics.Paint.ANTI_ALIAS_FLAG;
+import static android.graphics.Paint.Style.FILL;
+import static android.graphics.Paint.Style.STROKE;
 
 /**
  * Created by Shaun Christensen on 2016.09.30.
  */
-public class ViewGroupPalette extends ViewGroup //implements ViewPaint.OnActiveChangeListener
+public class ViewGroupPalette extends ViewGroup implements OnClickListener
 {
     // fields
 
-    private final ArrayList<ViewPaint> arrayListViewPaint;
-    private int intIndex;
-    private OnColorChangeListener onColorChangeListener;
+    private int intColorIndex;
+    private List<ViewPaint> listColors;
+    private OnSetColorListener onSetColorListener;
+
+    private ViewPaint viewPaint;
 
     // constructors
 
-    public ViewGroupPalette(Context context)
+    public ViewGroupPalette(Context context, int colorIndex, List<Integer> colors)
     {
         super(context);
 
-        arrayListViewPaint = new ArrayList<ViewPaint>();
+        intColorIndex = colorIndex;
+        listColors = new ArrayList<ViewPaint>();
 
-//        ((ViewPaint)arrayListViewPaint.get(0)).setActive(true);
-
-        for (ViewPaint v: arrayListViewPaint)
+        for (int color : colors)
         {
-            this.addView(v);
-//            v.setOnActiveChangeListener(this);
+            viewPaint = new ViewPaint(context, color);
+            viewPaint.setOnClickListener(this);
+
+            addView(viewPaint);
+            listColors.add(viewPaint);
         }
 
-        intIndex = 0;
-        onColorChangeListener = null;
+        listColors.get(intColorIndex).setActive(true);
+
+        onSetColorListener = null;
 
         setWillNotDraw(false);
     }
 
     // interfaces
 
-    public interface OnColorChangeListener
+    public interface OnSetColorListener
     {
-        void onColorChange(int color);
+        void onSetColor(int colorIndex);
     }
 
     // methods
 
     public void addColor(int color)
     {
-        ViewPaint viewPaint = new ViewPaint(this.getContext(), color);
-        viewPaint.setActive(true);
-        //      viewPaint.setOnActiveChangeListener(this);
+        viewPaint = new ViewPaint(getContext(), color);
+        viewPaint.setOnClickListener(this);
 
-        arrayListViewPaint.add(viewPaint);
-
-        this.addView(viewPaint);
-
-//        onActiveChange(viewPaint);
+        addView(viewPaint);
+        listColors.add(viewPaint);
         requestLayout();
+        setViewPaintActive(viewPaint);
     }
 
     public int removeColor()
     {
-        try
+        if (intColorIndex >= 0 && intColorIndex < listColors.size())
         {
-            ViewPaint viewPaint = ((ViewPaint)arrayListViewPaint.get(intIndex));
-            //        viewPaint.setOnActiveChangeListener(null);
+            viewPaint = listColors.get(intColorIndex);
+            viewPaint.setOnClickListener(null);
 
-            arrayListViewPaint.remove(intIndex);
+            listColors.remove(intColorIndex);
+            removeView(viewPaint);
 
-            this.removeView(viewPaint);
-
-            if (intIndex > 0)
+            if (intColorIndex > 0)
             {
-                viewPaint = ((ViewPaint)arrayListViewPaint.get(intIndex - 1));
+                viewPaint = listColors.get(intColorIndex - 1);
             }
             else
             {
-                viewPaint = ((ViewPaint)arrayListViewPaint.get(0));
+                viewPaint = listColors.get(0);
             }
 
-            viewPaint.setActive(true);
-
-            //           onActiveChange(viewPaint);
             requestLayout();
-        }
-        catch (Exception e)
-        {
-            Log.e("ViewGroupPalette.removeColor", "Error: Unable to remove the color." + e.getMessage());
+            setViewPaintActive(viewPaint);
         }
 
-        return arrayListViewPaint.size();
+        return listColors.size();
     }
 
-    public void setOnColorChangeListener(OnColorChangeListener listener)
+    public void setOnSetColorListener(OnSetColorListener listener)
     {
-        onColorChangeListener = listener;
+        onSetColorListener = listener;
     }
 
-    /*    @Override
-        public void onActiveChange(ViewPaint viewPaint)
+    private void setViewPaintActive(ViewPaint viewPaint)
+    {
+        for (int i = 0; i < listColors.size(); i++)
         {
-            for (int i = 0; i < arrayListViewPaint.size(); i++)
+            if (viewPaint == listColors.get(i))
             {
-                if (((ViewPaint)arrayListViewPaint.get(i)) == viewPaint)
-                {
-                    intIndex = i;
-                }
-                else
-                {
-                    ((ViewPaint)arrayListViewPaint.get(i)).setActive(false);
-                }
+                intColorIndex = i;
+                listColors.get(intColorIndex).setActive(true);
+                onSetColorListener.onSetColor(intColorIndex);
             }
-
-            onColorChangeListener.onColorChange(viewPaint.getColor());
+            else
+            {
+                listColors.get(i).setActive(false);
+            }
         }
-    */
+    }
+
+    @Override
+    public void onClick(View v)
+    {
+        if (v instanceof ViewPaint)
+        {
+            setViewPaintActive((ViewPaint)v);
+        }
+    }
+
     @Override
     public void onDraw(Canvas canvas)
     {
         super.onDraw(canvas);
 
-        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setColor(Color.argb(255, 222, 184, 135));
-        paint.setStyle(Paint.Style.FILL);
+        Paint paint = new Paint(ANTI_ALIAS_FLAG);
+        paint.setColor(Color.rgb(222, 184, 135));
+        paint.setStyle(FILL);
 
-        RectF rectF = new RectF();
-        rectF.bottom = getHeight() * .99f;
-        rectF.left = getWidth() * .06f;
-        rectF.right = getWidth() * .94f;
-        rectF.top = getHeight() * .01f;
+        float strokeWidth = (getHeight() < getWidth() ? getHeight() : getWidth()) / 100;
 
-        canvas.drawOval(rectF, paint);
+        canvas.drawOval(getPaddingLeft(), getPaddingTop(), getWidth() - getPaddingRight(), getHeight() - getPaddingBottom(), paint);
 
-        paint.setColor(Color.argb(255, 139, 115, 85));
-        paint.setStrokeWidth(rectF.width() * .01f);
-        paint.setStyle(Paint.Style.STROKE);
+        paint.setColor(Color.rgb(139, 115, 85));
+        paint.setStrokeWidth(strokeWidth);
+        paint.setStyle(STROKE);
 
-        canvas.drawOval(rectF, paint);
+        canvas.drawOval(getPaddingLeft() + strokeWidth, getPaddingTop() + strokeWidth, getWidth() - getPaddingRight() - strokeWidth, getHeight() - getPaddingBottom() - strokeWidth, paint);
     }
 
     @Override
     protected void onLayout(boolean b, int i, int i1, int i2, int i3)
     {
-        int radius = (int)((getHeight() < getWidth() ? getHeight() : getWidth()) / (3 + Math.sqrt(arrayListViewPaint.size())));
+        int radius = (int)((getHeight() < getWidth() ? getHeight() : getWidth()) / (5 + Math.sqrt(listColors.size())));
         float theta = (float)(2 * Math.PI / getChildCount());
 
         PointF pointF;
@@ -169,8 +174,8 @@ public class ViewGroupPalette extends ViewGroup //implements ViewPaint.OnActiveC
         for (int index = 0; index < getChildCount(); index++)
         {
             pointF = new PointF();
-            pointF.x = getWidth() * .5f - (getWidth() * .45f - radius) * (float)Math.cos(index * theta);
-            pointF.y = getHeight() * .5f - (getHeight() * .5f - radius) * (float)Math.sin(index * theta);
+            pointF.x = getWidth() / 2 - (getWidth() / 2 - radius) * (float)Math.cos(index * theta);
+            pointF.y = getHeight() / 2 - (getHeight() / 2 - radius) * (float)Math.sin(index * theta);
 
             rect = new Rect();
             rect.bottom = (int)(pointF.y + radius);

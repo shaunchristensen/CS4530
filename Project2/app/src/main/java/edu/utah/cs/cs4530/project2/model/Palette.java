@@ -7,22 +7,27 @@
 
 package edu.utah.cs.cs4530.project2.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by Shaun Christensen on 2016.09.30.
  */
-
-public class Palette
+public class Palette implements Serializable
 {
     // fields
 
+    private float floatThetaBlue;
+    private float floatThetaGreen;
+    private float floatThetaRed;
+    private int intColorIndex;
     private final List<Integer> listColors;
+    private static Palette palette;
 
     // constructors
 
-    public Palette()
+    private Palette()
     {
         listColors = new ArrayList<Integer>();
     }
@@ -34,9 +39,34 @@ public class Palette
         listColors.add(color);
     }
 
+    public float getAngleBlue()
+    {
+        return floatThetaBlue;
+    }
+
+    public float getAngleGreen()
+    {
+        return floatThetaGreen;
+    }
+
+    public float getAngleRed()
+    {
+        return floatThetaRed;
+    }
+
     public int getColor(int index)
     {
         return listColors.get(index);
+    }
+
+    public int getColorCount()
+    {
+        return listColors.size();
+    }
+
+    public int getColorIndex()
+    {
+        return intColorIndex;
     }
 
     public List<Integer> getColors()
@@ -44,8 +74,38 @@ public class Palette
         return listColors;
     }
 
+    public static Palette getPalette()
+    {
+        if (palette == null)
+        {
+            palette = new Palette();
+        }
+
+        return palette;
+    }
+
     public void removeColor(int index)
     {
         listColors.remove(index);
+    }
+
+    public void setAngleBlue(float theta)
+    {
+        floatThetaBlue = theta;
+    }
+
+    public void setAngleGreen(float theta)
+    {
+        floatThetaGreen = theta;
+    }
+
+    public void setAngleRed(float theta)
+    {
+        floatThetaRed = theta;
+    }
+
+    public void setColorIndex(int index)
+    {
+        intColorIndex = index;
     }
 }

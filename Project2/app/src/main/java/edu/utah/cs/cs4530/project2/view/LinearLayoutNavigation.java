@@ -13,8 +13,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 
-import java.util.List;
-
 import edu.utah.cs.cs4530.project2.controller.R;
 
 import static android.view.View.*;
@@ -33,7 +31,7 @@ public class LinearLayoutNavigation extends LinearLayout implements OnClickListe
     private OnButtonNextClickListener onButtonNextClickListener;
     private OnButtonPlayStopClickListener onButtonPlayStopClickListener;
     private OnButtonPreviousClickListener onButtonPreviousClickListener;
-    private OnPaintViewClickListener onPaintViewClickListener;
+    private OnViewPaintClickListener onViewPaintClickListener;
     private ViewPaint viewPaint;
 
     // constructors
@@ -60,9 +58,11 @@ public class LinearLayoutNavigation extends LinearLayout implements OnClickListe
         onButtonNextClickListener = null;
         onButtonPlayStopClickListener = null;
         onButtonPreviousClickListener = null;
-        onPaintViewClickListener = null;
+        onViewPaintClickListener = null;
 
-        setViewPaint(color);
+        viewPaint = new ViewPaint(getContext(), color);
+        viewPaint.setActive(true);
+        viewPaint.setOnClickListener(this);
 
         LayoutParams layoutParams = new LayoutParams(200, 200);
 
@@ -91,9 +91,9 @@ public class LinearLayoutNavigation extends LinearLayout implements OnClickListe
         void onButtonPreviousClick();
     }
 
-    public interface OnPaintViewClickListener
+    public interface OnViewPaintClickListener
     {
-        void onPaintViewClick();
+        void onViewPaintClick();
     }
 
     // methods
@@ -145,16 +145,22 @@ public class LinearLayoutNavigation extends LinearLayout implements OnClickListe
         onButtonPreviousClickListener = listener;
     }
 
-    public void setOnPaintViewClickListener(OnPaintViewClickListener listener)
+    public void setOnViewPaintClickListener(OnViewPaintClickListener listener)
     {
-        onPaintViewClickListener = listener;
+        onViewPaintClickListener = listener;
     }
 
     public void setViewPaint(int color)
     {
+        viewPaint.setOnClickListener(null);
+        removeView(viewPaint);
+
         viewPaint = new ViewPaint(getContext(), color);
         viewPaint.setActive(true);
         viewPaint.setOnClickListener(this);
+
+        addView(viewPaint, new LayoutParams(200, 200));
+        requestLayout();
     }
 
     @Override
@@ -172,9 +178,9 @@ public class LinearLayoutNavigation extends LinearLayout implements OnClickListe
         {
             onButtonPreviousClickListener.onButtonPreviousClick();
         }
-        else if (view == viewPaint && onPaintViewClickListener != null && !booleanAnimationIsStarted)
+        else if (view == viewPaint && onViewPaintClickListener != null && !booleanAnimationIsStarted)
         {
-            onPaintViewClickListener.onPaintViewClick();
+            onViewPaintClickListener.onViewPaintClick();
         }
     }
 
@@ -182,7 +188,6 @@ public class LinearLayoutNavigation extends LinearLayout implements OnClickListe
     protected void onLayout(boolean b, int i, int i1, int i2, int i3)
     {
         int left, right;
-        int margin = (getHeight() - 200) / 2;
 
         View view;
 
@@ -192,16 +197,16 @@ public class LinearLayoutNavigation extends LinearLayout implements OnClickListe
 
             if (index < getChildCount() - 1)
             {
-                left = (margin + 200) * index + margin;
-                right = (margin + 200) * index + margin + 200;
+                left = (getPaddingTop() + 200) * index + getPaddingTop();
+                right = (getPaddingTop() + 200) * (index + 1);
             }
             else
             {
-                left = getWidth() - margin - 200;
-                right = getWidth() - margin;
+                left = getWidth() - getPaddingTop() - 200;
+                right = getWidth() - getPaddingTop();
             }
 
-            view.layout(left, margin, right, margin + 200);
+            view.layout(left, getPaddingTop(), right, getHeight() - getPaddingBottom());
         }
     }
 }

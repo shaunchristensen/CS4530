@@ -7,25 +7,23 @@
 
 package edu.utah.cs.cs4530.project2.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by Shaun Christensen on 2016.09.30.
  */
-
-public class Painting
+public class Painting implements Serializable
 {
     // fields
 
-    private final float floatAspectRatio;
     private final List<Stroke> listStrokes;
 
     // constructors
 
-    public Painting(float aspectRatio)
+    public Painting()
     {
-        floatAspectRatio = aspectRatio;
         listStrokes = new ArrayList<Stroke>();
     }
 
@@ -34,11 +32,6 @@ public class Painting
     public void addStroke(Stroke stroke)
     {
         listStrokes.add(stroke);
-    }
-
-    public float getAspectRatio()
-    {
-        return floatAspectRatio;
     }
 
     public List<Stroke> getStrokes()

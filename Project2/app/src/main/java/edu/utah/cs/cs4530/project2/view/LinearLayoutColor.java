@@ -9,34 +9,41 @@ package edu.utah.cs.cs4530.project2.view;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.Rect;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 
+import static android.graphics.Color.BLUE;
+import static android.graphics.Color.GREEN;
+import static android.graphics.Color.RED;
+import static android.view.View.*;
+import static android.widget.LinearLayout.LayoutParams.*;
+import static edu.utah.cs.cs4530.project2.view.ViewKnob.*;
+
 /**
  * Created by Shaun Christensen on 2016.09.30.
  */
-public class LinearLayoutColor extends LinearLayout implements View.OnClickListener, ViewKnob.OnValueChangeListener
+public class LinearLayoutColor extends LinearLayout implements OnClickListener, OnViewKnobTouchListener
 {
     // fields
 
     private final Button buttonColorAdd;
     private final Button buttonColorRemove;
-    private final Button buttonColorSave;
+    private final Button buttonOK;
     private int intBlue;
     private int intGreen;
     private int intRed;
-    private OnColorAddClickListener onColorAddClickListener;
-    private OnColorRemoveClickListener onColorRemoveClickListener;
-    private OnColorSaveClickListener onColorSaveClickListener;
+    private OnButtonColorAddClickListener onButtonColorAddClickListener;
+    private OnButtonColorRemoveClickListener onButtonColorRemoveClickListener;
+    private OnButtonOKClickListener onButtonOKClickListener;
+    private OnSetAngleListener onSetAngleListener;
     private final ViewKnob viewKnobBlue;
     private final ViewKnob viewKnobGreen;
     private final ViewKnob viewKnobRed;
 
     // constructors
 
-    public LinearLayoutColor(Context context)
+    public LinearLayoutColor(Context context, float thetaRed, float thetaGreen, float thetaBlue)
     {
         super(context);
 
@@ -48,130 +55,134 @@ public class LinearLayoutColor extends LinearLayout implements View.OnClickListe
         buttonColorRemove.setOnClickListener(this);
         buttonColorRemove.setText("-");
 
-        buttonColorSave = new Button(context);
-        buttonColorSave.setOnClickListener(this);
-        buttonColorSave.setText("Save");
+        buttonOK = new Button(context);
+        buttonOK.setOnClickListener(this);
+        buttonOK.setText("OK");
 
-        intBlue = intGreen = intRed = 255;
+        onButtonColorAddClickListener = null;
+        onButtonColorRemoveClickListener = null;
+        onButtonOKClickListener = null;
+        onSetAngleListener = null;
 
-        onColorAddClickListener = null;
-        onColorRemoveClickListener = null;
-        onColorSaveClickListener = null;
+        viewKnobBlue = new ViewKnob(context, BLUE);
+        viewKnobBlue.setAngle(thetaBlue);
+        viewKnobBlue.setOnViewKnobTouchListener(this);
 
-        viewKnobBlue = new ViewKnob(context, Color.BLUE);
-        viewKnobBlue.setOnValueChangeListener(this);
+        viewKnobGreen = new ViewKnob(context, GREEN);
+        viewKnobGreen.setAngle(thetaGreen);
+        viewKnobGreen.setOnViewKnobTouchListener(this);
 
-        viewKnobGreen = new ViewKnob(context, Color.GREEN);
-        viewKnobGreen.setOnValueChangeListener(this);
+        viewKnobRed = new ViewKnob(context, RED);
+        viewKnobRed.setAngle(thetaRed);
+        viewKnobRed.setOnViewKnobTouchListener(this);
 
-        viewKnobRed = new ViewKnob(context, Color.RED);
-        viewKnobRed.setOnValueChangeListener(this);
+        intBlue = viewKnobBlue.getValue();
+        intGreen = viewKnobGreen.getValue();
+        intRed = viewKnobRed.getValue();
+
+        LayoutParams layoutParams = new LayoutParams(MATCH_PARENT, 0, 1);
 
         LinearLayout linearLayout = new LinearLayout(context);
-        linearLayout.addView(buttonColorAdd, new LayoutParams(LayoutParams.MATCH_PARENT, 0, 1));
-        linearLayout.addView(buttonColorRemove, new LayoutParams(LayoutParams.MATCH_PARENT, 0, 1));
-        linearLayout.setOrientation(LinearLayout.VERTICAL);
+        linearLayout.addView(buttonColorAdd, layoutParams);
+        linearLayout.addView(buttonColorRemove, layoutParams);
+        linearLayout.setOrientation(VERTICAL);
 
-        addView(viewKnobRed, new LayoutParams(0, LayoutParams.MATCH_PARENT, 2));
-        addView(viewKnobGreen, new LayoutParams(0, LayoutParams.MATCH_PARENT, 2));
-        addView(viewKnobBlue, new LayoutParams(0, LayoutParams.MATCH_PARENT, 2));
-        addView(linearLayout, new LayoutParams(0, LayoutParams.MATCH_PARENT, 1));
-        addView(buttonColorSave, new LayoutParams(0, LayoutParams.MATCH_PARENT, 2));
+        layoutParams = new LayoutParams(0, MATCH_PARENT, 1);
+
+        addView(viewKnobRed, layoutParams);
+        addView(viewKnobGreen, layoutParams);
+        addView(viewKnobBlue, layoutParams);
+        addView(linearLayout, layoutParams);
+        addView(buttonOK, layoutParams);
     }
 
     // interfaces
 
-    public interface OnColorAddClickListener
+    public interface OnButtonColorAddClickListener
     {
-        void onColorAddClick(int color);
+        void onButtonColorAddClick(int color);
     }
 
-    public interface OnColorRemoveClickListener
+    public interface OnButtonColorRemoveClickListener
     {
-        void onColorRemoveClick();
+        void onButtonColorRemoveClick();
     }
 
-    public interface OnColorSaveClickListener
+    public interface OnButtonOKClickListener
     {
-        void onColorSaveClick();
+        void onButtonOKClick();
+    }
+
+    public interface OnSetAngleListener
+    {
+        void onSetAngle(float thetaRed, float thetaGreen, float thetaBlue);
     }
 
     // methods
 
-    public void setColorRemoveEnabled(boolean enabled)
+    public void setButtonColorRemoveEnabled(boolean enabled)
     {
         buttonColorRemove.setEnabled(enabled);
     }
 
-    public void setOnColorAddClickListener(OnColorAddClickListener listener)
+    public void setOnButtonColorAddClickListener(OnButtonColorAddClickListener listener)
     {
-        onColorAddClickListener = listener;
+        onButtonColorAddClickListener = listener;
     }
 
-    public void setOnColorRemoveClickListener(OnColorRemoveClickListener listener)
+    public void setOnButtonColorRemoveClickListener(OnButtonColorRemoveClickListener listener)
     {
-        onColorRemoveClickListener = listener;
+        onButtonColorRemoveClickListener = listener;
     }
 
-    public void setOnColorSaveClickListener(OnColorSaveClickListener listener)
+    public void setOnButtonOKClickListener(OnButtonOKClickListener listener)
     {
-        onColorSaveClickListener = listener;
+        onButtonOKClickListener = listener;
+    }
+
+    public void setOnSetAngleListener(OnSetAngleListener listener)
+    {
+        onSetAngleListener = listener;
     }
 
     @Override
     public void onClick(View view)
     {
-        if (view == buttonColorAdd)
+        if (view == buttonColorAdd && onButtonColorAddClickListener != null)
         {
-            onColorAddClickListener.onColorAddClick(Color.argb(255, intRed, intGreen, intBlue));
+            onButtonColorAddClickListener.onButtonColorAddClick(Color.rgb(intRed, intGreen, intBlue));
         }
-        else if (view == buttonColorRemove)
+        else if (view == buttonColorRemove && onButtonColorRemoveClickListener != null)
         {
-            onColorRemoveClickListener.onColorRemoveClick();
+            onButtonColorRemoveClickListener.onButtonColorRemoveClick();
         }
-        else if (view == buttonColorSave)
+        else if (view == buttonOK && onButtonOKClickListener != null)
         {
-            onColorSaveClickListener.onColorSaveClick();
+            onButtonOKClickListener.onButtonOKClick();
         }
     }
 
     @Override
     protected void onLayout(boolean b, int i, int i1, int i2, int i3)
     {
-        Rect rect;
+        float width = (getWidth() - getPaddingTop() * 6) / 5;
+
         View view;
 
         for (int index = 0; index < getChildCount(); index++)
         {
-            rect = new Rect();
-            rect.bottom = getHeight();
-
-/*            if (index < getChildCount() - 1)
-            {
-                rect.left = (int)(index * getWidth() * 2 / 7);
-                rect.right = (int)((index + 1) * getWidth() * 2 / 7);
-            }
-            else
-            {
-                rect.left = (int)(getWidth() * 6 / 7);
-                rect.right = (int)getWidth();
-            }*/
-
-            rect.left = (int)(index * getWidth() * 5);
-            rect.right = (int)((index + 1) * getWidth() * 5);
-
-            rect.top = 0;
-
             view = getChildAt(index);
-            view.layout(rect.left, rect.top, rect.right, rect.bottom);
+            view.layout((int)((getPaddingTop() + width) * index + getPaddingTop()), getPaddingTop(), (int)((getPaddingTop() + width) * (index + 1)), getHeight() - getPaddingBottom());
         }
     }
 
     @Override
-    public void onValueChange()
+    public void onViewKnobTouch()
     {
         intBlue = viewKnobBlue.getValue();
         intGreen = viewKnobGreen.getValue();
         intRed = viewKnobRed.getValue();
+
+        onSetAngleListener.onSetAngle(viewKnobRed.getAngle(), viewKnobGreen.getAngle(), viewKnobBlue.getAngle());
     }
 }
