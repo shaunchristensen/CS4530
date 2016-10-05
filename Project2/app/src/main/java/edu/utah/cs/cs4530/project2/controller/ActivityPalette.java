@@ -47,8 +47,9 @@ public class ActivityPalette extends AppCompatActivity implements OnButtonColorA
     public void onButtonColorRemoveClick()
     {
         palette.removeColor(palette.getColorIndex());
+        viewGroupPalette.removeColor();
 
-        if (viewGroupPalette.removeColor() > 1)
+        if (palette.getColorCount() > 1)
         {
             linearLayoutColor.setButtonColorRemoveEnabled(true);
         }
@@ -76,9 +77,6 @@ public class ActivityPalette extends AppCompatActivity implements OnButtonColorA
         int height = (width - padding * 6) / 4 + (padding * 2);
         int margin = (getResources().getDisplayMetrics().widthPixels - width) / 2;
 
-        LayoutParams layoutParams = new LayoutParams(width, height);
-        layoutParams.setMargins(margin, 0, margin, 0);
-
         linearLayoutColor = new LinearLayoutColor(this, palette.getAngleRed(), palette.getAngleGreen(), palette.getAngleBlue());
         linearLayoutColor.setPadding(0, padding, 0, padding);
         linearLayoutColor.setOnButtonColorAddClickListener(this);
@@ -89,6 +87,9 @@ public class ActivityPalette extends AppCompatActivity implements OnButtonColorA
         viewGroupPalette = new ViewGroupPalette(this, palette.getColorIndex(), palette.getColors());
         viewGroupPalette.setPadding(padding, padding, padding, 0);
         viewGroupPalette.setOnSetColorListener(this);
+
+        LayoutParams layoutParams = new LayoutParams(width, height);
+        layoutParams.setMargins(margin, 0, margin, 0);
 
         LinearLayout linearLayout = new LinearLayout(this);
         linearLayout.addView(viewGroupPalette, new LayoutParams(MATCH_PARENT, 0, 1));

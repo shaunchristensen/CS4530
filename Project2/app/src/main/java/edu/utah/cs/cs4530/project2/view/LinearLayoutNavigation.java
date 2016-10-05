@@ -8,14 +8,13 @@
 package edu.utah.cs.cs4530.project2.view;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 
-import edu.utah.cs.cs4530.project2.controller.R;
-
+import static android.graphics.Color.rgb;
 import static android.view.View.*;
+import static edu.utah.cs.cs4530.project2.controller.R.drawable.*;
 
 /**
  * Created by Shaun Christensen on 2016.09.30.
@@ -41,17 +40,17 @@ public class LinearLayoutNavigation extends LinearLayout implements OnClickListe
         super(context);
 
         buttonNext = new Button(context);
-        buttonNext.setBackgroundResource(R.drawable.next);
+        buttonNext.setBackgroundResource(next);
         buttonNext.setEnabled(false);
         buttonNext.setOnClickListener(this);
 
         buttonPlayStop = new Button(context);
-        buttonPlayStop.setBackgroundResource(R.drawable.play);
+        buttonPlayStop.setBackgroundResource(play);
         buttonPlayStop.setEnabled(false);
         buttonPlayStop.setOnClickListener(this);
 
         buttonPrevious = new Button(context);
-        buttonPrevious.setBackgroundResource(R.drawable.previous);
+        buttonPrevious.setBackgroundResource(previous);
         buttonPrevious.setEnabled(false);
         buttonPrevious.setOnClickListener(this);
 
@@ -71,7 +70,7 @@ public class LinearLayoutNavigation extends LinearLayout implements OnClickListe
         addView(buttonPlayStop, layoutParams);
         addView(viewPaint, layoutParams);
 
-        setBackgroundColor(Color.rgb(192, 192, 192));
+        setBackgroundColor(rgb(192, 192, 192));
     }
 
     // interfaces
@@ -112,11 +111,11 @@ public class LinearLayoutNavigation extends LinearLayout implements OnClickListe
     {
         if (booleanAnimationIsStarted)
         {
-            buttonPlayStop.setBackgroundResource(R.drawable.stop);
+            buttonPlayStop.setBackgroundResource(stop);
         }
         else
         {
-            buttonPlayStop.setBackgroundResource(R.drawable.play);
+            buttonPlayStop.setBackgroundResource(play);
         }
     }
 

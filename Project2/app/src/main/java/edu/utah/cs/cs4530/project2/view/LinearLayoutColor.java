@@ -8,7 +8,6 @@
 package edu.utah.cs.cs4530.project2.view;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -16,6 +15,7 @@ import android.widget.LinearLayout;
 import static android.graphics.Color.BLUE;
 import static android.graphics.Color.GREEN;
 import static android.graphics.Color.RED;
+import static android.graphics.Color.rgb;
 import static android.view.View.*;
 import static android.widget.LinearLayout.LayoutParams.*;
 import static edu.utah.cs.cs4530.project2.view.ViewKnob.*;
@@ -150,7 +150,7 @@ public class LinearLayoutColor extends LinearLayout implements OnClickListener, 
     {
         if (view == buttonColorAdd && onButtonColorAddClickListener != null)
         {
-            onButtonColorAddClickListener.onButtonColorAddClick(Color.rgb(intRed, intGreen, intBlue));
+            onButtonColorAddClickListener.onButtonColorAddClick(rgb(intRed, intGreen, intBlue));
         }
         else if (view == buttonColorRemove && onButtonColorRemoveClickListener != null)
         {

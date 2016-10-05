@@ -11,6 +11,7 @@ import android.animation.Animator;
 import android.animation.ValueAnimator;
 import android.animation.ValueAnimator.AnimatorUpdateListener;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PointF;
@@ -47,12 +48,13 @@ public class ViewCanvas extends View implements AnimatorListener, AnimatorUpdate
 
     // constructors
 
-    public ViewCanvas(Context context, int color, List<Pair<Integer, List<PointF>>> strokes, long duration)
+    public ViewCanvas(Context context, int color, long duration)
     {
         super(context);
 
         intColor = color;
         listPoints = null;
+        listStrokes = new ArrayList<Pair<Integer, List<PointF>>>();
         onAnimationToggleListener = null;
         onViewCanvasTouchListener = null;
         paint = new Paint(ANTI_ALIAS_FLAG);
@@ -62,8 +64,6 @@ public class ViewCanvas extends View implements AnimatorListener, AnimatorUpdate
         valueAnimator.addListener(this);
         valueAnimator.addUpdateListener(this);
         valueAnimator.setDuration(duration);
-
-        setStrokes(strokes);
     }
 
     // interfaces
@@ -75,7 +75,7 @@ public class ViewCanvas extends View implements AnimatorListener, AnimatorUpdate
 
     public interface OnViewCanvasTouchListener
     {
-        void onViewCanvasTouch();
+        void onViewCanvasTouch(int height, int width);
         void onViewCanvasTouch(int color, List<PointF> points);
     }
 
@@ -201,7 +201,7 @@ public class ViewCanvas extends View implements AnimatorListener, AnimatorUpdate
 
                 if (onViewCanvasTouchListener != null)
                 {
-                    onViewCanvasTouchListener.onViewCanvasTouch();
+                    onViewCanvasTouchListener.onViewCanvasTouch(getHeight(), getWidth());
                 }
             }
             else if (event.getActionMasked() == ACTION_UP && onViewCanvasTouchListener != null)

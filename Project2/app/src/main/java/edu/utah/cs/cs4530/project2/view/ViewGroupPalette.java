@@ -9,12 +9,9 @@ package edu.utah.cs.cs4530.project2.view;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PointF;
 import android.graphics.Rect;
-import android.graphics.RectF;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -22,9 +19,11 @@ import android.view.ViewGroup;
 import java.util.ArrayList;
 import java.util.List;
 
+import static android.graphics.Color.rgb;
 import static android.graphics.Paint.ANTI_ALIAS_FLAG;
 import static android.graphics.Paint.Style.FILL;
 import static android.graphics.Paint.Style.STROKE;
+import static java.lang.Math.*;
 
 /**
  * Created by Shaun Christensen on 2016.09.30.
@@ -34,7 +33,7 @@ public class ViewGroupPalette extends ViewGroup implements OnClickListener
     // fields
 
     private int intColorIndex;
-    private List<ViewPaint> listColors;
+    private final List<ViewPaint> listColors;
     private OnSetColorListener onSetColorListener;
 
     private ViewPaint viewPaint;
@@ -84,7 +83,7 @@ public class ViewGroupPalette extends ViewGroup implements OnClickListener
         setViewPaintActive(viewPaint);
     }
 
-    public int removeColor()
+    public void removeColor()
     {
         if (intColorIndex >= 0 && intColorIndex < listColors.size())
         {
@@ -106,8 +105,6 @@ public class ViewGroupPalette extends ViewGroup implements OnClickListener
             requestLayout();
             setViewPaintActive(viewPaint);
         }
-
-        return listColors.size();
     }
 
     public void setOnSetColorListener(OnSetColorListener listener)
@@ -147,14 +144,14 @@ public class ViewGroupPalette extends ViewGroup implements OnClickListener
         super.onDraw(canvas);
 
         Paint paint = new Paint(ANTI_ALIAS_FLAG);
-        paint.setColor(Color.rgb(222, 184, 135));
+        paint.setColor(rgb(222, 184, 135));
         paint.setStyle(FILL);
 
         float strokeWidth = (getHeight() < getWidth() ? getHeight() : getWidth()) / 100;
 
         canvas.drawOval(getPaddingLeft(), getPaddingTop(), getWidth() - getPaddingRight(), getHeight() - getPaddingBottom(), paint);
 
-        paint.setColor(Color.rgb(139, 115, 85));
+        paint.setColor(rgb(139, 115, 85));
         paint.setStrokeWidth(strokeWidth);
         paint.setStyle(STROKE);
 
@@ -164,8 +161,8 @@ public class ViewGroupPalette extends ViewGroup implements OnClickListener
     @Override
     protected void onLayout(boolean b, int i, int i1, int i2, int i3)
     {
-        int radius = (int)((getHeight() < getWidth() ? getHeight() : getWidth()) / (5 + Math.sqrt(listColors.size())));
-        float theta = (float)(2 * Math.PI / getChildCount());
+        int radius = (int)((getHeight() < getWidth() ? getHeight() : getWidth()) / (10 + sqrt(listColors.size())));
+        float theta = (float)(2 * PI / getChildCount());
 
         PointF pointF;
         Rect rect;
@@ -174,8 +171,8 @@ public class ViewGroupPalette extends ViewGroup implements OnClickListener
         for (int index = 0; index < getChildCount(); index++)
         {
             pointF = new PointF();
-            pointF.x = getWidth() / 2 - (getWidth() / 2 - radius) * (float)Math.cos(index * theta);
-            pointF.y = getHeight() / 2 - (getHeight() / 2 - radius) * (float)Math.sin(index * theta);
+            pointF.x = getWidth() / 2 - (getWidth() / 2 - radius) * (float)cos(index * theta);
+            pointF.y = getHeight() / 2 - (getHeight() / 2 - radius) * (float)sin(index * theta);
 
             rect = new Rect();
             rect.bottom = (int)(pointF.y + radius);

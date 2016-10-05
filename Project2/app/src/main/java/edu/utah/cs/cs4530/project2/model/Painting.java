@@ -18,12 +18,16 @@ public class Painting implements Serializable
 {
     // fields
 
+    private final int intHeight;
+    private final int intWidth;
     private final List<Stroke> listStrokes;
 
     // constructors
 
-    public Painting()
+    public Painting(int height, int width)
     {
+        intHeight = height;
+        intWidth = width;
         listStrokes = new ArrayList<Stroke>();
     }
 
@@ -34,8 +38,18 @@ public class Painting implements Serializable
         listStrokes.add(stroke);
     }
 
+    public int getHeight()
+    {
+        return intHeight;
+    }
+
     public List<Stroke> getStrokes()
     {
         return listStrokes;
+    }
+
+    public int getWidth()
+    {
+        return intWidth;
     }
 }

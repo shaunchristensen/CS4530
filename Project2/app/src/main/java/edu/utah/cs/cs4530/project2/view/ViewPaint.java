@@ -9,16 +9,17 @@ package edu.utah.cs.cs4530.project2.view;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
-import android.view.MotionEvent;
 import android.view.View;
 
 import static android.graphics.Color.BLACK;
 import static android.graphics.Paint.ANTI_ALIAS_FLAG;
 import static android.graphics.Paint.Style.FILL;
 import static android.graphics.Paint.Style.STROKE;
+import static android.view.View.MeasureSpec.EXACTLY;
+import static android.view.View.MeasureSpec.getMode;
+import static android.view.View.MeasureSpec.getSize;
 
 /**
  * Created by Shaun Christensen on 2016.09.30.
@@ -72,7 +73,7 @@ public class ViewPaint extends View
         if (booleanActive)
         {
             paint.setColor(BLACK);
-            paint.setStrokeWidth(rectF.width() * .1f);
+            paint.setStrokeWidth(rectF.width() / 10);
             paint.setStyle(STROKE);
 
             canvas.drawCircle(rectF.centerX(), rectF.centerY(), rectF.width() * .4f, paint);
@@ -84,19 +85,19 @@ public class ViewPaint extends View
     {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
-        int modeHeight = MeasureSpec.getMode(heightMeasureSpec);
-        int modeWidth = MeasureSpec.getMode(widthMeasureSpec);
-        int sizeHeight = MeasureSpec.getSize(heightMeasureSpec);
-        int sizeWidth = MeasureSpec.getSize(widthMeasureSpec);
+        int modeHeight = getMode(heightMeasureSpec);
+        int modeWidth = getMode(widthMeasureSpec);
+        int sizeHeight = getSize(heightMeasureSpec);
+        int sizeWidth = getSize(widthMeasureSpec);
         int suggestedMinimumHeight = getSuggestedMinimumHeight();
         int suggestedMinimumWidth = getSuggestedMinimumWidth();
 
-        if (modeHeight == MeasureSpec.EXACTLY)
+        if (modeHeight == EXACTLY)
         {
             suggestedMinimumHeight = suggestedMinimumWidth = sizeHeight;
         }
 
-        if (modeWidth == MeasureSpec.EXACTLY)
+        if (modeWidth == EXACTLY)
         {
             suggestedMinimumHeight = suggestedMinimumWidth = sizeWidth;
         }

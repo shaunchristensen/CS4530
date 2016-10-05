@@ -9,15 +9,22 @@ package edu.utah.cs.cs4530.project2.view;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.view.MotionEvent;
 import android.view.View;
 
+import static android.graphics.Color.BLACK;
+import static android.graphics.Color.WHITE;
 import static android.graphics.Color.blue;
 import static android.graphics.Color.green;
 import static android.graphics.Color.red;
 import static android.graphics.Paint.ANTI_ALIAS_FLAG;
+import static android.graphics.Paint.Style.FILL;
+import static android.graphics.Paint.Style.STROKE;
+import static android.view.View.MeasureSpec.EXACTLY;
+import static android.view.View.MeasureSpec.getMode;
+import static android.view.View.MeasureSpec.getSize;
+import static java.lang.Math.*;
 
 /**
  * Created by Shaun Christensen on 2016.09.30
@@ -26,11 +33,11 @@ public class ViewKnob extends View
 {
     // fields
 
-    final private float floatTau;
+    private final float floatTau;
     private float floatTheta;
     private float floatX;
     private float floatY;
-    final private int intColor;
+    private final int intColor;
     private int intValue;
     private OnViewKnobTouchListener onViewKnobTouchListener;
 
@@ -40,7 +47,7 @@ public class ViewKnob extends View
     {
         super(context);
 
-        floatTau = (float)(Math.PI * 2);
+        floatTau = (float)(PI * 2);
         floatTheta = floatX = floatY = 0;
         intColor = color;
         intValue = 255;
@@ -81,7 +88,7 @@ public class ViewKnob extends View
 
     public void setAngle(double x, double y)
     {
-        setAngle((float)Math.atan2(y - floatY, x - floatX) + floatTau * .25f);
+        setAngle((float)atan2(y - floatY, x - floatX) + floatTau * .25f);
     }
 
     public void setValue()
@@ -96,11 +103,11 @@ public class ViewKnob extends View
 
         float height = getHeight() - getPaddingBottom() - getPaddingTop();
         float width = getWidth() - getPaddingLeft() - getPaddingRight();
-        float radius = (height < width ? height : width) * .5f;
-        float y = (height - radius * 2 < radius * .5f ? height - radius * 2 : radius) * .5f;
+        float radius = (height < width ? height : width) / 2;
+        float y = (height - radius * 2 < radius / 2 ? height - radius * 2 : radius) / 2;
 
-        floatX = width * .5f + getPaddingLeft();
-        floatY = height - ((height - (radius * 2) - y) * .5f) - radius + getPaddingTop();
+        floatX = width / 2 + getPaddingLeft();
+        floatY = height - ((height - (radius * 2) - y) / 2) - radius + getPaddingTop();
 
         Paint paint = new Paint(ANTI_ALIAS_FLAG);
         paint.setColor(intColor);
@@ -108,8 +115,8 @@ public class ViewKnob extends View
 
         canvas.drawLine(floatX, floatY, floatX, floatY - radius - y, paint);
 
-        paint.setColor(Color.BLACK);
-        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(BLACK);
+        paint.setStyle(FILL);
 
         canvas.drawCircle(floatX, floatY, radius, paint);
 
@@ -117,10 +124,10 @@ public class ViewKnob extends View
 
         canvas.drawCircle(floatX, floatY, radius, paint);
 
-        paint.setColor(Color.WHITE);
-        paint.setStyle(Paint.Style.STROKE);
+        paint.setColor(WHITE);
+        paint.setStyle(STROKE);
 
-        canvas.drawLine(floatX + (radius * .5f) * (float)Math.cos((double)floatTheta - floatTau * .25f), floatY + (radius * .5f) * (float)Math.sin((double)floatTheta - floatTau * .25f), floatX + radius * (float)Math.cos((double)floatTheta - floatTau * .25f), floatY + radius * (float)Math.sin((double)floatTheta - floatTau * .25f), paint);
+        canvas.drawLine(floatX + (radius * .5f) * (float)cos((double)floatTheta - floatTau * .25f), floatY + (radius * .5f) * (float)sin((double)floatTheta - floatTau * .25f), floatX + radius * (float)cos((double)floatTheta - floatTau * .25f), floatY + radius * (float)sin((double)floatTheta - floatTau * .25f), paint);
     }
 
     @Override
@@ -128,19 +135,19 @@ public class ViewKnob extends View
     {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
-        int modeHeight = MeasureSpec.getMode(heightMeasureSpec);
-        int modeWidth = MeasureSpec.getMode(widthMeasureSpec);
-        int sizeHeight = MeasureSpec.getSize(heightMeasureSpec);
-        int sizeWidth = MeasureSpec.getSize(widthMeasureSpec);
+        int modeHeight = getMode(heightMeasureSpec);
+        int modeWidth = getMode(widthMeasureSpec);
+        int sizeHeight = getSize(heightMeasureSpec);
+        int sizeWidth = getSize(widthMeasureSpec);
         int suggestedMinimumHeight = getSuggestedMinimumHeight();
         int suggestedMinimumWidth = getSuggestedMinimumWidth();
 
-        if (modeHeight == MeasureSpec.EXACTLY)
+        if (modeHeight == EXACTLY)
         {
             suggestedMinimumHeight = suggestedMinimumWidth = sizeHeight;
         }
 
-        if (modeWidth == MeasureSpec.EXACTLY)
+        if (modeWidth == EXACTLY)
         {
             suggestedMinimumHeight = suggestedMinimumWidth = sizeWidth;
         }
