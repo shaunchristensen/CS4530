@@ -88,7 +88,7 @@ public class ViewKnob extends View
 
     public void setAngle(double x, double y)
     {
-        setAngle((float)atan2(y - floatY, x - floatX) + floatTau * .25f);
+        setAngle((float)atan2(y - floatY, x - floatX) + floatTau / 4);
     }
 
     public void setValue()
@@ -111,7 +111,7 @@ public class ViewKnob extends View
 
         Paint paint = new Paint(ANTI_ALIAS_FLAG);
         paint.setColor(intColor);
-        paint.setStrokeWidth((int)radius / 5);
+        paint.setStrokeWidth((int)(radius / 5));
 
         canvas.drawLine(floatX, floatY, floatX, floatY - radius - y, paint);
 
@@ -127,7 +127,7 @@ public class ViewKnob extends View
         paint.setColor(WHITE);
         paint.setStyle(STROKE);
 
-        canvas.drawLine(floatX + (radius * .5f) * (float)cos((double)floatTheta - floatTau * .25f), floatY + (radius * .5f) * (float)sin((double)floatTheta - floatTau * .25f), floatX + radius * (float)cos((double)floatTheta - floatTau * .25f), floatY + radius * (float)sin((double)floatTheta - floatTau * .25f), paint);
+        canvas.drawLine(floatX + (radius / 2) * (float)cos((double)floatTheta - floatTau / 4), floatY + (radius / 2) * (float)sin((double)floatTheta - floatTau / 4), floatX + radius * (float)cos((double)floatTheta - floatTau / 4), floatY + radius * (float)sin((double)floatTheta - floatTau / 4), paint);
     }
 
     @Override

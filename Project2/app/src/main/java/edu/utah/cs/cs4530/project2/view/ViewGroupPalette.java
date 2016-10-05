@@ -93,13 +93,13 @@ public class ViewGroupPalette extends ViewGroup implements OnClickListener
             listColors.remove(intColorIndex);
             removeView(viewPaint);
 
-            if (intColorIndex > 0)
+            if (intColorIndex >= 0 && intColorIndex < listColors.size())
             {
-                viewPaint = listColors.get(intColorIndex - 1);
+                viewPaint = listColors.get(intColorIndex);
             }
             else
             {
-                viewPaint = listColors.get(0);
+                viewPaint = listColors.get(listColors.size() - 1);
             }
 
             requestLayout();
@@ -161,8 +161,8 @@ public class ViewGroupPalette extends ViewGroup implements OnClickListener
     @Override
     protected void onLayout(boolean b, int i, int i1, int i2, int i3)
     {
-        int radius = (int)((getHeight() < getWidth() ? getHeight() : getWidth()) / (10 + sqrt(listColors.size())));
-        float theta = (float)(2 * PI / getChildCount());
+        int radius = (int)((getHeight() < getWidth() ? getHeight() : getWidth()) / (sqrt(listColors.size()) + 7));
+        float theta = (float)(PI * 2 / getChildCount());
 
         PointF pointF;
         Rect rect;
@@ -171,8 +171,8 @@ public class ViewGroupPalette extends ViewGroup implements OnClickListener
         for (int index = 0; index < getChildCount(); index++)
         {
             pointF = new PointF();
-            pointF.x = getWidth() / 2 - (getWidth() / 2 - radius) * (float)cos(index * theta);
-            pointF.y = getHeight() / 2 - (getHeight() / 2 - radius) * (float)sin(index * theta);
+            pointF.x = getWidth() / 2 - (getWidth() * .475f - radius) * (float)cos(theta * index);
+            pointF.y = getHeight() / 2 - (getHeight() * .475f - radius) * (float)sin(theta * index);
 
             rect = new Rect();
             rect.bottom = (int)(pointF.y + radius);

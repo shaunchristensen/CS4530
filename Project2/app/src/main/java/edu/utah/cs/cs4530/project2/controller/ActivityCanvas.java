@@ -39,6 +39,7 @@ import static android.graphics.Color.RED;
 import static android.graphics.Color.WHITE;
 import static android.graphics.Color.YELLOW;
 import static android.graphics.Color.rgb;
+import static android.view.Gravity.CENTER;
 import static android.view.ViewTreeObserver.*;
 import static android.widget.LinearLayout.*;
 import static android.widget.LinearLayout.LayoutParams.*;
@@ -52,11 +53,13 @@ public class ActivityCanvas extends AppCompatActivity implements OnAnimationTogg
 {
     // fields
 
-    private Gallery gallery;
-    private int intDuration;
-    private int intRequestCode;
     private float floatHeight;
     private float floatWidth;
+    private Gallery gallery;
+    private int intDuration;
+    private int intHeight;
+    private int intRequestCode;
+    private int intWidth;
     private LinearLayout linearLayoutCanvas;
     private LinearLayoutNavigation linearLayoutNavigation;
     private List<Pair<Integer, List<PointF>>> listStrokes;
@@ -66,6 +69,44 @@ public class ActivityCanvas extends AppCompatActivity implements OnAnimationTogg
     private ViewCanvas viewCanvas;
 
     // methods
+
+    private void deserialize(String tag)
+    {
+        try
+        {
+            FileInputStream fileInputStream = getApplicationContext().openFileInput("gallery");
+            ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
+            gallery = (Gallery)objectInputStream.readObject();
+            objectInputStream.close();
+            fileInputStream.close();
+        }
+        catch (Exception e)
+        {
+            gallery = Gallery.getGallery();
+
+            Log.e(tag, "Error: Unable to read the gallery. " + e.getMessage());
+        }
+
+        try
+        {
+            FileInputStream fileInputStream = getApplicationContext().openFileInput("palette");
+            ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
+            palette = (Palette)objectInputStream.readObject();
+            objectInputStream.close();
+            fileInputStream.close();
+        }
+        catch (Exception e)
+        {
+            palette = Palette.getPalette();
+            palette.addColor(RED);
+            palette.addColor(BLUE);
+            palette.addColor(GREEN);
+            palette.addColor(YELLOW);
+            palette.addColor(rgb(128, 0, 128));
+
+            Log.e(tag, "Error: Unable to read the palette. " + e.getMessage());
+        }
+    }
 
     private List<Pair<Integer, List<PointF>>> getStrokes()
     {
@@ -87,6 +128,35 @@ public class ActivityCanvas extends AppCompatActivity implements OnAnimationTogg
         }
 
         return listStrokes;
+    }
+
+    private void serialize(String tag)
+    {
+        try
+        {
+            FileOutputStream fileOutputStream = new FileOutputStream(new File(getFilesDir(), "gallery"));
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
+            objectOutputStream.writeObject(gallery);
+            objectOutputStream.close();
+            fileOutputStream.close();
+        }
+        catch(Exception e)
+        {
+            Log.e(tag, "Error: Unable to open the gallery. " + e.getMessage());
+        }
+
+        try
+        {
+            FileOutputStream fileOutputStream = new FileOutputStream(new File(getFilesDir(), "palette"));
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
+            objectOutputStream.writeObject(palette);
+            objectOutputStream.close();
+            fileOutputStream.close();
+        }
+        catch(Exception e)
+        {
+            Log.e(tag, "Error: Unable to write the palette. " + e.getMessage());
+        }
     }
 
     private void setButtonsEnabled()
@@ -112,11 +182,41 @@ public class ActivityCanvas extends AppCompatActivity implements OnAnimationTogg
         }
     }
 
+    private void setViewCanvasDimensions()
+    {
+        if (gallery.getPaintingIndex() >= 0 && gallery.getPaintingIndex() < gallery.getPaintingCount())
+        {
+            if (floatHeight / gallery.getPainting(gallery.getPaintingIndex()).getHeight() < floatWidth / gallery.getPainting(gallery.getPaintingIndex()).getWidth())
+            {
+                floatHeight = intHeight;
+                floatWidth = floatHeight * gallery.getPainting(gallery.getPaintingIndex()).getWidth() / gallery.getPainting(gallery.getPaintingIndex()).getHeight();
+
+                viewCanvas.setLayoutParams(new LayoutParams((int)floatWidth, intHeight));
+            }
+            else
+            {
+                floatWidth = intWidth;
+                floatHeight = floatWidth * gallery.getPainting(gallery.getPaintingIndex()).getHeight() / gallery.getPainting(gallery.getPaintingIndex()).getWidth();
+
+                viewCanvas.setLayoutParams(new LayoutParams(intWidth, (int)floatHeight));
+            }
+        }
+        else
+        {
+            floatHeight = intHeight;
+            floatWidth = intWidth;
+
+            viewCanvas.setLayoutParams(new LayoutParams(intWidth, intHeight));
+        }
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
     {
         if (requestCode == intRequestCode)
         {
+            deserialize("ActivityCanvas.onActivityResult()");
+
             linearLayoutNavigation.setViewPaint(palette.getColor(palette.getColorIndex()));
             viewCanvas.setColor(palette.getColor(palette.getColorIndex()));
         }
@@ -143,9 +243,11 @@ public class ActivityCanvas extends AppCompatActivity implements OnAnimationTogg
     public void onButtonNextClick()
     {
         gallery.setPaintingIndex(gallery.getPaintingIndex() + 1);
-        viewCanvas.setStrokes(getStrokes());
 
         setButtonsEnabled();
+        setViewCanvasDimensions();
+
+        viewCanvas.setStrokes(getStrokes());
     }
 
     @Override
@@ -158,9 +260,11 @@ public class ActivityCanvas extends AppCompatActivity implements OnAnimationTogg
     public void onButtonPreviousClick()
     {
         gallery.setPaintingIndex(gallery.getPaintingIndex() - 1);
-        viewCanvas.setStrokes(getStrokes());
 
         setButtonsEnabled();
+        setViewCanvasDimensions();
+
+        viewCanvas.setStrokes(getStrokes());
     }
 
     @Override
@@ -176,49 +280,7 @@ public class ActivityCanvas extends AppCompatActivity implements OnAnimationTogg
     {
         super.onCreate(savedInstanceState);
 
-        for (File file : getFilesDir().listFiles())
-        {
-            if (!file.getName().startsWith("instant"))
-            {
-                Log.i("File", file.getName());
-//                file.delete();
-            }
-        }
-
-        try
-        {
-            FileInputStream fileInputStream = getApplicationContext().openFileInput("gallery");
-            ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
-            gallery = (Gallery) objectInputStream.readObject();
-            objectInputStream.close();
-            fileInputStream.close();
-        }
-        catch (Exception e)
-        {
-            gallery = Gallery.getGallery();
-
-            Log.e("ActivityCanvas.onCreate", "Error: Unable to read the gallery. " + e.getMessage());
-        }
-
-        try
-        {
-            FileInputStream fileInputStream = getApplicationContext().openFileInput("palette");
-            ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
-            palette = (Palette) objectInputStream.readObject();
-            objectInputStream.close();
-            fileInputStream.close();
-        }
-        catch (Exception e)
-        {
-            palette = Palette.getPalette();
-            palette.addColor(RED);
-            palette.addColor(BLUE);
-            palette.addColor(GREEN);
-            palette.addColor(YELLOW);
-            palette.addColor(rgb(128, 0, 128));
-
-            Log.e("ActivityCanvas.onCreate", "Error: Unable to read the palette. " + e.getMessage());
-        }
+        deserialize("ActivityCanvas.onCreate()");
 
         intDuration = 5000;
         intRequestCode = 4530;
@@ -231,6 +293,7 @@ public class ActivityCanvas extends AppCompatActivity implements OnAnimationTogg
         linearLayoutNavigation.setOnButtonPreviousClickListener(this);
         linearLayoutNavigation.setOnViewPaintClickListener(this);
         linearLayoutNavigation.setPadding(0, padding, 0, padding);
+        linearLayoutNavigation.measure(WRAP_CONTENT, WRAP_CONTENT);
 
         viewCanvas = new ViewCanvas(this, palette.getColor(palette.getColorIndex()), intDuration);
         viewCanvas.getViewTreeObserver().addOnGlobalLayoutListener(this);
@@ -241,6 +304,7 @@ public class ActivityCanvas extends AppCompatActivity implements OnAnimationTogg
         linearLayoutCanvas = new LinearLayout(this);
         linearLayoutCanvas.addView(viewCanvas);
         linearLayoutCanvas.setBackgroundColor(rgb(128, 128, 128));
+        linearLayoutCanvas.setGravity(CENTER);
 
         LinearLayout linearLayout = new LinearLayout(this);
         linearLayout.addView(linearLayoutNavigation, new LayoutParams(MATCH_PARENT, WRAP_CONTENT));
@@ -254,34 +318,15 @@ public class ActivityCanvas extends AppCompatActivity implements OnAnimationTogg
     @Override
     public void onGlobalLayout()
     {
-        if (floatHeight != viewCanvas.getHeight() || floatWidth != viewCanvas.getWidth())
+        if (intHeight != viewCanvas.getHeight() || intWidth != viewCanvas.getWidth())
         {
-            floatHeight = viewCanvas.getHeight();
-            floatWidth = viewCanvas.getWidth();
-
-            if (gallery.getPaintingCount() > 0)
-            {
-                int padding;
-
-                if (floatHeight / gallery.getPainting(gallery.getPaintingIndex()).getHeight() < floatWidth / gallery.getPainting(gallery.getPaintingIndex()).getWidth())
-                {
-                    padding = (int)((floatWidth - gallery.getPainting(gallery.getPaintingIndex()).getWidth() * floatHeight / gallery.getPainting(gallery.getPaintingIndex()).getHeight()) / 2);
-
-                    linearLayoutCanvas.setPadding(padding, 0, padding, 0);
-                }
-                else
-                {
-                    padding = (int)((floatHeight - gallery.getPainting(gallery.getPaintingIndex()).getHeight() * floatWidth / gallery.getPainting(gallery.getPaintingIndex()).getWidth()) / 2);
-
-                    linearLayoutCanvas.setPadding(0, padding, 0, padding);
-                }
-            }
-            else
-            {
-                linearLayoutCanvas.setPadding(0, 0, 0, 0);
-            }
-
             viewCanvas.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+
+            floatHeight = intHeight = viewCanvas.getHeight();
+            floatWidth = intWidth = viewCanvas.getWidth();
+
+            setViewCanvasDimensions();
+
             viewCanvas.setStrokes(getStrokes());
         }
     }
@@ -291,31 +336,7 @@ public class ActivityCanvas extends AppCompatActivity implements OnAnimationTogg
     {
         super.onStop();
 
-        try
-        {
-            FileOutputStream fileOutputStream = new FileOutputStream(new File(getFilesDir(), "gallery"));
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-            objectOutputStream.writeObject(gallery);
-            objectOutputStream.close();
-            fileOutputStream.close();
-        }
-        catch(Exception e)
-        {
-            Log.e("ActivityCanvas.onStop", "Error: Unable to open the gallery. " + e.getMessage());
-        }
-
-        try
-        {
-            FileOutputStream fileOutputStream = new FileOutputStream(new File(getFilesDir(), "palette"));
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-            objectOutputStream.writeObject(palette);
-            objectOutputStream.close();
-            fileOutputStream.close();
-        }
-        catch(Exception e)
-        {
-            Log.e("ActivityCanvas.onStop", "Error: Unable to write the palette. " + e.getMessage());
-        }
+        serialize("ActivityCanvas.onStop()");
     }
 
     @Override
@@ -345,6 +366,7 @@ public class ActivityCanvas extends AppCompatActivity implements OnAnimationTogg
     @Override
     public void onViewPaintClick()
     {
+        serialize("ActivityCanvas.onViewPaintClick()");
         startActivityForResult(new Intent(this, ActivityPalette.class), intRequestCode);
     }
 }

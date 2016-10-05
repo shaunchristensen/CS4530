@@ -7,17 +7,28 @@
 
 package edu.utah.cs.cs4530.project2.controller;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
 import edu.utah.cs.cs4530.project2.model.Palette;
 import edu.utah.cs.cs4530.project2.view.LinearLayoutColor;
 import edu.utah.cs.cs4530.project2.view.ViewGroupPalette;
 import edu.utah.cs.cs4530.project2.view.ViewGroupPalette.OnSetColorListener;
 
+import static android.graphics.Color.BLUE;
+import static android.graphics.Color.GREEN;
+import static android.graphics.Color.RED;
+import static android.graphics.Color.YELLOW;
+import static android.graphics.Color.rgb;
 import static android.widget.LinearLayout.*;
 import static android.widget.LinearLayout.LayoutParams.*;
 import static edu.utah.cs.cs4530.project2.view.LinearLayoutColor.*;
@@ -34,6 +45,53 @@ public class ActivityPalette extends AppCompatActivity implements OnButtonColorA
     private ViewGroupPalette viewGroupPalette;
 
     // methods
+
+    private void deserialize(String tag)
+    {
+        try
+        {
+            FileInputStream fileInputStream = getApplicationContext().openFileInput("palette");
+            ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
+            palette = (Palette)objectInputStream.readObject();
+            objectInputStream.close();
+            fileInputStream.close();
+        }
+        catch (Exception e)
+        {
+            palette = Palette.getPalette();
+            palette.addColor(RED);
+            palette.addColor(BLUE);
+            palette.addColor(GREEN);
+            palette.addColor(YELLOW);
+            palette.addColor(rgb(128, 0, 128));
+
+            Log.e(tag, "Error: Unable to read the palette. " + e.getMessage());
+        }
+    }
+
+    private void serialize(String tag)
+    {
+        try
+        {
+            FileOutputStream fileOutputStream = new FileOutputStream(new File(getFilesDir(), "palette"));
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
+            objectOutputStream.writeObject(palette);
+            objectOutputStream.close();
+            fileOutputStream.close();
+        }
+        catch(Exception e)
+        {
+            Log.e(tag, "Error: Unable to write the palette. " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void onBackPressed()
+    {
+        super.onBackPressed();
+
+        serialize("ActivityPalette.onBackPressed()");
+    }
 
     @Override
     public void onButtonColorAddClick(int color)
@@ -62,6 +120,7 @@ public class ActivityPalette extends AppCompatActivity implements OnButtonColorA
     @Override
     public void onButtonOKClick()
     {
+        serialize("ActivityPalette.onButtonOKClick()");
         finish();
     }
 
@@ -70,7 +129,7 @@ public class ActivityPalette extends AppCompatActivity implements OnButtonColorA
     {
         super.onCreate(savedInstanceState);
 
-        palette = Palette.getPalette();
+        deserialize("ActivityPalette.onCreate()");
 
         int padding = (getResources().getDisplayMetrics().heightPixels > getResources().getDisplayMetrics().widthPixels ? getResources().getDisplayMetrics().heightPixels : getResources().getDisplayMetrics().widthPixels) / 100;
         int width = getResources().getDisplayMetrics().heightPixels < getResources().getDisplayMetrics().widthPixels ? getResources().getDisplayMetrics().heightPixels : getResources().getDisplayMetrics().widthPixels;
@@ -111,5 +170,13 @@ public class ActivityPalette extends AppCompatActivity implements OnButtonColorA
     public void onSetColor(int colorIndex)
     {
         palette.setColorIndex(colorIndex);
+    }
+
+    @Override
+    protected void onStop()
+    {
+        super.onStop();
+
+        serialize("ActivityPalette.onStop()");
     }
 }
