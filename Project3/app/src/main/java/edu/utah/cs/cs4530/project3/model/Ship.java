@@ -7,73 +7,52 @@
 
 package edu.utah.cs.cs4530.project3.model;
 
-import android.util.Log;
-
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 public class Ship implements Serializable
 {
     // fields
 
-    protected final int intHeading;
-    protected final int intLength;
-    protected final Set<Integer> setCells;
+    private final int intHeading;
+    private final int intLeft;
+    private final int intLength;
+    private final int intTop;
+    private final Set<Integer> setCells;
 
     // constructors
 
-    public Ship(int length, int heading, Set<Integer> cells)
+    public Ship(int length, int heading, int left, int top, Set<Integer> cells)
     {
         intHeading = heading;
+        intLeft = left;
         intLength = length;
+        intTop = top;
         setCells = cells;
     }
 
     // methods
 
-    public Boolean containsCell(Integer cell)
+    public boolean containsCell(Integer cell)
     {
-        try
-        {
-            return setCells.contains(cell);
-        }
-        catch (Exception e)
-        {
-            Log.e("Ship.containsCell", "Error: Unable to check the cell. " + e.getMessage());
-
-            return null;
-        }
+        return setCells.contains(cell);
     }
 
-    public int getCellCount()
+    public boolean getStatus()
     {
-        return setCells.size();
+        return setCells.size() > 0;
     }
 
-    public int getHeading()
+    public List<Integer> getShip()
     {
-        return intHeading;
-    }
-
-    public int getLength()
-    {
-        return intLength;
-    }
-
-    public Set<Integer> getCells()
-    {
-        return setCells;
+        return new ArrayList<>(Arrays.asList(intLength, intHeading, intLeft, intTop));
     }
 
     public void removeCell(Integer cell)
     {
-        try
-        {
-            setCells.remove(cell);
-        }
-        catch (Exception e)
-        {
-            Log.e("Ship.removeCell", "Error: Unable to remove the cell. " + e.getMessage());
-        }
+        setCells.remove(cell);
     }
 }

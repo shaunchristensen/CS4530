@@ -8,7 +8,6 @@
 package edu.utah.cs.cs4530.project3.model;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.Set;
 
 public class Game implements Serializable
@@ -59,13 +58,13 @@ public class Game implements Serializable
         return arrayShips;
     }
 
-    public void setStatus(boolean active)
-    {
-        booleanStatus = active;
-    }
-
     public void setPlayer(int player)
     {
         intPlayer = player;
+    }
+
+    public void setStatus(boolean status)
+    {
+        booleanStatus = status;
     }
 }
