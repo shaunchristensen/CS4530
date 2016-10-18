@@ -17,19 +17,19 @@ public class Game implements Serializable
 
     private boolean booleanStatus;
     private int intPlayer;
-    private final List<List<Ship>> listShips;
-    private final List<Set<Integer>> listHits;
-    private final List<Set<Integer>> listMisses;
+    private final Set<Integer>[] arrayHits;
+    private final Set<Integer>[] arrayMisses;
+    private final Ship[][] arrayShips;
 
     // constructors
 
-    public Game(int player, List<List<Ship>> ships, List<Set<Integer>> hits, List<Set<Integer>> misses)
+    public Game(int player, Set<Integer>[] hits, Set<Integer>[] misses, Ship[][] ships)
     {
+        arrayHits = hits;
+        arrayMisses = misses;
+        arrayShips = ships;
         booleanStatus = true;
         intPlayer = player;
-        listHits = hits;
-        listMisses = misses;
-        listShips = ships;
     }
 
     // methods
@@ -44,19 +44,19 @@ public class Game implements Serializable
         return intPlayer;
     }
 
-    public List<List<Ship>> getShips()
+    public Set<Integer>[] getHits()
     {
-        return listShips;
+        return arrayHits;
     }
 
-    public List<Set<Integer>> getHits()
+    public Set<Integer>[] getMisses()
     {
-        return listHits;
+        return arrayMisses;
     }
 
-    public List<Set<Integer>> getMisses()
+    public Ship[][] getShips()
     {
-        return listMisses;
+        return arrayShips;
     }
 
     public void setStatus(boolean active)

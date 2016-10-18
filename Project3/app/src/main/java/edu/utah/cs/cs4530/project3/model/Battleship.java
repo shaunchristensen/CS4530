@@ -8,6 +8,7 @@
 package edu.utah.cs.cs4530.project3.model;
 
 import android.util.Log;
+import android.util.Pair;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -30,7 +31,7 @@ public class Battleship implements Serializable
     private final int intPlayers;
     private final int intRows;
     private final List<Game> listGames;
-    private final List<Integer> listShips;
+    private final List<Pair<Integer, Integer>> listShips;
     private final Random random;
 
     // constructors
@@ -40,7 +41,7 @@ public class Battleship implements Serializable
         intColumns = intRows = 10;
         intPlayers = 2;
         listGames = new ArrayList<>();
-        listShips = new ArrayList<Integer>(Arrays.asList(5, 4, 3, 3, 2));
+        listShips = new ArrayList<>(Arrays.asList(new Pair<>(0, 5), new Pair<>(1, 4), new Pair<>(2, 3), new Pair<>(3, 3), new Pair<>(4, 2)));
         random = new Random();
     }
 
@@ -60,63 +61,60 @@ public class Battleship implements Serializable
     {
         try
         {
-            int angle, head, length, player, ship, tail;
-            List<Integer> lengths;
-            List<List<Ship>> ships = Arrays.asList((List<Ship>[])Arrays.copyOf(new ArrayList<Ship>().toArray(), intPlayers));
-            List<Set<Integer>> hits = Arrays.asList((Set<Integer>[])Arrays.copyOf(new HashSet<Integer>().toArray(), intPlayers));
-            List<Set<Integer>> misses = Arrays.asList((Set<Integer>[])Arrays.copyOf(new HashSet<Integer>().toArray(), intPlayers));
+            int cell, column, heading, index, length, player, row, ship;
+            List<Pair<Integer, Integer>> pairs;
             Set<Integer> cells;
+            Set<Integer>[] hits = (Set<Integer>[])new HashSet<?>[intPlayers];
+            Set<Integer>[] misses = (Set<Integer>[])new HashSet<?>[intPlayers];
+            Ship[][] ships = new Ship[intPlayers][listShips.size()];
 
-            player = random.nextInt();
+            player = random.nextInt(intPlayers);
 
             for (int i = 0; i < intPlayers; i++)
             {
-                hits.set(i, new HashSet<Integer>());
-                misses.set(i, new HashSet<Integer>());
-                ships.set(i, new ArrayList<Ship>(listShips.size()));
+                hits[player] = new HashSet<>();
+                misses[player] = new HashSet<>();
+                pairs = new ArrayList<>(listShips);
 
-                lengths = new ArrayList<>(listShips);
-                player = (player + i) % intPlayers;
-
-                while (lengths.size() > 0)
+                while (pairs.size() > 0)
                 {
                     cells = new HashSet<>();
-                    ship = random.nextInt() % lengths.size();
-                    length = lengths.get(ship);
+                    ship = random.nextInt(pairs.size());
+                    length = pairs.get(ship).second;
 
                     ship: while (cells.isEmpty())
                     {
-                        tail = random.nextInt() % (intRows * intColumns);
-                        angle = random.nextInt() % 4 * 90;
-                        head = tail + ((int)sin(angle / PI * 2) - (int)cos(angle / PI * 2) * intColumns) * length;
+                        heading = random.nextInt(4) * 90;
+                        column = (heading == 270 ? length - 1 : 0) + random.nextInt(intColumns - (heading == 90 || heading == 270 ? length - 1 : 0));
+                        row = (heading == 0 ? length - 1 : 0) + random.nextInt(intRows - (heading == 0 || heading == 180 ? length - 1 : 0));
 
-                        if (head >= 0 && head < intRows * intColumns)
+                        for (int j = 0; j < length; j++)
                         {
-                            for (int j = min(head, tail); j <= max(head, tail); j++)
+                            cell = ((int)sin(heading * PI / 180) - (int)cos(heading * PI / 180) * intColumns) * j + intColumns * row + column;
+
+                            for (Ship s : ships[player])
                             {
-                                for (Ship s : ships.get(player))
+                                if (s != null && s.containsCell(cell))
                                 {
-                                    if (s.containsCell(j))
-                                    {
-                                        cells.clear();
+                                    cells.clear();
 
-                                        continue ship;
-                                    }
+                                    continue ship;
                                 }
-
-                                cells.add(j);
                             }
 
-                            lengths.remove(ship);
-                            ships.get(player).set(ship, new Ship(length, angle, cells));
+                            cells.add(cell);
                         }
+
+                        ships[player][pairs.get(ship).first] = new Ship(length, heading, cells);
+                        pairs.remove(ship);
                     }
                 }
+
+                player = (player + 1) % intPlayers;
             }
 
-            listGames.add(new Game((player + 1) % intPlayers, ships, hits, misses));
-
             intGame = listGames.size();
+            listGames.add(new Game(player, hits, misses, ships));
 
             return true;
         }
@@ -148,15 +146,15 @@ public class Battleship implements Serializable
         {
             if (listGames.get(intGame).getStatus())
             {
-                for (Ship ship1 : listGames.get(intGame).getShips().get(player))
+                for (Ship s : listGames.get(intGame).getShips()[player])
                 {
-                    if (ship1.containsCell(cell))
+                    if (s.containsCell(cell))
                     {
-                        listGames.get(intGame).getHits().get(player).add(cell);
+                        listGames.get(intGame).getHits()[player].add(cell);
 
-                        for (Ship ship2 : listGames.get(intGame).getShips().get(player))
+                        for (Ship t : listGames.get(intGame).getShips()[player])
                         {
-                            if (ship2.getCellCount() > 0)
+                            if (t.getCellCount() > 0)
                             {
                                 return true;
                             }
@@ -168,7 +166,7 @@ public class Battleship implements Serializable
                     }
                 }
 
-                listGames.get(intGame).getMisses().get(player).add(cell);
+                listGames.get(intGame).getMisses()[player].add(cell);
 
                 return false;
             }
@@ -209,6 +207,33 @@ public class Battleship implements Serializable
         return intGame;
     }
 
+    public int[][][] getShips()
+    {
+        try
+        {
+            int cell;
+            int[][][] ships = new int[intPlayers][listShips.size()][];
+
+            for (int i = 0; i < intPlayers; i++)
+            {
+                for (int j = 0; j < listShips.size(); j++)
+                {
+                    cell = Collections.min(listGames.get(intGame).getShips()[i][j].getCells());
+
+                    ships[i][j] = new int[] {listGames.get(intGame).getShips()[i][j].getHeading(), listGames.get(intGame).getShips()[i][j].getLength(), cell / intColumns, cell % intColumns};
+                }
+            }
+
+            return ships;
+        }
+        catch (Exception e)
+        {
+            Log.e("Battleship.getShips", "Error: Unable to get the ships. " + e.getMessage());
+
+            return null;
+        }
+    }
+
     public Integer getPlayer()
     {
         try
@@ -223,40 +248,18 @@ public class Battleship implements Serializable
         }
     }
 
-    public List<List<List<Integer>>> getShips()
+    public Set<Integer>[] getHits()
     {
         try
         {
-            int cell;
-            List<List<List<Integer>>> ships = new ArrayList<>();
+            Set<Integer>[] hits = (Set<Integer>[])new HashSet<?>[intPlayers];
 
             for (int i = 0; i < intPlayers; i++)
             {
-                ships.add(new ArrayList<List<Integer>>());
-
-                for (Ship ship : listGames.get(intGame).getShips().get(i))
-                {
-                    cell = Collections.min(ship.getCells());
-
-                    ships.get(i).add(Arrays.asList(ship.getHeading(), ship.getLength(), cell / intColumns, cell % intColumns));
-                }
+                hits[i] = new HashSet<>(listGames.get(intGame).getHits()[i]);
             }
 
-            return ships;
-        }
-        catch (Exception e)
-        {
-            Log.e("Battleship.getShips", "Error: Unable to get the ships. " + e.getMessage());
-
-            return null;
-        }
-    }
-
-    public List<Set<Integer>> getHits()
-    {
-        try
-        {
-            return new ArrayList<>(listGames.get(intGame).getHits());
+            return hits;
         }
         catch (Exception e)
         {
@@ -266,11 +269,18 @@ public class Battleship implements Serializable
         }
     }
 
-    public List<Set<Integer>> getMisses()
+    public Set<Integer>[] getMisses()
     {
         try
         {
-            return new ArrayList<>(listGames.get(intGame).getMisses());
+            Set<Integer>[] misses = (Set<Integer>[])new HashSet<?>[intPlayers];
+
+            for (int i = 0; i < intPlayers; i++)
+            {
+                misses[i] = new HashSet<>(listGames.get(intGame).getHits()[i]);
+            }
+
+            return misses;
         }
         catch (Exception e)
         {

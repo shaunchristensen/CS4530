@@ -31,7 +31,7 @@ public class Ship implements Serializable
 
     // methods
 
-    public Boolean containsCell(int cell)
+    public Boolean containsCell(Integer cell)
     {
         try
         {
@@ -65,7 +65,7 @@ public class Ship implements Serializable
         return setCells;
     }
 
-    public void removeCell(int cell)
+    public void removeCell(Integer cell)
     {
         try
         {
