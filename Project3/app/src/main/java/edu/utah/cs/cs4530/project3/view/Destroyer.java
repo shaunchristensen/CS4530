@@ -17,9 +17,9 @@ public class Destroyer extends Ship
 {
     // constructors
 
-    public Destroyer(Context context, int row, int column, int heading)
+    public Destroyer(Context context, int length, int heading, int left, int top)
     {
-        super(context, row, column, heading, 2);
+        super(context, length, heading, left, top);
     }
 
     // methods
@@ -28,9 +28,9 @@ public class Destroyer extends Ship
     protected Path getPath(float width, float height)
     {
         Path path = new Path();
-        path.moveTo(-.25f, .9f);
-        path.quadTo(-.69f, 0, 0, -.9f);
-        path.quadTo(.69f, 0, .25f, .9f);
+        path.moveTo(-.25f, .45f * intLength);
+        path.quadTo(-.69f, 0 * intLength, 0, -.45f * intLength);
+        path.quadTo(.69f, 0 * intLength, .25f, .45f * intLength);
         path.close();
         path.transform(getMatrix(width, height));
 

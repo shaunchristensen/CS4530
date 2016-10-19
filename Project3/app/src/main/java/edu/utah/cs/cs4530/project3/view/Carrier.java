@@ -10,16 +10,13 @@ package edu.utah.cs.cs4530.project3.view;
 import android.content.Context;
 import android.graphics.Path;
 
-/**
- * Created by Shaun Christensen on 2016.10.10.
- */
 public class Carrier extends Ship
 {
     // constructors
 
-    public Carrier(Context context, int row, int column, int heading)
+    public Carrier(Context context, int length, int heading, int left, int top)
     {
-        super(context, row, column, heading, 5);
+        super(context, length, heading, left, top);
     }
 
     // methods
@@ -28,12 +25,12 @@ public class Carrier extends Ship
     protected Path getPath(float width, float height)
     {
         Path path = new Path();
-        path.moveTo(.25f, -2.4f);
-        path.lineTo(.4f, -1.34f);
-        path.lineTo(.4f, 2.4f);
-        path.lineTo(-.4f, 2.4f);
-        path.lineTo(-.4f, -1.34f);
-        path.lineTo(-.25f, -2.4f);
+        path.moveTo(.25f, -.48f * intLength);
+        path.lineTo(.4f, -.268f * intLength);
+        path.lineTo(.4f, .48f * intLength);
+        path.lineTo(-.4f, .48f * intLength);
+        path.lineTo(-.4f, -.268f * intLength);
+        path.lineTo(-.25f, -.48f * intLength);
         path.close();
         path.transform(getMatrix(width, height));
 

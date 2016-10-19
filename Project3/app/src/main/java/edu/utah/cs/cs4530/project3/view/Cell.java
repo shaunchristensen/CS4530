@@ -12,38 +12,29 @@ import android.widget.Button;
 
 import static android.graphics.Color.rgb;
 
-/**
- * Created by Shaun Christensen on 2016.10.10.
- */
 public class Cell extends Button
 {
     // fields
 
-    private final int intColumn;
-    private final int intRow;
+    private final int intCell;
 
     // constructors
 
-    public Cell(Context context, boolean enabled, int row, int column)
+    public Cell(Context context, boolean enabled, int cell)
     {
         super(context);
 
-        intColumn = column;
-        intRow = row;
+        intCell = cell;
 
         setBackgroundColor(rgb(64, 164, 223));
         setEnabled(enabled);
+        setZ(0);
     }
 
     // methods
 
-    public int getColumn()
+    public int getCell()
     {
-        return intColumn;
-    }
-
-    public int getRow()
-    {
-        return intRow;
+        return intCell;
     }
 }

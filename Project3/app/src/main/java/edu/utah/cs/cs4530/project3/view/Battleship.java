@@ -10,16 +10,13 @@ package edu.utah.cs.cs4530.project3.view;
 import android.content.Context;
 import android.graphics.Path;
 
-/**
- * Created by Shaun Christensen on 2016.10.10.
- */
 public class Battleship extends Ship
 {
     // constructors
 
-    public Battleship(Context context, int row, int column, int heading)
+    public Battleship(Context context, int length, int heading, int left, int top)
     {
-        super(context, row, column, heading, 4);
+        super(context, length, heading, left, top);
     }
 
     // methods
@@ -28,9 +25,9 @@ public class Battleship extends Ship
     protected Path getPath(float width, float height)
     {
         Path path = new Path();
-        path.moveTo(0, -1.9f);
-        path.cubicTo(.56f, -.85f, .5f, 1.9f, 0, 1.9f);
-        path.cubicTo(-.5f, 1.9f, -.56f, -.85f, 0, -1.9f);
+        path.moveTo(0, -.475f * intLength);
+        path.cubicTo(.56f, -.2125f * intLength, .5f, .475f * intLength, 0, .475f * intLength);
+        path.cubicTo(-.5f, .475f * intLength, -.56f, -.2125f * intLength, 0, -.475f * intLength);
         path.close();
         path.transform(getMatrix(width, height));
 

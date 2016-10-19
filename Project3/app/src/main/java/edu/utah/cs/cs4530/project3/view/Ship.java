@@ -12,48 +12,33 @@ import android.graphics.Matrix;
 import android.graphics.Path;
 import android.view.View;
 
-/**
- * Created by Shaun Christensen on 2016.10.10.
- */
 public abstract class Ship extends View
 {
     // fields
 
-    protected final int intColumn;
     protected final int intHeading;
+    protected final int intLeft;
     protected final int intLength;
-    protected final int intRow;
-
+    protected final int intTop;
     protected Path path;
 
     // constructors
 
-    public Ship(Context context, int row, int column, int heading, int length)
+    public Ship(Context context, int length, int heading, int left, int top)
     {
         super(context);
 
-        intRow = row;
-        intColumn = column;
-        intHeading = ((heading % 360 + 45) / 90) * 90;
+        intHeading = heading;
+        intLeft = left;
         intLength = length;
+        intTop = top;
     }
 
     // methods
 
     protected float getLeft(float width)
     {
-        float left = intColumn + .5f;
-
-        if (intHeading == 90)
-        {
-            left -= (intLength - 1) * .5f;
-        }
-        else if (intHeading == 270)
-        {
-            left += (intLength - 1) * .5f;
-        }
-
-        return left * width;
+        return (intLeft + 1) * width;
     }
 
     protected Matrix getMatrix(float width, float height)
@@ -70,17 +55,6 @@ public abstract class Ship extends View
 
     protected float getTop(float height)
     {
-        float top = intRow + .5f;
-
-        if (intHeading == 0)
-        {
-            top += (intLength - 1) * .5f;
-        }
-        else if (intHeading == 180)
-        {
-            top -= (intLength - 1) * .5f;
-        }
-
-        return top * height;
+        return (intTop + 1) * height;
     }
 }

@@ -32,11 +32,11 @@ public class LinearLayoutTemp extends LinearLayout
 
         paint = new Paint(ANTI_ALIAS_FLAG);
 
-        shipCarrier = new Carrier(context, 0, 0, 0);
-        shipBattleship = new Battleship(context, 0, 9, 90);
-        shipCruiser = new Cruiser(context, 9, 9, 180);
-        shipSubmarine = new Submarine(context, 9, 0, 270);
-        shipDestroyer = new Destroyer(context, 5, 5, 90);
+        shipCarrier = new Carrier(context, 5, 0, 0, 0);
+        shipBattleship = new Battleship(context, 4, 0, 9, 90);
+        shipCruiser = new Cruiser(context, 3, 9, 9, 180);
+        shipSubmarine = new Submarine(context, 3, 9, 0, 270);
+        shipDestroyer = new Destroyer(context, 2, 5, 5, 90);
     }
 
     @Override

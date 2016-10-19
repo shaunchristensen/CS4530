@@ -15,6 +15,9 @@ import android.os.Bundle;
 import android.util.TypedValue;
 import android.widget.TextView;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import edu.utah.cs.cs4530.project3.model.Battleship;
 import edu.utah.cs.cs4530.project3.view.Grid;
 import edu.utah.cs.cs4530.project3.view.LinearLayoutTemp;
@@ -43,7 +46,7 @@ public class ActivityMain extends AppCompatActivity
         textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 100);
         textView.setTypeface(Typeface.createFromAsset(getAssets(), "fonts/ITC Machine Bold.ttf"));
 
-        Grid grid = new Grid(this, true, 10, 10, new Ship[0], new int[0]);
+        Grid grid = new Grid(this, true, 10, 10, 0, 2, (Set<Integer>[])new HashSet<?>[2], (Set<Integer>[])new HashSet<?>[2], new Ship[2][5]);
 
         LinearLayoutTemp linearLayout = new LinearLayoutTemp(this);
 //        linearLayout.addView(textView);
