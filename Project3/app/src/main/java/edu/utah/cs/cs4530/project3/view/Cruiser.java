@@ -14,7 +14,7 @@ public class Cruiser extends Ship
 {
     // constructors
 
-    public Cruiser(Context context, int length, int heading, int left, int top)
+    public Cruiser(Context context, int length, int heading, float left, float top)
     {
         super(context, length, heading, left, top);
     }
@@ -22,14 +22,14 @@ public class Cruiser extends Ship
     // methods
 
     @Override
-    protected Path getPath(float width, float height)
+    protected Path getPath(float length, float margin)
     {
         Path path = new Path();
         path.moveTo(-.25f, .4666f * intLength);
         path.quadTo(-.69f, 0 * intLength, 0, -.4666f * intLength);
         path.quadTo(.69f, 0 * intLength, .25f, .4666f * intLength);
         path.close();
-        path.transform(getMatrix(width, height));
+        path.transform(getMatrix(length, margin));
 
         return path;
     }

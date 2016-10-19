@@ -14,7 +14,7 @@ public class Carrier extends Ship
 {
     // constructors
 
-    public Carrier(Context context, int length, int heading, int left, int top)
+    public Carrier(Context context, int length, int heading, float left, float top)
     {
         super(context, length, heading, left, top);
     }
@@ -22,7 +22,7 @@ public class Carrier extends Ship
     // methods
 
     @Override
-    protected Path getPath(float width, float height)
+    protected Path getPath(float length, float margin)
     {
         Path path = new Path();
         path.moveTo(.25f, -.48f * intLength);
@@ -32,7 +32,7 @@ public class Carrier extends Ship
         path.lineTo(-.4f, -.268f * intLength);
         path.lineTo(-.25f, -.48f * intLength);
         path.close();
-        path.transform(getMatrix(width, height));
+        path.transform(getMatrix(length, margin));
 
         return path;
     }

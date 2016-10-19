@@ -17,20 +17,20 @@ public class Ship implements Serializable
 {
     // fields
 
+    private final float floatLeft;
+    private final float floatTop;
     private final int intHeading;
-    private final int intLeft;
     private final int intLength;
-    private final int intTop;
     private final Set<Integer> setCells;
 
     // constructors
 
-    public Ship(int length, int heading, int left, int top, Set<Integer> cells)
+    public Ship(int length, int heading, float left, float top, Set<Integer> cells)
     {
+        floatLeft = left;
+        floatTop = top;
         intHeading = heading;
-        intLeft = left;
         intLength = length;
-        intTop = top;
         setCells = cells;
     }
 
@@ -46,9 +46,9 @@ public class Ship implements Serializable
         return setCells.size() > 0;
     }
 
-    public List<Integer> getShip()
+    public List<Number> getShip()
     {
-        return new ArrayList<>(Arrays.asList(intLength, intHeading, intLeft, intTop));
+        return new ArrayList<Number>(Arrays.asList(intLength, intHeading, floatLeft, floatTop));
     }
 
     public void removeCell(Integer cell)

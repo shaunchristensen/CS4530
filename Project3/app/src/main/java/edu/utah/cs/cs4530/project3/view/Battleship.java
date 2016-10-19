@@ -14,7 +14,7 @@ public class Battleship extends Ship
 {
     // constructors
 
-    public Battleship(Context context, int length, int heading, int left, int top)
+    public Battleship(Context context, int length, int heading, float left, float top)
     {
         super(context, length, heading, left, top);
     }
@@ -22,14 +22,14 @@ public class Battleship extends Ship
     // methods
 
     @Override
-    protected Path getPath(float width, float height)
+    protected Path getPath(float length, float margin)
     {
         Path path = new Path();
         path.moveTo(0, -.475f * intLength);
         path.cubicTo(.56f, -.2125f * intLength, .5f, .475f * intLength, 0, .475f * intLength);
         path.cubicTo(-.5f, .475f * intLength, -.56f, -.2125f * intLength, 0, -.475f * intLength);
         path.close();
-        path.transform(getMatrix(width, height));
+        path.transform(getMatrix(length, margin));
 
         return path;
     }

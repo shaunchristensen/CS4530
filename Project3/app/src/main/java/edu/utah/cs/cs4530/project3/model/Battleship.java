@@ -98,14 +98,14 @@ public class Battleship implements Serializable
         return listGames.get(intGame).getPlayer();
     }
 
-    public List<List<List<Integer>>> getShips()
+    public List<List<List<Number>>> getShips()
     {
-        List<List<List<Integer>>> ships = new ArrayList<>();
+        List<List<List<Number>>> ships = new ArrayList<>();
         Ship[][] s = listGames.get(intGame).getShips();
 
         for (int i = 0; i < intPlayers; i++)
         {
-            ships.add(new ArrayList<List<Integer>>());
+            ships.add(new ArrayList<List<Number>>());
 
             for (int j = 0; j < listShips.size(); j++)
             {
@@ -177,6 +177,7 @@ public class Battleship implements Serializable
                         minimum = min(cell, stern);
                     }
 
+                    // FIXME: 2016.10.19 fix left, top. add either half of length or .5f. need to be floats
                     ships[player][pairs.get(ship).first] = new Ship(length, heading, minimum % intColumns, minimum / intColumns, cells);
                     pairs.remove(ship);
                 }

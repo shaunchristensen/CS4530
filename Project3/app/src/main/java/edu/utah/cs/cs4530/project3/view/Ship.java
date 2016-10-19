@@ -16,45 +16,45 @@ public abstract class Ship extends View
 {
     // fields
 
+    protected final float floatLeft;
+    protected final float floatTop;
     protected final int intHeading;
-    protected final int intLeft;
     protected final int intLength;
-    protected final int intTop;
     protected Path path;
 
     // constructors
 
-    public Ship(Context context, int length, int heading, int left, int top)
+    public Ship(Context context, int length, int heading, float left, float top)
     {
         super(context);
 
+        floatLeft = left;
+        floatTop = top;
         intHeading = heading;
-        intLeft = left;
         intLength = length;
-        intTop = top;
     }
 
     // methods
 
-    protected float getLeft(float width)
+    protected float getLeft(float length, float margin)
     {
-        return (intLeft + 1) * width;
+        return floatLeft * length - margin / 2;
     }
 
-    protected Matrix getMatrix(float width, float height)
+    protected Matrix getMatrix(float length, float margin)
     {
         Matrix matrix = new Matrix();
         matrix.postRotate(intHeading);
-        matrix.postScale(width, height);
-        matrix.postTranslate(getLeft(width), getTop(height));
+        matrix.postScale(length, length);
+        matrix.postTranslate(getLeft(length, margin), getTop(length, margin));
 
         return matrix;
     }
 
-    protected abstract Path getPath(float width, float height);
+    protected abstract Path getPath(float length, float margin);
 
-    protected float getTop(float height)
+    protected float getTop(float length, float margin)
     {
-        return (intTop + 1) * height;
+        return floatTop * length - margin / 2;
     }
 }

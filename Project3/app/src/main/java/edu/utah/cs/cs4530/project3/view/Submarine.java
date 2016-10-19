@@ -14,7 +14,7 @@ public class Submarine extends Ship
 {
     // constructors
 
-    public Submarine(Context context, int length, int heading, int left, int top)
+    public Submarine(Context context, int length, int heading, float left, float top)
     {
         super(context, length, heading, left, top);
     }
@@ -22,14 +22,14 @@ public class Submarine extends Ship
     // methods
 
     @Override
-    protected Path getPath(float width, float height)
+    protected Path getPath(float length, float margin)
     {
         Path path = new Path();
         path.moveTo(0, -.4666f * intLength);
         path.cubicTo(.75f, -.4666f * intLength, .25f, .4666f * intLength, 0, .4666f * intLength);
         path.cubicTo(-.25f, .4666f * intLength, -.75f, -.4666f * intLength, 0, -.4666f * intLength);
         path.close();
-        path.transform(getMatrix(width, height));
+        path.transform(getMatrix(length, margin));
 
         return path;
     }
