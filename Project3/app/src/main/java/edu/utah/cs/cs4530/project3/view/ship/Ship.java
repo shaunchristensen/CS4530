@@ -5,7 +5,7 @@
  * Assignment: Project 3 - MVC Battleship
  */
 
-package edu.utah.cs.cs4530.project3.view;
+package edu.utah.cs.cs4530.project3.view.ship;
 
 import android.content.Context;
 import android.graphics.Matrix;
@@ -16,29 +16,29 @@ public abstract class Ship extends View
 {
     // fields
 
-    protected final float floatLeft;
-    protected final float floatTop;
     protected final int intHeading;
+    protected final int intLeft;
     protected final int intLength;
+    protected final int intTop;
     protected Path path;
 
     // constructors
 
-    public Ship(Context context, int length, int heading, float left, float top)
+    public Ship(Context context, int length, int heading, int left, int top)
     {
         super(context);
 
-        floatLeft = left;
-        floatTop = top;
         intHeading = heading;
+        intLeft = left;
         intLength = length;
+        intTop = top;
     }
 
     // methods
 
     protected float getLeft(float length, float margin)
     {
-        return floatLeft * length - margin / 2;
+        return (intLeft + (intHeading == 90 || intHeading == 270 ? intLength / 2f : .5f)) * length - margin / 2;
     }
 
     protected Matrix getMatrix(float length, float margin)
@@ -51,10 +51,10 @@ public abstract class Ship extends View
         return matrix;
     }
 
-    protected abstract Path getPath(float length, float margin);
+    public abstract Path getPath(float length, float margin);
 
     protected float getTop(float length, float margin)
     {
-        return floatTop * length - margin / 2;
+        return (intTop + (intHeading == 0 || intHeading == 180 ? intLength / 2f : .5f)) * length - margin / 2;
     }
 }

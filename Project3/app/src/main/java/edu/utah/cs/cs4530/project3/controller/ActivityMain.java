@@ -15,13 +15,12 @@ import android.os.Bundle;
 import android.util.TypedValue;
 import android.widget.TextView;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 import edu.utah.cs.cs4530.project3.model.Battleship;
-import edu.utah.cs.cs4530.project3.view.GridLayoutBattleship;
-import edu.utah.cs.cs4530.project3.view.LinearLayoutTemp;
-import edu.utah.cs.cs4530.project3.view.Ship;
+import edu.utah.cs.cs4530.project3.view.LinearLayoutBattleship;
+import edu.utah.cs.cs4530.project3.view.ship.Ship;
 
 public class ActivityMain extends AppCompatActivity
 {
@@ -37,18 +36,48 @@ public class ActivityMain extends AppCompatActivity
         battleship = Battleship.getBattleship();
         battleship.startGame();
 
+        List<List<Ship>> ships = new ArrayList<>();
+
+        for (int i : battleship.getPlayers())
+        {
+            ships.add(new ArrayList<Ship>());
+
+            for (edu.utah.cs.cs4530.project3.model.ship.Ship s : battleship.getShips(i))
+            {
+                if (s.getClass().equals(edu.utah.cs.cs4530.project3.model.ship.Battleship.class))
+                {
+                    ships.get(i).add(new edu.utah.cs.cs4530.project3.view.ship.Battleship(this, s.getLength(), s.getHeading(), s.getLength(), s.getTop()));
+                }
+                else if (s.getClass().equals(edu.utah.cs.cs4530.project3.model.ship.Carrier.class))
+                {
+                    ships.get(i).add(new edu.utah.cs.cs4530.project3.view.ship.Carrier(this, s.getLength(), s.getHeading(), s.getLength(), s.getTop()));
+                }
+                else if (s.getClass().equals(edu.utah.cs.cs4530.project3.model.ship.Cruiser.class))
+                {
+                    ships.get(i).add(new edu.utah.cs.cs4530.project3.view.ship.Cruiser(this, s.getLength(), s.getHeading(), s.getLength(), s.getTop()));
+                }
+                else if (s.getClass().equals(edu.utah.cs.cs4530.project3.model.ship.Destroyer.class))
+                {
+                    ships.get(i).add(new edu.utah.cs.cs4530.project3.view.ship.Destroyer(this, s.getLength(), s.getHeading(), s.getLength(), s.getTop()));
+                }
+                else
+                {
+                    ships.get(i).add(new edu.utah.cs.cs4530.project3.view.ship.Submarine(this, s.getLength(), s.getHeading(), s.getLength(), s.getTop()));
+                }
+
+
+            }
+        }
+
         TextView textView = new TextView(this);
         textView.setTextColor(Color.rgb(132, 132, 130));
         textView.setText("Battleship");
         textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 100);
         textView.setTypeface(Typeface.createFromAsset(getAssets(), "fonts/ITC Machine Bold.ttf"));
 
-        GridLayoutBattleship gridLayoutBattleship = new GridLayoutBattleship(this, true, 10, 10, 0, 2, (Set<Integer>[])new HashSet<?>[2], (Set<Integer>[])new HashSet<?>[2], new Ship[2][5]);
+        LinearLayoutBattleship linearLayoutBattleship = new LinearLayoutBattleship(this, battleship.getRows(), battleship.getColumns(), battleship.getPlayers());
+        linearLayoutBattleship.loadGame(battleship.getStatus(), battleship.getOpponent(), battleship.getPlayer(), ships, battleship.getHits(), battleship.getMisses());
 
-        LinearLayoutTemp linearLayout = new LinearLayoutTemp(this);
-//        linearLayout.addView(textView);
-        linearLayout.setBackgroundColor(Color.rgb(64, 164, 223));
-
-        setContentView(gridLayoutBattleship);
+        setContentView(linearLayoutBattleship );
     }
 }

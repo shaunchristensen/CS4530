@@ -28,7 +28,6 @@ public class Cell extends Button
 
         setBackgroundColor(rgb(64, 164, 223));
         setEnabled(enabled);
-        setZ(0);
     }
 
     // methods

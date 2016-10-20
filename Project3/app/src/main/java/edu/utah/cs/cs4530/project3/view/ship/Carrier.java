@@ -5,7 +5,7 @@
  * Assignment: Project 3 - MVC Battleship
  */
 
-package edu.utah.cs.cs4530.project3.view;
+package edu.utah.cs.cs4530.project3.view.ship;
 
 import android.content.Context;
 import android.graphics.Path;
@@ -14,7 +14,7 @@ public class Carrier extends Ship
 {
     // constructors
 
-    public Carrier(Context context, int length, int heading, float left, float top)
+    public Carrier(Context context, int length, int heading, int left, int top)
     {
         super(context, length, heading, left, top);
     }
@@ -22,7 +22,7 @@ public class Carrier extends Ship
     // methods
 
     @Override
-    protected Path getPath(float length, float margin)
+    public Path getPath(float length, float margin)
     {
         Path path = new Path();
         path.moveTo(.25f, -.48f * intLength);

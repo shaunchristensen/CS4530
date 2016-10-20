@@ -8,7 +8,12 @@
 package edu.utah.cs.cs4530.project3.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
+
+import edu.utah.cs.cs4530.project3.model.ship.Ship;
 
 public class Game implements Serializable
 {
@@ -16,19 +21,21 @@ public class Game implements Serializable
 
     private boolean booleanStatus;
     private int intPlayer;
-    private final Set<Integer>[] arrayHits;
-    private final Set<Integer>[] arrayMisses;
-    private final Ship[][] arrayShips;
+    private final int intPlayers;
+    private final List<List<Ship>> listShips;
+    private final List<Set<Integer>> listHits;
+    private final List<Set<Integer>> listMisses;
 
     // constructors
 
-    public Game(int player, Set<Integer>[] hits, Set<Integer>[] misses, Ship[][] ships)
+    public Game(int player, int players, List<List<Ship>> ships, List<Set<Integer>> hits, List<Set<Integer>> misses)
     {
-        arrayHits = hits;
-        arrayMisses = misses;
-        arrayShips = ships;
         booleanStatus = true;
         intPlayer = player;
+        intPlayers = players;
+        listHits = Collections.unmodifiableList(hits);
+        listMisses = Collections.unmodifiableList(misses);
+        listShips = Collections.unmodifiableList(ships);
     }
 
     // methods
@@ -38,33 +45,58 @@ public class Game implements Serializable
         return booleanStatus;
     }
 
+    public boolean shoot(final int cell)
+    {
+        for (Ship s : listShips.get(intPlayer))
+        {
+            if (s.containsCell(cell))
+            {
+                listHits.get(intPlayer).add(cell);
+                s.removeCell(cell);
+
+                for (Ship t : listShips.get(intPlayer))
+                {
+                    if (t.getStatus())
+                    {
+                        intPlayer = getOpponent();
+
+                        return true;
+                    }
+                }
+
+                booleanStatus = false;
+
+                return true;
+            }
+        }
+
+        listMisses.get(intPlayer).add(cell);
+
+        return false;
+    }
+
+    public int getOpponent()
+    {
+        return (intPlayer + 1) % intPlayers;
+    }
+
     public int getPlayer()
     {
         return intPlayer;
     }
 
-    public Set<Integer>[] getHits()
+    public List<Set<Integer>> getHits()
     {
-        return arrayHits;
+        return new ArrayList<>(listHits);
     }
 
-    public Set<Integer>[] getMisses()
+    public List<Set<Integer>> getMisses()
     {
-        return arrayMisses;
+        return new ArrayList<>(listMisses);
     }
 
-    public Ship[][] getShips()
+    public List<Ship> getShips(int player)
     {
-        return arrayShips;
-    }
-
-    public void setPlayer(int player)
-    {
-        intPlayer = player;
-    }
-
-    public void setStatus(boolean status)
-    {
-        booleanStatus = status;
+        return new ArrayList<>(listShips.get(player));
     }
 }

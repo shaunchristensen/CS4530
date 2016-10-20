@@ -5,16 +5,19 @@
  * Assignment: Project 3 - MVC Battleship
  */
 
-package edu.utah.cs.cs4530.project3.view;
+package edu.utah.cs.cs4530.project3.view.ship;
 
 import android.content.Context;
 import android.graphics.Path;
 
-public class Submarine extends Ship
+/**
+ * Created by Shaun Christensen on 2016.10.10.
+ */
+public class Destroyer extends Ship
 {
     // constructors
 
-    public Submarine(Context context, int length, int heading, float left, float top)
+    public Destroyer(Context context, int length, int heading, int left, int top)
     {
         super(context, length, heading, left, top);
     }
@@ -22,12 +25,12 @@ public class Submarine extends Ship
     // methods
 
     @Override
-    protected Path getPath(float length, float margin)
+    public Path getPath(float length, float margin)
     {
         Path path = new Path();
-        path.moveTo(0, -.4666f * intLength);
-        path.cubicTo(.75f, -.4666f * intLength, .25f, .4666f * intLength, 0, .4666f * intLength);
-        path.cubicTo(-.25f, .4666f * intLength, -.75f, -.4666f * intLength, 0, -.4666f * intLength);
+        path.moveTo(-.25f, .45f * intLength);
+        path.quadTo(-.69f, 0, 0, -.45f * intLength);
+        path.quadTo(.69f, 0, .25f, .45f * intLength);
         path.close();
         path.transform(getMatrix(length, margin));
 
