@@ -12,6 +12,7 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.TypedValue;
 import android.widget.TextView;
 
@@ -20,13 +21,18 @@ import java.util.List;
 
 import edu.utah.cs.cs4530.project3.model.Battleship;
 import edu.utah.cs.cs4530.project3.view.LinearLayoutBattleship;
+import edu.utah.cs.cs4530.project3.view.ship.Carrier;
+import edu.utah.cs.cs4530.project3.view.ship.Cruiser;
+import edu.utah.cs.cs4530.project3.view.ship.Destroyer;
 import edu.utah.cs.cs4530.project3.view.ship.Ship;
+import edu.utah.cs.cs4530.project3.view.ship.Submarine;
 
-public class ActivityMain extends AppCompatActivity
+public class ActivityMain extends AppCompatActivity implements LinearLayoutBattleship.OnShootListener
 {
     // fields
 
     Battleship battleship;
+    LinearLayoutBattleship linearLayoutBattleship;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -36,6 +42,21 @@ public class ActivityMain extends AppCompatActivity
         battleship = Battleship.getBattleship();
         battleship.startGame();
 
+        TextView textView = new TextView(this);
+        textView.setTextColor(Color.rgb(132, 132, 130));
+        textView.setText("Battleship");
+        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 100);
+        textView.setTypeface(Typeface.createFromAsset(getAssets(), "fonts/ITC Machine Bold.ttf"));
+
+        linearLayoutBattleship = new LinearLayoutBattleship(this, battleship.getRows(), battleship.getColumns(), battleship.getPlayers());
+        linearLayoutBattleship.loadGame(battleship.getStatus(), battleship.getOpponent(), battleship.getPlayer(), getShips(), battleship.getHits(), battleship.getMisses());
+        linearLayoutBattleship.setOnShootListener(this);
+
+        setContentView(linearLayoutBattleship);
+    }
+
+    private List<List<Ship>> getShips()
+    {
         List<List<Ship>> ships = new ArrayList<>();
 
         for (int i : battleship.getPlayers())
@@ -46,38 +67,52 @@ public class ActivityMain extends AppCompatActivity
             {
                 if (s.getClass().equals(edu.utah.cs.cs4530.project3.model.ship.Battleship.class))
                 {
-                    ships.get(i).add(new edu.utah.cs.cs4530.project3.view.ship.Battleship(this, s.getLength(), s.getHeading(), s.getLength(), s.getTop()));
+                    ships.get(i).add(new edu.utah.cs.cs4530.project3.view.ship.Battleship(this, s.getLength(), s.getHeading(), s.getLeft(), s.getTop()));
+                    Log.i("getShips", "Battleship - Length: " + s.getLength() + ", Heading: " + s.getHeading() + ", Left: " + s.getLeft() + ", Top: " + s.getTop());
                 }
                 else if (s.getClass().equals(edu.utah.cs.cs4530.project3.model.ship.Carrier.class))
                 {
-                    ships.get(i).add(new edu.utah.cs.cs4530.project3.view.ship.Carrier(this, s.getLength(), s.getHeading(), s.getLength(), s.getTop()));
+                    ships.get(i).add(new Carrier(this, s.getLength(), s.getHeading(), s.getLeft(), s.getTop()));
+                    Log.i("getShips", "Carrier - Length: " + s.getLength() + ", Heading: " + s.getHeading() + ", Left: " + s.getLeft() + ", Top: " + s.getTop());
                 }
                 else if (s.getClass().equals(edu.utah.cs.cs4530.project3.model.ship.Cruiser.class))
                 {
-                    ships.get(i).add(new edu.utah.cs.cs4530.project3.view.ship.Cruiser(this, s.getLength(), s.getHeading(), s.getLength(), s.getTop()));
+                    ships.get(i).add(new Cruiser(this, s.getLength(), s.getHeading(), s.getLeft(), s.getTop()));
+                    Log.i("getShips", "Cruiser - Length: " + s.getLength() + ", Heading: " + s.getHeading() + ", Left: " + s.getLeft() + ", Top: " + s.getTop());
                 }
                 else if (s.getClass().equals(edu.utah.cs.cs4530.project3.model.ship.Destroyer.class))
                 {
-                    ships.get(i).add(new edu.utah.cs.cs4530.project3.view.ship.Destroyer(this, s.getLength(), s.getHeading(), s.getLength(), s.getTop()));
+                    ships.get(i).add(new Destroyer(this, s.getLength(), s.getHeading(), s.getLeft(), s.getTop()));
+                    Log.i("getShips", "Destroyer - Length: " + s.getLength() + ", Heading: " + s.getHeading() + ", Left: " + s.getLeft() + ", Top: " + s.getTop());
                 }
                 else
                 {
-                    ships.get(i).add(new edu.utah.cs.cs4530.project3.view.ship.Submarine(this, s.getLength(), s.getHeading(), s.getLength(), s.getTop()));
+                    ships.get(i).add(new Submarine(this, s.getLength(), s.getHeading(), s.getLeft(), s.getTop()));
+                    Log.i("getShips", "Submarine - Length: " + s.getLength() + ", Heading: " + s.getHeading() + ", Left: " + s.getLeft() + ", Top: " + s.getTop());
                 }
-
-
             }
         }
 
-        TextView textView = new TextView(this);
-        textView.setTextColor(Color.rgb(132, 132, 130));
-        textView.setText("Battleship");
-        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 100);
-        textView.setTypeface(Typeface.createFromAsset(getAssets(), "fonts/ITC Machine Bold.ttf"));
+        return ships;
+    }
 
-        LinearLayoutBattleship linearLayoutBattleship = new LinearLayoutBattleship(this, battleship.getRows(), battleship.getColumns(), battleship.getPlayers());
-        linearLayoutBattleship.loadGame(battleship.getStatus(), battleship.getOpponent(), battleship.getPlayer(), ships, battleship.getHits(), battleship.getMisses());
+    @Override
+    public void onShoot(int cell)
+    {
+        if (battleship.getStatus())
+        {
+            Log.i("onShoot", "Opponent: " + battleship.getOpponent() + ", Cell: " + cell);
 
-        setContentView(linearLayoutBattleship );
+            linearLayoutBattleship.addShot(battleship.shoot(cell), cell);
+
+            if (battleship.getStatus())
+            {
+                linearLayoutBattleship.setPlayers(battleship.getOpponent(), battleship.getPlayer());
+            }
+            else
+            {
+                linearLayoutBattleship.setStatus(false);
+            }
+        }
     }
 }

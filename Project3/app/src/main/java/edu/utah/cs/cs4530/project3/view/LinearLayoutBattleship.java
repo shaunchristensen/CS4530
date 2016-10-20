@@ -8,10 +8,13 @@
 package edu.utah.cs.cs4530.project3.view;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
 import android.graphics.Path;
+import android.graphics.drawable.GradientDrawable;
+import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
@@ -34,12 +37,12 @@ import static android.graphics.Color.rgb;
 import static android.graphics.Paint.ANTI_ALIAS_FLAG;
 import static android.graphics.Paint.Style.STROKE;
 
-public class LinearLayoutBattleship extends LinearLayout
+public class LinearLayoutBattleship extends LinearLayout implements View.OnClickListener
 {
     // fields
 
     private boolean booleanStatus;
-    private float floatLength;
+    private float floatRatio;
     private Grid gridOpponent;
     private Grid gridPlayer;
     private final int intColumns;
@@ -58,7 +61,32 @@ public class LinearLayoutBattleship extends LinearLayout
     {
         super(context);
 
-//        floatLength = .5f;
+        floatRatio = .5f;
+        float floatHeightOpponent;
+        float floatHeightPlayer;
+        float floatWidthOpponent;
+        float floatWidthPlayer;
+
+        int height = getResources().getDisplayMetrics().heightPixels;
+        int width = getResources().getDisplayMetrics().widthPixels;
+
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
+        {
+            floatHeightOpponent = height * floatRatio;
+            floatHeightPlayer = height - floatHeightOpponent;
+            floatWidthOpponent = floatWidthPlayer = width;
+
+            setOrientation(LinearLayout.VERTICAL);
+        }
+        else
+        {
+            floatHeightOpponent = floatHeightPlayer = height;
+            floatWidthOpponent = width * floatRatio;
+            floatWidthPlayer = width - floatWidthOpponent;
+
+            setOrientation(LinearLayout.HORIZONTAL);
+        }
+
         intColumns = columns;
         intRows = rows;
         listHits = new ArrayList<>();
@@ -87,9 +115,14 @@ public class LinearLayoutBattleship extends LinearLayout
         gridOpponent = new Grid(context, false, 0);
         gridPlayer = new Grid(context, false, 1);
 
+        onShootListener = null;
+
+        // wait until resize event to set width/height instead
+        // handle rotation
         // add other stuff
-        addView(gridOpponent);
-        addView(gridPlayer);
+        // may look good enough won't need to zoom grids
+        addView(gridOpponent, (int)floatWidthOpponent, (int)floatHeightOpponent);
+        addView(gridPlayer, (int)floatWidthPlayer, (int)floatHeightPlayer);
     }
 
     // methods
@@ -114,6 +147,15 @@ public class LinearLayoutBattleship extends LinearLayout
 
         setPlayers(opponent, player);
         setStatus(status);
+    }
+
+    @Override
+    public void onClick(View view)
+    {
+        if (view instanceof Cell)
+        {
+            onShootListener.onShoot(((Cell)view).getCell());
+        }
     }
 
     public void setPlayers(int opponent, int player)
@@ -246,11 +288,11 @@ public class LinearLayoutBattleship extends LinearLayout
                 {
                     if (listHits.get(intPlayer).contains(c.getCell()) || listMisses.get(intPlayer).contains(c.getCell()))
                     {
-                        c.setEnabled(true);
+                        c.setEnabled(false);
                     }
                     else
                     {
-                        c.setEnabled(false);
+                        c.setEnabled(true);
                     }
                 }
             }
@@ -274,6 +316,10 @@ public class LinearLayoutBattleship extends LinearLayout
 
         private class GridLayoutGrid extends GridLayout
         {
+            // fields
+
+            private OnShootListener onShootListener;
+
             // constructors
 
             public GridLayoutGrid(Context context)
@@ -290,6 +336,13 @@ public class LinearLayoutBattleship extends LinearLayout
                 setColumnCount(intColumns);
             }
 
+            // interfaces
+
+            public interface OnShootListener
+            {
+                void onShoot(int cell);
+            }
+
             // methods
 
             @Override
@@ -304,6 +357,11 @@ public class LinearLayoutBattleship extends LinearLayout
                     view = getChildAt(i);
                     view.layout((int)(i % intColumns * floatLength), (int)(i / intColumns * floatLength), (int)((i % intColumns + 1) * floatLength - floatMargin), (int)((i / intColumns + 1) * floatLength - floatMargin));
                 }
+            }
+
+            public void setOnShootListener(OnShootListener listener)
+            {
+                onShootListener = listener;
             }
         }
 
@@ -364,12 +422,12 @@ public class LinearLayoutBattleship extends LinearLayout
 
                     paint.setStyle(Style.FILL);
 
-                    canvas.drawCircle(i % intColumns * floatLength + (floatLength - floatMargin) / 2, i / intColumns * floatLength + (floatLength - floatMargin) / 2, floatLength / 10, paint);
+                    canvas.drawCircle(i % intColumns * floatLength + (floatLength - floatMargin) / 2, i / intColumns * floatLength + (floatLength - floatMargin) / 2, floatLength / 25, paint);
 
                     paint.setColor(BLACK);
                     paint.setStyle(STROKE);
 
-                    canvas.drawCircle(i % intColumns * floatLength + (floatLength - floatMargin) / 2, i / intColumns * floatLength + (floatLength - floatMargin) / 2, floatLength / 10, paint);
+                    canvas.drawCircle(i % intColumns * floatLength + (floatLength - floatMargin) / 2, i / intColumns * floatLength + (floatLength - floatMargin) / 2, floatLength / 25, paint);
                 }
             }
         }

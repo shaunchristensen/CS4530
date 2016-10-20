@@ -150,7 +150,7 @@ public class Battleship implements Serializable
                 cells: while (cells.isEmpty())
                 {
                     heading = random.nextInt(4) * 90;
-                    cell = minimum = stern = ((heading == 0 ? s.getLength() - 1 : 0) + random.nextInt(intRows - (heading == 0 || heading == 180 ? s.getLength() - 1 : 0))) * intColumns + (heading == 270 ? s.getLength() - 1 : 0) + random.nextInt(intColumns - (heading == 90 || heading == 270 ? s.getLength() - 1 : 0));
+                    cell = stern = ((heading == 0 ? s.getLength() - 1 : 0) + random.nextInt(intRows - (heading == 0 || heading == 180 ? s.getLength() - 1 : 0))) * intColumns + (heading == 270 ? s.getLength() - 1 : 0) + random.nextInt(intColumns - (heading == 90 || heading == 270 ? s.getLength() - 1 : 0));
 
                     for (int j = 0; j < s.getLength(); j++)
                     {

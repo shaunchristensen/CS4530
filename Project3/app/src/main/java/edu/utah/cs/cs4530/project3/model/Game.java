@@ -47,18 +47,20 @@ public class Game implements Serializable
 
     public boolean shoot(final int cell)
     {
-        for (Ship s : listShips.get(intPlayer))
+        int opponent = getOpponent();
+
+        for (Ship s : listShips.get(opponent))
         {
             if (s.containsCell(cell))
             {
-                listHits.get(intPlayer).add(cell);
+                listHits.get(opponent).add(cell);
                 s.removeCell(cell);
 
-                for (Ship t : listShips.get(intPlayer))
+                for (Ship t : listShips.get(opponent))
                 {
                     if (t.getStatus())
                     {
-                        intPlayer = getOpponent();
+                        intPlayer = opponent;
 
                         return true;
                     }
@@ -70,7 +72,7 @@ public class Game implements Serializable
             }
         }
 
-        listMisses.get(intPlayer).add(cell);
+        listMisses.get(opponent).add(cell);
 
         return false;
     }
