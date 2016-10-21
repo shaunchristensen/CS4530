@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.utah.cs.cs4530.project3.model.Battleship;
+import edu.utah.cs.cs4530.project3.view.Cell;
 import edu.utah.cs.cs4530.project3.view.LinearLayoutBattleship;
 import edu.utah.cs.cs4530.project3.view.ship.Carrier;
 import edu.utah.cs.cs4530.project3.view.ship.Cruiser;
@@ -48,9 +49,8 @@ public class ActivityMain extends AppCompatActivity implements LinearLayoutBattl
         textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 100);
         textView.setTypeface(Typeface.createFromAsset(getAssets(), "fonts/ITC Machine Bold.ttf"));
 
-        linearLayoutBattleship = new LinearLayoutBattleship(this, battleship.getRows(), battleship.getColumns(), battleship.getPlayers());
+        linearLayoutBattleship = new LinearLayoutBattleship(this, battleship.getRows(), battleship.getColumns(), battleship.getPlayers(), this);
         linearLayoutBattleship.loadGame(battleship.getStatus(), battleship.getOpponent(), battleship.getPlayer(), getShips(), battleship.getHits(), battleship.getMisses());
-        linearLayoutBattleship.setOnShootListener(this);
 
         setContentView(linearLayoutBattleship);
     }
@@ -68,27 +68,22 @@ public class ActivityMain extends AppCompatActivity implements LinearLayoutBattl
                 if (s.getClass().equals(edu.utah.cs.cs4530.project3.model.ship.Battleship.class))
                 {
                     ships.get(i).add(new edu.utah.cs.cs4530.project3.view.ship.Battleship(this, s.getLength(), s.getHeading(), s.getLeft(), s.getTop()));
-                    Log.i("getShips", "Battleship - Length: " + s.getLength() + ", Heading: " + s.getHeading() + ", Left: " + s.getLeft() + ", Top: " + s.getTop());
                 }
                 else if (s.getClass().equals(edu.utah.cs.cs4530.project3.model.ship.Carrier.class))
                 {
                     ships.get(i).add(new Carrier(this, s.getLength(), s.getHeading(), s.getLeft(), s.getTop()));
-                    Log.i("getShips", "Carrier - Length: " + s.getLength() + ", Heading: " + s.getHeading() + ", Left: " + s.getLeft() + ", Top: " + s.getTop());
                 }
                 else if (s.getClass().equals(edu.utah.cs.cs4530.project3.model.ship.Cruiser.class))
                 {
                     ships.get(i).add(new Cruiser(this, s.getLength(), s.getHeading(), s.getLeft(), s.getTop()));
-                    Log.i("getShips", "Cruiser - Length: " + s.getLength() + ", Heading: " + s.getHeading() + ", Left: " + s.getLeft() + ", Top: " + s.getTop());
                 }
                 else if (s.getClass().equals(edu.utah.cs.cs4530.project3.model.ship.Destroyer.class))
                 {
                     ships.get(i).add(new Destroyer(this, s.getLength(), s.getHeading(), s.getLeft(), s.getTop()));
-                    Log.i("getShips", "Destroyer - Length: " + s.getLength() + ", Heading: " + s.getHeading() + ", Left: " + s.getLeft() + ", Top: " + s.getTop());
                 }
                 else
                 {
                     ships.get(i).add(new Submarine(this, s.getLength(), s.getHeading(), s.getLeft(), s.getTop()));
-                    Log.i("getShips", "Submarine - Length: " + s.getLength() + ", Heading: " + s.getHeading() + ", Left: " + s.getLeft() + ", Top: " + s.getTop());
                 }
             }
         }
@@ -101,18 +96,9 @@ public class ActivityMain extends AppCompatActivity implements LinearLayoutBattl
     {
         if (battleship.getStatus())
         {
-            Log.i("onShoot", "Opponent: " + battleship.getOpponent() + ", Cell: " + cell);
-
             linearLayoutBattleship.addShot(battleship.shoot(cell), cell);
-
-            if (battleship.getStatus())
-            {
-                linearLayoutBattleship.setPlayers(battleship.getOpponent(), battleship.getPlayer());
-            }
-            else
-            {
-                linearLayoutBattleship.setStatus(false);
-            }
+            linearLayoutBattleship.setPlayers(battleship.getOpponent(), battleship.getPlayer());
+            linearLayoutBattleship.setStatus(battleship.getStatus());
         }
     }
 }

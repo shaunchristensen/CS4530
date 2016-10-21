@@ -72,6 +72,8 @@ public class Game implements Serializable
             }
         }
 
+        intPlayer = opponent;
+
         listMisses.get(opponent).add(cell);
 
         return false;
