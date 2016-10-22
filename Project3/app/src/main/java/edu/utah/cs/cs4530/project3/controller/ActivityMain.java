@@ -12,7 +12,6 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.util.TypedValue;
 import android.widget.TextView;
 
@@ -20,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.utah.cs.cs4530.project3.model.Battleship;
-import edu.utah.cs.cs4530.project3.view.Cell;
 import edu.utah.cs.cs4530.project3.view.LinearLayoutBattleship;
 import edu.utah.cs.cs4530.project3.view.ship.Carrier;
 import edu.utah.cs.cs4530.project3.view.ship.Cruiser;
@@ -28,7 +26,9 @@ import edu.utah.cs.cs4530.project3.view.ship.Destroyer;
 import edu.utah.cs.cs4530.project3.view.ship.Ship;
 import edu.utah.cs.cs4530.project3.view.ship.Submarine;
 
-public class ActivityMain extends AppCompatActivity implements LinearLayoutBattleship.OnShootListener
+import static edu.utah.cs.cs4530.project3.view.LinearLayoutBattleship.*;
+
+public class ActivityMain extends AppCompatActivity implements OnShootListener
 {
     // fields
 
