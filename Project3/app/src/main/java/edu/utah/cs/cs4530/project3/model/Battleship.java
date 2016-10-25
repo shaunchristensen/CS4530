@@ -29,9 +29,7 @@ public class Battleship implements Serializable
     // fields
 
     private static Battleship battleship;
-    private final int intColumns;
-    private int intGame;
-    private final int intRows;
+    private final int intColumnsCount, intRowsCount;
     private final List<Game> listGames;
     private final List<Integer> listPlayers;
     private final List<Ship> listShips;
@@ -41,7 +39,7 @@ public class Battleship implements Serializable
 
     private Battleship()
     {
-        intColumns = intRows = 10;
+        intColumnsCount = intRowsCount = 10;
         listGames = new ArrayList<>();
         listPlayers = Collections.unmodifiableList(Arrays.asList(0, 1));
         listShips = Collections.unmodifiableList(Arrays.asList(new edu.utah.cs.cs4530.project3.model.ship.Battleship(), new Carrier(), new Cruiser(), new Destroyer(), new Submarine()));
@@ -60,76 +58,52 @@ public class Battleship implements Serializable
         return battleship;
     }
 
-    public boolean getStatus()
+    public boolean getStatus(int game)
     {
-        return listGames.get(intGame).getStatus();
+        return listGames.get(game).getStatus();
     }
 
-    public boolean shoot(int cell)
+    public boolean shoot(int game, int cell)
     {
-        return listGames.get(intGame).shoot(cell);
+        return listGames.get(game).shoot(cell);
     }
 
-    public int getColumns()
+    public int getColumnsCount()
     {
-        return intColumns;
+        return intColumnsCount;
     }
 
-    public int getGame()
+    public int getGamesCount()
     {
-        return intGame;
+        return listGames.size();
     }
 
-    public int getOpponent()
+    public int getHitsCount(int game, int player)
     {
-        return listGames.get(intGame).getOpponent();
+        return listGames.get(game).getHitsCount(player);
     }
 
-    public int getPlayer()
+    public int getMissesCount(int game, int player)
     {
-        return listGames.get(intGame).getPlayer();
+        return listGames.get(game).getMissesCount(player);
     }
 
-    public int getRows()
+    public int getOpponent(int game)
     {
-        return intRows;
+        return listGames.get(game).getOpponent();
     }
 
-    public List<Integer> getPlayers()
+    public int getPlayer(int game)
     {
-        return listPlayers;
+        return listGames.get(game).getPlayer();
     }
 
-    public List<Set<Integer>> getHits()
+    public int getRowsCount()
     {
-        return listGames.get(intGame).getHits();
+        return intRowsCount;
     }
 
-    public List<Set<Integer>> getMisses()
-    {
-        return listGames.get(intGame).getMisses();
-    }
-
-    public List<Ship> getShips(int player)
-    {
-        return listGames.get(intGame).getShips(player);
-    }
-
-    private List<Ship> shuffleShips()
-    {
-        List<Ship> ships = new ArrayList<>(listShips);
-
-        Collections.shuffle(ships);
-
-        return ships;
-    }
-
-    public void setGame(int game)
-    {
-        intGame = game;
-    }
-
-    public void startGame()
+    public int newGame()
     {
         int cell, heading, minimum, stern;
         List<List<Ship>> ships = new ArrayList<>();
@@ -150,11 +124,11 @@ public class Battleship implements Serializable
                 cells: while (cells.isEmpty())
                 {
                     heading = random.nextInt(4) * 90;
-                    cell = stern = ((heading == 0 ? s.getLength() - 1 : 0) + random.nextInt(intRows - (heading == 0 || heading == 180 ? s.getLength() - 1 : 0))) * intColumns + (heading == 270 ? s.getLength() - 1 : 0) + random.nextInt(intColumns - (heading == 90 || heading == 270 ? s.getLength() - 1 : 0));
+                    cell = stern = ((heading == 0 ? s.getLength() - 1 : 0) + random.nextInt(intRowsCount - (heading == 0 || heading == 180 ? s.getLength() - 1 : 0))) * intColumnsCount + (heading == 270 ? s.getLength() - 1 : 0) + random.nextInt(intColumnsCount - (heading == 90 || heading == 270 ? s.getLength() - 1 : 0));
 
                     for (int j = 0; j < s.getLength(); j++)
                     {
-                        cell = stern + ((int)sin(heading * PI / 180) - (int)cos(heading * PI / 180) * intColumns) * j;
+                        cell = stern + ((int)sin(heading * PI / 180) - (int)cos(heading * PI / 180) * intColumnsCount) * j;
 
                         for (Ship t : ships.get(i))
                         {
@@ -170,33 +144,42 @@ public class Battleship implements Serializable
                     }
 
                     minimum = min(cell, stern);
-
-                    if (s.getClass().equals(edu.utah.cs.cs4530.project3.model.ship.Battleship.class))
-                    {
-                        ships.get(i).add(new edu.utah.cs.cs4530.project3.model.ship.Battleship(heading, minimum % intColumns, minimum / intColumns, cells));
-                    }
-                    else if (s.getClass().equals(Carrier.class))
-                    {
-                        ships.get(i).add(new Carrier(heading, minimum % intColumns, minimum / intColumns, cells));
-                    }
-                    else if (s.getClass().equals(Cruiser.class))
-                    {
-                        ships.get(i).add(new Cruiser(heading, minimum % intColumns, minimum / intColumns, cells));
-                    }
-                    else if (s.getClass().equals(Destroyer.class))
-                    {
-                        ships.get(i).add(new Destroyer(heading, minimum % intColumns, minimum / intColumns, cells));
-                    }
-                    else
-                    {
-                        ships.get(i).add(new Submarine(heading, minimum % intColumns, minimum / intColumns, cells));
-                    }
+                    ships.get(i).add(s.getShip(heading, minimum % intColumnsCount, minimum / intColumnsCount, cells));
                 }
             }
         }
 
-        intGame = listGames.size();
-
         listGames.add(new Game(random.nextInt(listPlayers.size()), listPlayers.size(), ships, hits, misses));
+
+        return listGames.size() - 1;
+    }
+
+    public List<Integer> getPlayers()
+    {
+        return listPlayers;
+    }
+
+    public List<Set<Integer>> getHits(int game)
+    {
+        return listGames.get(game).getHits();
+    }
+
+    public List<Set<Integer>> getMisses(int game)
+    {
+        return listGames.get(game).getMisses();
+    }
+
+    public List<Ship> getShips(int game, int player)
+    {
+        return listGames.get(game).getShips(player);
+    }
+
+    private List<Ship> shuffleShips()
+    {
+        List<Ship> ships = new ArrayList<>(listShips);
+
+        Collections.shuffle(ships);
+
+        return ships;
     }
 }

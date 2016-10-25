@@ -25,7 +25,7 @@ public class Cell extends Button implements OnClickListener
 
     // constructors
 
-    public Cell(Context context, boolean enabled, int cell, OnCellClickListener listener)
+    public Cell(Context context, int cell, OnCellClickListener listener)
     {
         super(context);
 
@@ -33,7 +33,7 @@ public class Cell extends Button implements OnClickListener
         onCellClickListener = listener;
 
         setBackgroundColor(rgb(64, 164, 223));
-        setEnabled(true);
+        setEnabled(false);
         setOnClickListener(this);
     }
 

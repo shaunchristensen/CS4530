@@ -13,14 +13,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-public class Ship implements Serializable
+public abstract class Ship implements Serializable
 {
     // fields
 
-    private final int intHeading;
-    private final int intLeft;
-    private final int intLength;
-    private final int intTop;
+    private final int intHeading, intLeft, intLength, intTop;
     private final Set<Integer> setCells;
 
     // constructors
@@ -65,6 +62,8 @@ public class Ship implements Serializable
     {
         return intTop;
     }
+
+    public abstract Ship getShip(int heading, int left, int top, Set<Integer> cells);
 
     public void removeCell(int cell)
     {

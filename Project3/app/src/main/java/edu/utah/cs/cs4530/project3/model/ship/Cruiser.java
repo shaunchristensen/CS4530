@@ -12,6 +12,8 @@ import java.util.Set;
 
 public class Cruiser extends Ship
 {
+    // constructors
+
     public Cruiser()
     {
         this(0, 0, 0, new HashSet<Integer>());
@@ -20,5 +22,12 @@ public class Cruiser extends Ship
     public Cruiser(int heading, int left, int top, Set<Integer> cells)
     {
         super(3, heading, left, top, cells);
+    }
+
+    // methods
+
+    public Ship getShip(int heading, int left, int top, Set<Integer> cells)
+    {
+        return new Cruiser(heading, left, top, cells);
     }
 }

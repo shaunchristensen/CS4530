@@ -21,18 +21,17 @@ public class Game implements Serializable
 
     private boolean booleanStatus;
     private int intPlayer;
-    private final int intPlayers;
+    private final int intPlayersCount;
     private final List<List<Ship>> listShips;
-    private final List<Set<Integer>> listHits;
-    private final List<Set<Integer>> listMisses;
+    private final List<Set<Integer>> listHits, listMisses;
 
     // constructors
 
-    public Game(int player, int players, List<List<Ship>> ships, List<Set<Integer>> hits, List<Set<Integer>> misses)
+    public Game(int player, int playersCount, List<List<Ship>> ships, List<Set<Integer>> hits, List<Set<Integer>> misses)
     {
         booleanStatus = true;
         intPlayer = player;
-        intPlayers = players;
+        intPlayersCount = playersCount;
         listHits = Collections.unmodifiableList(hits);
         listMisses = Collections.unmodifiableList(misses);
         listShips = Collections.unmodifiableList(ships);
@@ -79,9 +78,19 @@ public class Game implements Serializable
         return false;
     }
 
+    public int getHitsCount(int player)
+    {
+        return listHits.get(player).size();
+    }
+
+    public int getMissesCount(int player)
+    {
+        return listMisses.get(player).size();
+    }
+
     public int getOpponent()
     {
-        return (intPlayer + 1) % intPlayers;
+        return (intPlayer + 1) % intPlayersCount;
     }
 
     public int getPlayer()

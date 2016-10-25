@@ -13,12 +13,8 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
 import android.graphics.Path;
-import android.graphics.drawable.GradientDrawable;
-import android.util.DisplayMetrics;
-import android.util.Log;
-import android.view.Gravity;
+import android.util.TypedValue;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.LinearLayout;
@@ -39,37 +35,30 @@ import static android.graphics.Color.WHITE;
 import static android.graphics.Color.rgb;
 import static android.graphics.Paint.ANTI_ALIAS_FLAG;
 import static android.graphics.Paint.Style.STROKE;
-import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
-import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
-import static android.widget.LinearLayout.*;
-import static android.widget.LinearLayout.VERTICAL;
+import static android.view.ViewTreeObserver.*;
 import static edu.utah.cs.cs4530.project3.view.Cell.*;
 
-public class LinearLayoutBattleship extends LinearLayout implements OnCellClickListener
+public class LinearLayoutGrid extends LinearLayout implements OnCellClickListener, OnGlobalLayoutListener
 {
     // fields
 
     private boolean booleanStatus;
-    private final Grid gridOpponent;
-    private final Grid gridPlayer;
-    private final int intColumns;
-    private int intOpponent;
-    private int intPlayer;
-    private final int intRows;
+    private final Grid gridOpponent, gridPlayer;
+    private final int intColumnsCount, intRowsCount;
+    private int intOpponent, intPlayer;
     private final List<List<Cell>> listCells;
     private List<List<Ship>> listShips;
-    private List<Set<Integer>> listHits;
-    private List<Set<Integer>> listMisses;
+    private List<Set<Integer>> listHits, listMisses;
     private final OnShootListener onShootListener;
 
     // constructors
 
-    public LinearLayoutBattleship(Context context, int rows, int columns, List<Integer> players, OnShootListener listener)
+    public LinearLayoutGrid(Context context, int rowsCount, int columnsCount, List<Integer> players, OnShootListener listener)
     {
         super(context);
 
-        intColumns = columns;
-        intRows = rows;
+        intColumnsCount = columnsCount;
+        intRowsCount = rowsCount;
         listHits = new ArrayList<>();
         listMisses = new ArrayList<>();
         listShips = new ArrayList<>();
@@ -80,9 +69,9 @@ public class LinearLayoutBattleship extends LinearLayout implements OnCellClickL
         {
             cells.add(new ArrayList<Cell>());
 
-            for (int j = 0; j < intRows * intColumns; j++)
+            for (int j = 0; j < intRowsCount * intColumnsCount; j++)
             {
-                cells.get(i).add(new Cell(context, false, j, this));
+                cells.get(i).add(new Cell(context, j, this));
             }
 
             listHits.add(new HashSet<Integer>());
@@ -95,20 +84,9 @@ public class LinearLayoutBattleship extends LinearLayout implements OnCellClickL
         gridPlayer = new Grid(context, true);
         onShootListener = listener;
 
-        LayoutParams layoutParams;
-
-        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE)
-        {
-            layoutParams = new LayoutParams(0, MATCH_PARENT, 1);
-        }
-        else
-        {
-            layoutParams = new LayoutParams(MATCH_PARENT, 0, 1);
-        }
-
-        // handle rotation
-        addView(gridOpponent, layoutParams);
-        addView(gridPlayer, layoutParams);
+        addView(gridOpponent);
+        addView(gridPlayer);
+        getViewTreeObserver().addOnGlobalLayoutListener(this);
     }
 
     // interfaces
@@ -138,8 +116,8 @@ public class LinearLayoutBattleship extends LinearLayout implements OnCellClickL
         listMisses = misses;
         listShips = ships;
 
-        setPlayers(opponent, player);
         setStatus(status);
+        setPlayers(opponent, player);
     }
 
     @Override
@@ -148,49 +126,52 @@ public class LinearLayoutBattleship extends LinearLayout implements OnCellClickL
         onShootListener.onShoot(cell);
     }
 
-    public void setPlayers(int opponent, int player)
+    @Override
+    public void onConfigurationChanged(Configuration newConfig)
     {
-        intOpponent = opponent;
-        intPlayer = player;
+        super.onConfigurationChanged(newConfig);
+
+        getViewTreeObserver().addOnGlobalLayoutListener(this);
+    }
+
+    @Override
+    public void onGlobalLayout()
+    {
+        LayoutParams layoutParamsOpponent;
+        LayoutParams layoutParamsPlayer;
+
+        if (getHeight() < getWidth())
+        {
+            layoutParamsOpponent = new LayoutParams(0, getHeight(), 1);
+            layoutParamsPlayer = new LayoutParams(0, getHeight(), 1);
+
+            setOrientation(HORIZONTAL);
+        }
+        else
+        {
+            layoutParamsOpponent = new LayoutParams(getWidth(), getHeight() / 2);
+            layoutParamsPlayer = new LayoutParams(getWidth(), getHeight() / 2);
+
+            setOrientation(VERTICAL);
+        }
+
+        gridOpponent.setLayoutParams(layoutParamsOpponent);
+        gridPlayer.setLayoutParams(layoutParamsPlayer);
     }
 
     public void setStatus(boolean status)
     {
         booleanStatus = status;
+    }
+
+    public void setPlayers(int opponent, int player)
+    {
+        intOpponent = opponent;
+        intPlayer = player;
 
         gridOpponent.togglePlayers();
         gridPlayer.togglePlayers();
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     // classes
 
@@ -203,7 +184,6 @@ public class LinearLayoutBattleship extends LinearLayout implements OnCellClickL
         private float floatMargin;
         private final GridLayoutGrid gridLayoutGrid;
         private final ViewGrid viewGrid;
-        private TextView textView;
 
         // constructors
 
@@ -213,26 +193,22 @@ public class LinearLayoutBattleship extends LinearLayout implements OnCellClickL
 
             booleanPlayer = player;
             gridLayoutGrid = new GridLayoutGrid(context);
-
-            textView = new TextView(context);
-            textView.setBackgroundColor(WHITE);
-
             viewGrid = new ViewGrid(context);
 
-            addView(textView);
-
-            for (int i = 0; i < intRows + intColumns + 1; i++)
+            for (int i = 0; i < intRowsCount + intColumnsCount + 1; i++)
             {
                 TextView textView = new TextView(context);
                 textView.setBackgroundColor(WHITE);
+                textView.setTextColor(BLACK);
+                textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 25);
 
-                if (i > 0 && i < intColumns + 1)
+                if (i > 0 && i < intColumnsCount + 1)
                 {
                     textView.setText(Integer.toString(i));
                 }
                 else
                 {
-                    textView.setText(getString(i - intColumns));
+                    textView.setText(getRowString(i - intColumnsCount));
                 }
 
                 addView(textView);
@@ -248,7 +224,7 @@ public class LinearLayoutBattleship extends LinearLayout implements OnCellClickL
 
         // methods
 
-        private String getString(int i)
+        private String getRowString(int i)
         {
             Stack<Integer> stack = new Stack<>();
             StringBuilder stringBuilder = new StringBuilder();
@@ -273,22 +249,7 @@ public class LinearLayoutBattleship extends LinearLayout implements OnCellClickL
         {
             super.onLayout(changed, l, t, r, b);
 
-            float height, left, top, width;
-
-            if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE)
-            {
-                floatLength = height = getHeight();
-                left = width = getWidth() - getHeight();
-                top = 0;
-            }
-            else
-            {
-                floatLength = width = getWidth();
-                height = top = getHeight() - getWidth();
-                left = 0;
-            }
-
-            floatLength /= ((intColumns > intRows ? intColumns : intRows) + 1);
+            floatLength = (getHeight() < getWidth() ? getHeight() : getWidth()) / ((intColumnsCount > intRowsCount ? intColumnsCount : intRowsCount) + 1);
             floatMargin = floatLength / 25;
 
             View view;
@@ -299,19 +260,19 @@ public class LinearLayoutBattleship extends LinearLayout implements OnCellClickL
 
                 if (i == 0)
                 {
-                    view.layout(0, 0, (int)width, (int)height);
+                    view.layout((int)floatMargin, (int)floatMargin, (int)(floatLength - floatMargin), (int)(floatLength - floatMargin));
                 }
-                else if (i < intColumns + 2)
+                else if (i < intColumnsCount + 1)
                 {
-                    view.layout((int)((i - 1) % (intColumns + 1) * floatLength + left), (int)top, (int)(((i - 1) % (intColumns + 1) + 1) * floatLength - floatMargin + left), (int)(floatLength - floatMargin + top));
+                    view.layout((int)(i % (intColumnsCount + 1) * floatLength), (int)floatMargin, (int)((i % (intColumnsCount + 1) + 1) * floatLength - floatMargin), (int)(floatLength - floatMargin));
                 }
-                else if (i < intColumns + intRows + 2)
+                else if (i < intColumnsCount + intRowsCount + 1)
                 {
-                    view.layout((int)left, (int)(((i - 1) - intColumns) * floatLength + top), (int)(floatLength - floatMargin + left), (int)(((i - 1) - intColumns + 1) * floatLength - floatMargin + top));
+                    view.layout((int)floatMargin, (int)((i - intColumnsCount) * floatLength), (int)(floatLength - floatMargin), (int)((i - intColumnsCount + 1) * floatLength - floatMargin));
                 }
                 else
                 {
-                    view.layout((int)(floatLength + left), (int)(floatLength + top), (int)((intColumns + 1) * floatLength + left), (int)((intRows + 1) * floatLength + top));
+                    view.layout((int)(floatLength), (int)(floatLength), (int)((intColumnsCount + 1) * floatLength), (int)((intRowsCount + 1) * floatLength));
                 }
             }
         }
@@ -350,15 +311,15 @@ public class LinearLayoutBattleship extends LinearLayout implements OnCellClickL
                 for (int i = 0; i < getChildCount(); i++)
                 {
                     view = getChildAt(i);
-                    view.layout((int)(i % intColumns * floatLength), (int)(i / intColumns * floatLength), (int)((i % intColumns + 1) * floatLength - floatMargin), (int)((i / intColumns + 1) * floatLength - floatMargin));
+                    view.layout((int)(i % intColumnsCount * floatLength), (int)(i / intColumnsCount * floatLength), (int)((i % intColumnsCount + 1) * floatLength - floatMargin), (int)((i / intColumnsCount + 1) * floatLength - floatMargin));
                 }
             }
 
             public void setEnabled()
             {
-                if (!booleanPlayer && booleanStatus)
+                if (booleanStatus)
                 {
-                    for (Cell c : listCells.get(intOpponent))
+                    for (Cell c : listCells.get(0))
                     {
                         if (listHits.get(intOpponent).contains(c.getCell()) || listMisses.get(intOpponent).contains(c.getCell()))
                         {
@@ -372,7 +333,7 @@ public class LinearLayoutBattleship extends LinearLayout implements OnCellClickL
                 }
                 else
                 {
-                    for (Cell c : listCells.get(intOpponent))
+                    for (Cell c : listCells.get(0))
                     {
                         c.setEnabled(false);
                     }
@@ -447,13 +408,8 @@ public class LinearLayoutBattleship extends LinearLayout implements OnCellClickL
 
                     paint.setStyle(Style.FILL);
 
-                    canvas.drawCircle(i % intColumns * floatLength + (floatLength - floatMargin) / 2, i / intColumns * floatLength + (floatLength - floatMargin) / 2, floatLength / 10, paint);
-
-                    paint.setColor(BLACK);
-                    paint.setStyle(STROKE);
-
-//                    canvas.drawCircle(i % intColumns * floatLength + (floatLength - floatMargin) / 2, i / intColumns * floatLength + (floatLength - floatMargin) / 2, floatLength / 10, paint);
-                }
+                    canvas.drawCircle(i % intColumnsCount * floatLength + (floatLength - floatMargin) / 2, i / intColumnsCount * floatLength + (floatLength - floatMargin) / 2, floatLength / 10, paint);
+               }
             }
         }
     }
