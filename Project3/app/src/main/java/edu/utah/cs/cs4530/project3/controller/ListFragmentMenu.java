@@ -1,3 +1,10 @@
+/**
+ * Author:     Shaun Christensen
+ * Course:     CS 4530 - Mobile Application Programming: Android
+ * Date:       2016.10.21
+ * Assignment: Project 3 - MVC Battleship
+ */
+
 package edu.utah.cs.cs4530.project3.controller;
 
 import android.database.DataSetObserver;
@@ -14,10 +21,13 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import edu.utah.cs.cs4530.project3.model.Battleship;
+import java.util.ArrayList;
+import java.util.List;
 
+import static android.graphics.Color.BLACK;
 import static android.graphics.Color.WHITE;
 import static android.graphics.Color.rgb;
+import static android.util.TypedValue.COMPLEX_UNIT_SP;
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 import static android.widget.AdapterView.*;
@@ -27,10 +37,10 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
 {
     // fields
 
-    private Battleship battleship = Battleship.getBattleship();
-    private int intGame;
+    private int intGame, intPadding;
+    private List<String> listGameStrings;
     private OnGameClickListener onGameClickListener;
-    private OnNewGameClickListener onNewGameClickListener ;
+    private OnNewGameClickListener onNewGameClickListener;
 
     // interfaces
 
@@ -73,19 +83,7 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
     @Override
     public int getCount()
     {
-        return battleship.getGamesCount();
-    }
-
-    @Override
-    public Object getItem(int position)
-    {
-        return null;
-    }
-
-    @Override
-    public long getItemId(int position)
-    {
-        return 0;
+        return listGameStrings.size();
     }
 
     @Override
@@ -101,28 +99,52 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
     }
 
     @Override
+    public Object getItem(int position)
+    {
+        return null;
+    }
+
+    @Override
+    public long getItemId(int position)
+    {
+        return 0;
+    }
+
+    @Override
     public View getView(int position, View convertView, ViewGroup parent)
     {
         TextView textview = new TextView(getActivity());
 
         if (position == intGame)
         {
-            textview.setBackgroundColor(rgb(132, 132, 130));
+            textview.setBackgroundColor(rgb(192, 192, 192));
         }
         else
         {
             textview.setBackgroundColor(WHITE);
         }
-        textview.setText("Status: " + (battleship.getStatus(position) ? "In Progress" : "Game Over"));
-        // Player/Winner: 1/2
-        // shots by player
+
+        textview.setText(listGameStrings.get(position));
+        textview.setTextColor(BLACK);
+        textview.setTextSize(COMPLEX_UNIT_SP, 12.5f);
+
         return textview;
     }
 
-    public void invalidate()
+    public void addGameString(String gameString)
     {
-        //        getListAdapter().notify();
-        getListView().deferNotifyDataSetChanged();
+        listGameStrings.add(gameString);
+
+        intGame = listGameStrings.size() - 1;
+
+        getListView().invalidateViews();
+    }
+
+    public void clearSelection()
+    {
+        intGame = -1;
+
+        getListView().invalidateViews();
     }
 
     @Override
@@ -130,6 +152,7 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
     {
         super.onActivityCreated(savedInstanceState);
 
+        getListView().setOnItemClickListener(this);
         setListAdapter(this);
     }
 
@@ -145,23 +168,29 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
+        if (savedInstanceState != null)
+        {
+            intGame = savedInstanceState.getInt("intGame");
+            intPadding = savedInstanceState.getInt("intPadding");
+            listGameStrings = new ArrayList<>(savedInstanceState.getStringArrayList("listGameStrings"));
+        }
+
         onGameClickListener = (OnGameClickListener)getActivity();
         onNewGameClickListener = (OnNewGameClickListener)getActivity();
 
         Button button = new Button(getActivity());
+        button.setBackgroundColor(rgb(192, 192, 192));
         button.setOnClickListener(this);
         button.setText("New Game");
 
         ListView listView = new ListView(getActivity());
         listView.setId(android.R.id.list);
-        listView.setOnItemClickListener(this);
+        listView.setPadding(0, intPadding, 0, 0);
 
         LinearLayout linearLayout = new LinearLayout(getActivity());
-        linearLayout.addView(button, new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT));
+        linearLayout.addView(button, new LayoutParams(MATCH_PARENT, WRAP_CONTENT));
         linearLayout.addView(listView, new LinearLayout.LayoutParams(MATCH_PARENT, 0, 1));
         linearLayout.setOrientation(VERTICAL);
-
-//        setListAdapter((ListAdapter)getActivity());
 
         return linearLayout;
     }
@@ -169,7 +198,21 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id)
     {
+        intGame = position;
+
         onGameClickListener.onGameClick(position);
+
+        getListView().invalidateViews();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState)
+    {
+        outState.putInt("intGame", intGame);
+        outState.putInt("intPadding", intPadding);
+        outState.putStringArrayList("listGameStrings", (ArrayList<String>)listGameStrings);
+
+        super.onSaveInstanceState(outState);
     }
 
     @Override
@@ -177,9 +220,29 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
     {
     }
 
-    public void setGame(int game)
+    public void removeGameString(int game)
     {
-        intGame = game;
+        listGameStrings.remove(game);
+
+        clearSelection();
+    }
+
+    public void setGameString(int game, String gameString)
+    {
+        listGameStrings.set(game, gameString);
+
+        getListView().invalidateViews();
+    }
+
+    public void setGameStrings(List<String> gameStrings)
+    {
+        intGame = -1;
+        listGameStrings = gameStrings;
+    }
+
+    public void setPadding(int padding)
+    {
+        intPadding = padding;
     }
 
     @Override

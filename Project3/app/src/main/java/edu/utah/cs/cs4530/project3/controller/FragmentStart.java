@@ -56,11 +56,12 @@ public class FragmentStart extends Fragment implements OnClickListener
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)
     {
-        onStartClickListener = (OnStartClickListener)getActivity();
+        onStartClickListener = getActivity() instanceof OnStartClickListener ? (OnStartClickListener)getActivity() : null;
 
         int margin = getResources().getDisplayMetrics().heightPixels / 8;
 
         Button button = new Button(getActivity());
+        button.setBackgroundColor(rgb(192, 192, 192));
         button.setOnClickListener(this);
         button.setText("Start");
         button.setTextColor(BLACK);

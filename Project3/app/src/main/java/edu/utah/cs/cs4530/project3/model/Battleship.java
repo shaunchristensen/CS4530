@@ -78,16 +78,6 @@ public class Battleship implements Serializable
         return listGames.size();
     }
 
-    public int getHitsCount(int game, int player)
-    {
-        return listGames.get(game).getHitsCount(player);
-    }
-
-    public int getMissesCount(int game, int player)
-    {
-        return listGames.get(game).getMissesCount(player);
-    }
-
     public int getOpponent(int game)
     {
         return listGames.get(game).getOpponent();
@@ -181,5 +171,10 @@ public class Battleship implements Serializable
         Collections.shuffle(ships);
 
         return ships;
+    }
+
+    public String getGameString(int game)
+    {
+        return listGames.get(game).toString();
     }
 }

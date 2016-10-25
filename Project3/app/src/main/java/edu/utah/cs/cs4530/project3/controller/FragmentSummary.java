@@ -9,7 +9,6 @@
 
 package edu.utah.cs.cs4530.project3.controller;
 
-import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -43,6 +42,13 @@ public class FragmentSummary extends Fragment
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)
     {
+        if (savedInstanceState != null)
+        {
+            stringPlayer = savedInstanceState.getString("stringPlayer");
+            stringPlayer1 = savedInstanceState.getString("stringPlayer1");
+            stringPlayer2 = savedInstanceState.getString("stringPlayer2");
+        }
+
         TextView textViewBattleship = new TextView(getActivity());
         textViewBattleship.setText("Battleship");
         textViewBattleship.setTextColor(rgb(132, 132, 130));
@@ -95,9 +101,17 @@ public class FragmentSummary extends Fragment
         linearLayout.addView(textViewPlayer2, layoutParamsPlayer2);
         linearLayout.setOrientation(VERTICAL);
 
-        setRetainInstance(true);
-
         return linearLayout;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState)
+    {
+        outState.putString("stringPlayer", stringPlayer);
+        outState.putString("stringPlayer1", stringPlayer1);
+        outState.putString("stringPlayer2", stringPlayer2);
+
+        super.onSaveInstanceState(outState);
     }
 
     public void setText(int player, int hitsCount0, int missesCount0, int hitsCount1, int missesCount1)

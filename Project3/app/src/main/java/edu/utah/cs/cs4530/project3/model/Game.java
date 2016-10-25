@@ -15,6 +15,8 @@ import java.util.Set;
 
 import edu.utah.cs.cs4530.project3.model.ship.Ship;
 
+import static java.lang.Math.round;
+
 public class Game implements Serializable
 {
     // fields
@@ -78,16 +80,6 @@ public class Game implements Serializable
         return false;
     }
 
-    public int getHitsCount(int player)
-    {
-        return listHits.get(player).size();
-    }
-
-    public int getMissesCount(int player)
-    {
-        return listMisses.get(player).size();
-    }
-
     public int getOpponent()
     {
         return (intPlayer + 1) % intPlayersCount;
@@ -111,5 +103,25 @@ public class Game implements Serializable
     public List<Ship> getShips(int player)
     {
         return new ArrayList<>(listShips.get(player));
+    }
+
+    @Override
+    public String toString()
+    {
+        int hitsCount, missesCount, shotsCount;
+
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append((booleanStatus ? "In Progress" : "Game Over") + " ‐ Player " + (intPlayer + 1) + (!booleanStatus ? " won" : "") + ". Shots ‐");
+
+        for (int i = 0; i < intPlayersCount; i++)
+        {
+            hitsCount = listHits.get(i).size();
+            missesCount = listMisses.get(i).size();
+            shotsCount = hitsCount + missesCount;
+
+            stringBuilder.append(" Player " + (i + 1) + ": " + hitsCount + "/" + (shotsCount) + " (" + round(hitsCount * 100d / (shotsCount)) + "%).");
+        }
+
+        return stringBuilder.toString();
     }
 }

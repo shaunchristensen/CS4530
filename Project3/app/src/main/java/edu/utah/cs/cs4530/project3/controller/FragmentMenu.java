@@ -30,6 +30,8 @@ import static android.widget.LinearLayout.*;
 
 public class FragmentMenu extends Fragment
 {
+    // methods
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)

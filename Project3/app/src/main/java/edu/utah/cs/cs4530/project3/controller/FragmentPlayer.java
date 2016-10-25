@@ -22,8 +22,6 @@ import android.widget.TextView;
 
 import java.util.Stack;
 
-import edu.utah.cs.cs4530.project3.model.Battleship;
-
 import static android.graphics.Color.BLACK;
 import static android.graphics.Color.rgb;
 import static android.graphics.Typeface.BOLD;
@@ -38,6 +36,7 @@ public class FragmentPlayer extends Fragment implements OnClickListener
 {
     // fields
 
+    private int intColumnsCount;
     private OnOKClickListener onOKClickListener;
     private String stringInstruction, stringShot;
     private TextView textViewInstruction, textViewShot;
@@ -53,7 +52,7 @@ public class FragmentPlayer extends Fragment implements OnClickListener
 
     private String getRowColumnString(int cell)
     {
-        int row = cell / Battleship.getBattleship().getColumnsCount() + 1;
+        int row = cell / intColumnsCount + 1;
 
         Stack<Integer> stack = new Stack<>();
         StringBuilder stringBuilder = new StringBuilder();
@@ -70,7 +69,7 @@ public class FragmentPlayer extends Fragment implements OnClickListener
             stringBuilder.append((char)(stack.pop() + 64));
         }
 
-        stringBuilder.append(cell % Battleship.getBattleship().getColumnsCount() + 1);
+        stringBuilder.append(cell % intColumnsCount + 1);
 
         return stringBuilder.toString();
     }
@@ -88,11 +87,19 @@ public class FragmentPlayer extends Fragment implements OnClickListener
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)
     {
-        onOKClickListener = (OnOKClickListener)getActivity();
+        if (savedInstanceState != null)
+        {
+            intColumnsCount = savedInstanceState.getInt("intColumnsCount");
+            stringInstruction = savedInstanceState.getString("stringInstruction");
+            stringShot = savedInstanceState.getString("stringShot");
+        }
+
+        onOKClickListener = getActivity() instanceof OnOKClickListener ? (OnOKClickListener)getActivity() : null;
 
         int margin = getResources().getDisplayMetrics().heightPixels / 8;
 
         Button button = new Button(getActivity());
+        button.setBackgroundColor(rgb(192, 192, 192));
         button.setOnClickListener(this);
         button.setText("OK");
         button.setTextColor(BLACK);
@@ -136,9 +143,22 @@ public class FragmentPlayer extends Fragment implements OnClickListener
         linearLayout.addView(button, layoutParamsButton);
         linearLayout.setOrientation(VERTICAL);
 
-        setRetainInstance(true);
-
         return linearLayout;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState)
+    {
+        outState.putInt("intColumnsCount", intColumnsCount);
+        outState.putString("stringInstruction", stringInstruction);
+        outState.putString("stringShot", stringShot);
+
+        super.onSaveInstanceState(outState);
+    }
+
+    public void setColumnsCount(int columnsCount)
+    {
+        intColumnsCount = columnsCount;
     }
 
     public void setText(boolean shot, boolean hit, boolean status, int cell, int opponent, int player)
