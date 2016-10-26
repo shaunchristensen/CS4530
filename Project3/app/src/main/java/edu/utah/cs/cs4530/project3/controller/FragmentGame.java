@@ -7,6 +7,7 @@
 
 package edu.utah.cs.cs4530.project3.controller;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -18,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import edu.utah.cs.cs4530.project3.R;
 import edu.utah.cs.cs4530.project3.view.LinearLayoutGrid;
 import edu.utah.cs.cs4530.project3.view.LinearLayoutGrid.OnShootListener;
 import edu.utah.cs.cs4530.project3.view.ship.Ship;
@@ -32,10 +34,11 @@ public class FragmentGame extends Fragment
 
     // methods
 
-    @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)
+    public void onCreate(@Nullable Bundle savedInstanceState)
     {
+        super.onCreate(savedInstanceState);
+
         if (savedInstanceState != null)
         {
             intColumnsCount = savedInstanceState.getInt("intColumnsCount");
@@ -44,10 +47,16 @@ public class FragmentGame extends Fragment
             listPlayers = new ArrayList<>(savedInstanceState.getIntegerArrayList("listPlayers"));
         }
 
-        linearLayoutGrid = new LinearLayoutGrid(getActivity(), intRowsCount, intColumnsCount, intPadding, listPlayers, (OnShootListener)getActivity());
+        if (linearLayoutGrid == null)
+        {
+            linearLayoutGrid = new LinearLayoutGrid(getActivity(), intRowsCount, intColumnsCount, intPadding, listPlayers, (OnShootListener)getActivity());
+        }
+    }
 
-        setRetainInstance(true);
-
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)
+    {
         return linearLayoutGrid;
     }
 
@@ -58,7 +67,6 @@ public class FragmentGame extends Fragment
 
     public void loadGame(boolean status, int opponent, int player, List<List<Ship>> ships, List<Set<Integer>> hits, List<Set<Integer>> misses)
     {
-if (linearLayoutGrid != null)
         linearLayoutGrid.loadGame(status, opponent, player, ships, hits, misses);
     }
 

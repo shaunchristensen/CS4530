@@ -18,6 +18,7 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
 
 import java.util.Stack;
@@ -38,8 +39,8 @@ public class FragmentPlayer extends Fragment implements OnClickListener
 
     private int intColumnsCount, intMargin;
     private OnOKClickListener onOKClickListener;
-    private String stringInstruction, stringShot;
-    private TextView textViewInstruction, textViewShot;
+    private String stringOpponent, stringPlayer;
+    private TextView textViewOpponent, textViewPlayer;
 
     // interfaces
 
@@ -91,8 +92,8 @@ public class FragmentPlayer extends Fragment implements OnClickListener
         {
             intColumnsCount = savedInstanceState.getInt("intColumnsCount");
             intMargin = savedInstanceState.getInt("intMargin");
-            stringInstruction = savedInstanceState.getString("stringInstruction");
-            stringShot = savedInstanceState.getString("stringShot");
+            stringOpponent = savedInstanceState.getString("stringOpponent");
+            stringPlayer = savedInstanceState.getString("stringPlayer");
         }
 
         onOKClickListener = (OnOKClickListener)getActivity();
@@ -110,35 +111,35 @@ public class FragmentPlayer extends Fragment implements OnClickListener
         textViewBattleship.setTextSize(COMPLEX_UNIT_SP, 75);
         textViewBattleship.setTypeface(createFromAsset(getActivity().getAssets(), "fonts/ITC Machine Bold.ttf"));
 
-        textViewInstruction = new TextView(getActivity());
-        textViewInstruction.setText(stringInstruction);
-        textViewInstruction.setTextColor(BLACK);
-        textViewInstruction.setTextSize(COMPLEX_UNIT_SP, 25);
-        textViewInstruction.setTypeface(null, BOLD);
+        textViewOpponent = new TextView(getActivity());
+        textViewOpponent.setText(stringOpponent);
+        textViewOpponent.setTextColor(BLACK);
+        textViewOpponent.setTextSize(COMPLEX_UNIT_SP, 25);
 
-        textViewShot = new TextView(getActivity());
-        textViewShot.setText(stringShot);
-        textViewShot.setTextColor(BLACK);
-        textViewShot.setTextSize(COMPLEX_UNIT_SP, 25);
+        textViewPlayer = new TextView(getActivity());
+        textViewPlayer.setText(stringPlayer);
+        textViewPlayer.setTextColor(BLACK);
+        textViewPlayer.setTextSize(COMPLEX_UNIT_SP, 25);
+        textViewPlayer.setTypeface(null, BOLD);
 
-        LinearLayout.LayoutParams layoutParamsBattleship = new LinearLayout.LayoutParams(WRAP_CONTENT, 0, 2);
+        LayoutParams layoutParamsBattleship = new LayoutParams(WRAP_CONTENT, 0, 2);
         layoutParamsBattleship.gravity = CENTER_HORIZONTAL;
         layoutParamsBattleship.topMargin = intMargin;
 
-        LinearLayout.LayoutParams layoutParamsButton = new LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
+        LayoutParams layoutParamsButton = new LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
         layoutParamsButton.bottomMargin = intMargin;
         layoutParamsButton.gravity = CENTER_HORIZONTAL;
 
-        LinearLayout.LayoutParams layoutParamsInstruction = new LinearLayout.LayoutParams(WRAP_CONTENT, 0, 1);
-        layoutParamsInstruction.gravity = CENTER;
+        LayoutParams layoutParamsOpponent = new LayoutParams(WRAP_CONTENT, 0, 1);
+        layoutParamsOpponent.gravity = CENTER;
 
-        LinearLayout.LayoutParams layoutParamsShot = new LinearLayout.LayoutParams(WRAP_CONTENT, 0, 1);
-        layoutParamsShot.gravity = CENTER;
+        LayoutParams layoutParamsPlayer = new LayoutParams(WRAP_CONTENT, 0, 1);
+        layoutParamsPlayer.gravity = CENTER;
 
         LinearLayout linearLayout = new LinearLayout(getActivity());
         linearLayout.addView(textViewBattleship, layoutParamsBattleship);
-        linearLayout.addView(textViewShot, layoutParamsShot);
-        linearLayout.addView(textViewInstruction, layoutParamsInstruction);
+        linearLayout.addView(textViewOpponent, layoutParamsOpponent);
+        linearLayout.addView(textViewPlayer, layoutParamsPlayer);
         linearLayout.addView(button, layoutParamsButton);
         linearLayout.setOrientation(VERTICAL);
 
@@ -150,8 +151,8 @@ public class FragmentPlayer extends Fragment implements OnClickListener
     {
         outState.putInt("intColumnsCount", intColumnsCount);
         outState.putInt("intMargin", intMargin);
-        outState.putString("stringInstruction", stringInstruction);
-        outState.putString("stringShot", stringShot);
+        outState.putString("stringOpponent", stringOpponent);
+        outState.putString("stringPlayer", stringPlayer);
 
         super.onSaveInstanceState(outState);
     }
@@ -166,15 +167,25 @@ public class FragmentPlayer extends Fragment implements OnClickListener
         intMargin = margin;
     }
 
-    public void setText(boolean shot, boolean hit, boolean status, int cell, int opponent, int player)
+    public void setText(boolean hit, boolean status, int cell, int opponent, int player)
     {
-        stringInstruction = "Player " + (status ? (player + 1) + " press OK." : (opponent + 1) + " won!");
-        stringShot = shot ? "Player " + (opponent + 1) + ": " + getRowColumnString(cell) + " ‐ " + (hit ? "Hit!" : "Miss.") : "";
+        setText("Player " + (opponent + 1) + ": " + getRowColumnString(cell) + " ‐ " + (hit ? "Hit!" : "Miss."), status ? "Player " + (player + 1) + " press OK." : "Game Over.");
+    }
 
-        textViewInstruction.setText(stringInstruction);
-        textViewInstruction.invalidate();
+    public void setText(boolean status, int opponent, int player)
+    {
+        setText(status ? "" : "Player " + (player + 1) + " won.", status ? "Player " + (player + 1) + " press OK." : "Game Over.");
+    }
 
-        textViewShot.setText(stringShot);
-        textViewShot.invalidate();
+    private void setText(String opponent, String player)
+    {
+        stringOpponent = opponent;
+        stringPlayer = player;
+
+        textViewOpponent.setText(stringOpponent);
+        textViewOpponent.invalidate();
+
+        textViewPlayer.setText(stringPlayer);
+        textViewPlayer.invalidate();
     }
 }

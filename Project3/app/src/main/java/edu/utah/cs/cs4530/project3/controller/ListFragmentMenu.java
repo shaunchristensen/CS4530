@@ -145,10 +145,7 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
     {
         intGame = -1;
 
-        if (isAdded())
-        {
-            getListView().invalidateViews();
-        }
+        invalidateViews();
     }
 
     private void invalidateViews()

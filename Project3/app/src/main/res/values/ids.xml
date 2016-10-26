@@ -2,4 +2,5 @@
 <resources>
     <item name="frameLayoutGame" type="id">4530</item>
     <item name="frameLayoutMenu" type="id">4531</item>
+    <item name="linearLayoutGrid" type="id">4532</item>
 </resources>

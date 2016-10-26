@@ -111,7 +111,7 @@ public class Game implements Serializable
         int hitsCount, missesCount, shotsCount;
 
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append((booleanStatus ? "In Progress" : "Game Over") + " ‐ Player " + (intPlayer + 1) + (!booleanStatus ? " won" : "") + ". Shots ‐");
+        stringBuilder.append((booleanStatus ? "In Progress" : "Game Over") + ". Player " + (intPlayer + 1) + (booleanStatus ? "" : " won") + ". Shots ‐");
 
         for (int i = 0; i < intPlayersCount; i++)
         {
