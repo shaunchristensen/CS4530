@@ -30,6 +30,10 @@ import static android.widget.LinearLayout.*;
 
 public class FragmentMenu extends Fragment
 {
+    // fields
+
+    private int intMargin;
+
     // methods
 
     @Nullable
@@ -39,7 +43,7 @@ public class FragmentMenu extends Fragment
         TextView textViewBattleship = new TextView(getActivity());
         textViewBattleship.setText("Battleship");
         textViewBattleship.setTextColor(rgb(132, 132, 130));
-        textViewBattleship.setTextSize(COMPLEX_UNIT_SP, 100);
+        textViewBattleship.setTextSize(COMPLEX_UNIT_SP, 75);
         textViewBattleship.setTypeface(createFromAsset(getActivity().getAssets(), "fonts/ITC Machine Bold.ttf"));
 
         TextView textViewInstruction = new TextView(getActivity());
@@ -50,7 +54,7 @@ public class FragmentMenu extends Fragment
 
         LayoutParams layoutParamsBattleship = new LayoutParams(WRAP_CONTENT, 0, 1);
         layoutParamsBattleship.gravity = CENTER_HORIZONTAL;
-        layoutParamsBattleship.topMargin = getResources().getDisplayMetrics().heightPixels / 8;
+        layoutParamsBattleship.topMargin = intMargin;
 
         LayoutParams layoutParamsInstruction = new LayoutParams(WRAP_CONTENT, 0, 1);
         layoutParamsInstruction.gravity = CENTER_HORIZONTAL;
@@ -61,5 +65,18 @@ public class FragmentMenu extends Fragment
         linearLayout.setOrientation(VERTICAL);
 
         return linearLayout;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState)
+    {
+        outState.putInt("intMargin", intMargin);
+
+        super.onSaveInstanceState(outState);
+    }
+
+    public void setMargin(int margin)
+    {
+        intMargin = margin;
     }
 }

@@ -32,6 +32,7 @@ public class FragmentStart extends Fragment implements OnClickListener
 {
     // fields
 
+    private int intMargin;
     private OnStartClickListener onStartClickListener;
 
     // interfaces
@@ -56,9 +57,12 @@ public class FragmentStart extends Fragment implements OnClickListener
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)
     {
-        onStartClickListener = getActivity() instanceof OnStartClickListener ? (OnStartClickListener)getActivity() : null;
+        if (savedInstanceState != null)
+        {
+            intMargin = savedInstanceState.getInt("intMargin");
+        }
 
-        int margin = getResources().getDisplayMetrics().heightPixels / 8;
+        onStartClickListener = (OnStartClickListener)getActivity();
 
         Button button = new Button(getActivity());
         button.setBackgroundColor(rgb(192, 192, 192));
@@ -70,7 +74,7 @@ public class FragmentStart extends Fragment implements OnClickListener
         TextView textViewBattleship = new TextView(getActivity());
         textViewBattleship.setText("Battleship");
         textViewBattleship.setTextColor(rgb(132, 132, 130));
-        textViewBattleship.setTextSize(COMPLEX_UNIT_SP, 100);
+        textViewBattleship.setTextSize(COMPLEX_UNIT_SP, 75);
         textViewBattleship.setTypeface(createFromAsset(getActivity().getAssets(), "fonts/ITC Machine Bold.ttf"));
 
         TextView textViewInstruction = new TextView(getActivity());
@@ -79,15 +83,15 @@ public class FragmentStart extends Fragment implements OnClickListener
         textViewInstruction.setTextSize(COMPLEX_UNIT_SP, 50);
         textViewInstruction.setTypeface(null, BOLD);
 
-        LayoutParams layoutParamsBattleship = new LayoutParams(WRAP_CONTENT, 0, 5);
+        LayoutParams layoutParamsBattleship = new LayoutParams(WRAP_CONTENT, 0, 1);
         layoutParamsBattleship.gravity = CENTER_HORIZONTAL;
-        layoutParamsBattleship.topMargin = margin;
+        layoutParamsBattleship.topMargin = intMargin;
 
         LayoutParams layoutParamsButton = new LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
-        layoutParamsButton.bottomMargin = margin;
+        layoutParamsButton.bottomMargin = intMargin;
         layoutParamsButton.gravity = CENTER_HORIZONTAL;
 
-        LayoutParams layoutParamsInstruction = new LayoutParams(WRAP_CONTENT, 0, 3);
+        LayoutParams layoutParamsInstruction = new LayoutParams(WRAP_CONTENT, 0, 1);
         layoutParamsInstruction.gravity = CENTER_HORIZONTAL;
 
         LinearLayout linearLayout = new LinearLayout(getActivity());
@@ -97,5 +101,18 @@ public class FragmentStart extends Fragment implements OnClickListener
         linearLayout.setOrientation(VERTICAL);
 
         return linearLayout;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState)
+    {
+        outState.putInt("intMargin", intMargin);
+
+        super.onSaveInstanceState(outState);
+    }
+
+    public void setMargin(int margin)
+    {
+        intMargin = margin;
     }
 }

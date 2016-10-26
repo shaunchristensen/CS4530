@@ -36,7 +36,7 @@ public class FragmentPlayer extends Fragment implements OnClickListener
 {
     // fields
 
-    private int intColumnsCount;
+    private int intColumnsCount, intMargin;
     private OnOKClickListener onOKClickListener;
     private String stringInstruction, stringShot;
     private TextView textViewInstruction, textViewShot;
@@ -90,13 +90,12 @@ public class FragmentPlayer extends Fragment implements OnClickListener
         if (savedInstanceState != null)
         {
             intColumnsCount = savedInstanceState.getInt("intColumnsCount");
+            intMargin = savedInstanceState.getInt("intMargin");
             stringInstruction = savedInstanceState.getString("stringInstruction");
             stringShot = savedInstanceState.getString("stringShot");
         }
 
-        onOKClickListener = getActivity() instanceof OnOKClickListener ? (OnOKClickListener)getActivity() : null;
-
-        int margin = getResources().getDisplayMetrics().heightPixels / 8;
+        onOKClickListener = (OnOKClickListener)getActivity();
 
         Button button = new Button(getActivity());
         button.setBackgroundColor(rgb(192, 192, 192));
@@ -108,7 +107,7 @@ public class FragmentPlayer extends Fragment implements OnClickListener
         TextView textViewBattleship = new TextView(getActivity());
         textViewBattleship.setText("Battleship");
         textViewBattleship.setTextColor(rgb(132, 132, 130));
-        textViewBattleship.setTextSize(COMPLEX_UNIT_SP, 100);
+        textViewBattleship.setTextSize(COMPLEX_UNIT_SP, 75);
         textViewBattleship.setTypeface(createFromAsset(getActivity().getAssets(), "fonts/ITC Machine Bold.ttf"));
 
         textViewInstruction = new TextView(getActivity());
@@ -122,15 +121,15 @@ public class FragmentPlayer extends Fragment implements OnClickListener
         textViewShot.setTextColor(BLACK);
         textViewShot.setTextSize(COMPLEX_UNIT_SP, 25);
 
-        LinearLayout.LayoutParams layoutParamsBattleship = new LinearLayout.LayoutParams(WRAP_CONTENT, 0, 3);
+        LinearLayout.LayoutParams layoutParamsBattleship = new LinearLayout.LayoutParams(WRAP_CONTENT, 0, 2);
         layoutParamsBattleship.gravity = CENTER_HORIZONTAL;
-        layoutParamsBattleship.topMargin = margin;
+        layoutParamsBattleship.topMargin = intMargin;
 
         LinearLayout.LayoutParams layoutParamsButton = new LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
-        layoutParamsButton.bottomMargin = margin;
+        layoutParamsButton.bottomMargin = intMargin;
         layoutParamsButton.gravity = CENTER_HORIZONTAL;
 
-        LinearLayout.LayoutParams layoutParamsInstruction = new LinearLayout.LayoutParams(WRAP_CONTENT, 0, 2);
+        LinearLayout.LayoutParams layoutParamsInstruction = new LinearLayout.LayoutParams(WRAP_CONTENT, 0, 1);
         layoutParamsInstruction.gravity = CENTER;
 
         LinearLayout.LayoutParams layoutParamsShot = new LinearLayout.LayoutParams(WRAP_CONTENT, 0, 1);
@@ -150,6 +149,7 @@ public class FragmentPlayer extends Fragment implements OnClickListener
     public void onSaveInstanceState(Bundle outState)
     {
         outState.putInt("intColumnsCount", intColumnsCount);
+        outState.putInt("intMargin", intMargin);
         outState.putString("stringInstruction", stringInstruction);
         outState.putString("stringShot", stringShot);
 
@@ -159,6 +159,11 @@ public class FragmentPlayer extends Fragment implements OnClickListener
     public void setColumnsCount(int columnsCount)
     {
         intColumnsCount = columnsCount;
+    }
+
+    public void setMargin(int margin)
+    {
+        intMargin = margin;
     }
 
     public void setText(boolean shot, boolean hit, boolean status, int cell, int opponent, int player)

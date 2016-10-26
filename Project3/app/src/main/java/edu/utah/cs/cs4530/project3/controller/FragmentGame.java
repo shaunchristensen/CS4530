@@ -14,10 +14,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import edu.utah.cs.cs4530.project3.model.Battleship;
 import edu.utah.cs.cs4530.project3.view.LinearLayoutGrid;
 import edu.utah.cs.cs4530.project3.view.LinearLayoutGrid.OnShootListener;
 import edu.utah.cs.cs4530.project3.view.ship.Ship;
@@ -26,10 +26,30 @@ public class FragmentGame extends Fragment
 {
     // fields
 
-    private Battleship battleship = Battleship.getBattleship();
+    private int intColumnsCount, intPadding, intRowsCount;
     private LinearLayoutGrid linearLayoutGrid;
+    private List<Integer> listPlayers;
 
     // methods
+
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)
+    {
+        if (savedInstanceState != null)
+        {
+            intColumnsCount = savedInstanceState.getInt("intColumnsCount");
+            intPadding = savedInstanceState.getInt("intPadding");
+            intRowsCount = savedInstanceState.getInt("intRowsCount");
+            listPlayers = new ArrayList<>(savedInstanceState.getIntegerArrayList("listPlayers"));
+        }
+
+        linearLayoutGrid = new LinearLayoutGrid(getActivity(), intRowsCount, intColumnsCount, intPadding, listPlayers, (OnShootListener)getActivity());
+
+        setRetainInstance(true);
+
+        return linearLayoutGrid;
+    }
 
     public void addShot(boolean hit, int cell)
     {
@@ -38,12 +58,39 @@ public class FragmentGame extends Fragment
 
     public void loadGame(boolean status, int opponent, int player, List<List<Ship>> ships, List<Set<Integer>> hits, List<Set<Integer>> misses)
     {
+if (linearLayoutGrid != null)
         linearLayoutGrid.loadGame(status, opponent, player, ships, hits, misses);
     }
 
-    public void setPlayers(int opponent, int player)
+    @Override
+    public void onSaveInstanceState(Bundle outState)
     {
-        linearLayoutGrid.setPlayers(opponent, player);
+        outState.putInt("intColumnsCount", intColumnsCount);
+        outState.putInt("intPadding", intPadding);
+        outState.putInt("intRowsCount", intRowsCount);
+        outState.putIntegerArrayList("listPlayers", (ArrayList<Integer>)listPlayers);
+
+        super.onSaveInstanceState(outState);
+    }
+
+    public void setColumnsCount(int columnsCount)
+    {
+        intColumnsCount = columnsCount;
+    }
+
+    public void setPadding(int padding)
+    {
+        intPadding = padding;
+    }
+
+    public void setPlayers(List<Integer> players)
+    {
+        listPlayers = players;
+    }
+
+    public void setRowsCount(int rowsCount)
+    {
+        intRowsCount = rowsCount;
     }
 
     public void setStatus(boolean status)
@@ -51,12 +98,8 @@ public class FragmentGame extends Fragment
         linearLayoutGrid.setStatus(status);
     }
 
-    @Nullable
-    @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)
+    public void togglePlayers(int opponent, int player)
     {
-        linearLayoutGrid = new LinearLayoutGrid(getActivity(), battleship.getRowsCount(), battleship.getColumnsCount(), battleship.getPlayers(), (OnShootListener)getActivity());
-
-        return linearLayoutGrid;
+        linearLayoutGrid.togglePlayers(opponent, player);
     }
 }

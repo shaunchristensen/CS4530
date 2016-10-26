@@ -124,6 +124,7 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
             textview.setBackgroundColor(WHITE);
         }
 
+        textview.setPadding(intPadding, intPadding, intPadding, intPadding);
         textview.setText(listGameStrings.get(position));
         textview.setTextColor(BLACK);
         textview.setTextSize(COMPLEX_UNIT_SP, 12.5f);
@@ -137,20 +138,38 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
 
         intGame = listGameStrings.size() - 1;
 
-        getListView().invalidateViews();
+        invalidateViews();
     }
 
     public void clearSelection()
     {
         intGame = -1;
 
-        getListView().invalidateViews();
+        if (isAdded())
+        {
+            getListView().invalidateViews();
+        }
+    }
+
+    private void invalidateViews()
+    {
+        if (isAdded())
+        {
+            getListView().invalidateViews();
+        }
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState)
     {
         super.onActivityCreated(savedInstanceState);
+
+        if (savedInstanceState != null)
+        {
+            intGame = savedInstanceState.getInt("intGame");
+            intPadding = savedInstanceState.getInt("intPadding");
+            listGameStrings = new ArrayList<>(savedInstanceState.getStringArrayList("listGameStrings"));
+        }
 
         getListView().setOnItemClickListener(this);
         setListAdapter(this);
@@ -168,13 +187,6 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
-        if (savedInstanceState != null)
-        {
-            intGame = savedInstanceState.getInt("intGame");
-            intPadding = savedInstanceState.getInt("intPadding");
-            listGameStrings = new ArrayList<>(savedInstanceState.getStringArrayList("listGameStrings"));
-        }
-
         onGameClickListener = (OnGameClickListener)getActivity();
         onNewGameClickListener = (OnNewGameClickListener)getActivity();
 
@@ -202,7 +214,7 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
 
         onGameClickListener.onGameClick(position);
 
-        getListView().invalidateViews();
+        invalidateViews();
     }
 
     @Override
@@ -231,7 +243,7 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
     {
         listGameStrings.set(game, gameString);
 
-        getListView().invalidateViews();
+        invalidateViews();
     }
 
     public void setGameStrings(List<String> gameStrings)

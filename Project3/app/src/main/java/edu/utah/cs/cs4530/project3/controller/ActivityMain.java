@@ -7,7 +7,6 @@
 
 package edu.utah.cs.cs4530.project3.controller;
 
-import android.graphics.Color;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -39,6 +38,7 @@ import edu.utah.cs.cs4530.project3.view.ship.Destroyer;
 import edu.utah.cs.cs4530.project3.view.ship.Ship;
 import edu.utah.cs.cs4530.project3.view.ship.Submarine;
 
+import static android.graphics.Color.RED;
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static edu.utah.cs.cs4530.project3.view.LinearLayoutGrid.*;
 import static java.lang.Math.pow;
@@ -57,7 +57,8 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
     private FragmentStart fragmentStart;
     private FragmentSummary fragmentSummary;
     private FrameLayout frameLayoutMenu, frameLayoutGame;
-    private int intGame, intPadding;
+    private int intColumnsCount, intGame, intMargin, intPadding, intRowsCount;
+    private List<Integer> listPlayers;
     private ListFragmentMenu listFragmentMenu;
     private final String stringBattleship = "Battleship";
     private final String stringFragmentGame = "fragmentGame";
@@ -73,7 +74,7 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
     {
         List<List<Ship>> ships = new ArrayList<>();
 
-        for (int i : battleship.getPlayers())
+        for (int i : listPlayers)
         {
             ships.add(new ArrayList<Ship>());
 
@@ -110,6 +111,160 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
         return gameStrings;
     }
 
+    private void addFragments()
+    {
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+
+        if (!fragmentGame.isAdded())
+        {
+            fragmentTransaction.add(frameLayoutGame.getId(), fragmentGame, stringFragmentGame);
+        }
+
+        if (!fragmentPlayer.isAdded())
+        {
+            fragmentTransaction.add(frameLayoutGame.getId(), fragmentPlayer, stringFragmentPlayer);
+        }
+
+        if (booleanTablet && !fragmentMenu.isAdded())
+        {
+            fragmentTransaction.add(frameLayoutGame.getId(), fragmentMenu, stringFragmentMenu);
+        }
+
+        if (!fragmentStart.isAdded())
+        {
+            fragmentTransaction.add(frameLayoutGame.getId(), fragmentStart, stringFragmentStart);
+        }
+
+        if (!listFragmentMenu.isAdded())
+        {
+            if (booleanTablet)
+            {
+                fragmentTransaction.add(frameLayoutMenu.getId(), listFragmentMenu, stringListFragmentMenu);
+            }
+            else
+            {
+                fragmentTransaction.add(frameLayoutGame.getId(), listFragmentMenu, stringListFragmentMenu);
+            }
+        }
+
+//        fragmentTransaction.commitAllowingStateLoss();
+        fragmentTransaction.commit();
+
+        fragmentManager.executePendingTransactions();
+    }
+
+    private void attachFragments()
+    {
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+
+        if (booleanStart)
+        {
+            if (booleanGame)
+            {
+                if (booleanPlayer)
+                {
+                    if (fragmentGame.isDetached())
+                    {
+                        detachFragments(fragmentGame, fragmentTransaction);
+
+                        fragmentTransaction.attach(fragmentGame);
+                    }
+                }
+                else
+                {
+                    if (fragmentPlayer.isDetached())
+                    {
+                        detachFragments(fragmentPlayer, fragmentTransaction);
+
+                        fragmentTransaction.attach(fragmentPlayer);
+                    }
+
+                    if (fragmentManager.getBackStackEntryAt(fragmentManager.getBackStackEntryCount() - 1).getName().equals(stringListFragmentMenu))
+                    {
+                        fragmentTransaction.addToBackStack(stringFragmentPlayer);
+                    }
+                }
+            }
+            else
+            {
+                if (booleanTablet)
+                {
+                    if (listFragmentMenu.isDetached())
+                    {
+                        detachFragments(listFragmentMenu, fragmentTransaction);
+
+                        fragmentTransaction.attach(listFragmentMenu);
+                    }
+
+                    if (fragmentMenu.isDetached())
+                    {
+                        detachFragments(fragmentMenu, fragmentTransaction);
+
+                        fragmentTransaction.attach(fragmentMenu);
+                    }
+                }
+                else if (listFragmentMenu.isDetached())
+                {
+                    detachFragments(listFragmentMenu, fragmentTransaction);
+
+                    fragmentTransaction.attach(listFragmentMenu);
+                }
+
+                fragmentTransaction.addToBackStack(stringListFragmentMenu);
+            }
+        }
+        else if (fragmentStart.isDetached())
+        {
+            detachFragments(fragmentStart, fragmentTransaction);
+
+            fragmentTransaction.attach(fragmentStart);
+        }
+
+//        fragmentTransaction.commitAllowingStateLoss();
+        fragmentTransaction.commit();
+
+        fragmentManager.executePendingTransactions();
+    }
+
+    private void detachFragments(Fragment fragment, FragmentTransaction fragmentTransaction)
+    {
+        if (fragment == fragmentGame)
+        {
+            fragmentTransaction.detach(fragmentPlayer);
+        }
+        else if (fragment == fragmentMenu)
+        {
+            fragmentTransaction.detach(fragmentPlayer);
+            fragmentTransaction.detach(fragmentStart);
+        }
+        else if (fragment == fragmentPlayer)
+        {
+            fragmentTransaction.detach(fragmentGame);
+
+            if (booleanTablet)
+            {
+                fragmentTransaction.detach(fragmentMenu);
+            }
+            else
+            {
+                fragmentTransaction.detach(listFragmentMenu);
+            }
+        }
+        else if (fragment == fragmentStart)
+        {
+            if (booleanTablet)
+            {
+                fragmentTransaction.detach(fragmentMenu);
+            }
+
+            fragmentTransaction.detach(listFragmentMenu);
+        }
+        else
+        {
+            fragmentTransaction.detach(fragmentStart);
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -134,45 +289,65 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
             intGame = savedInstanceState.getInt("intGame");
         }
 
-        fragmentManager = getSupportFragmentManager();
-        fragmentGame = fragmentManager.findFragmentByTag(stringFragmentGame) == null ? new FragmentGame() : (FragmentGame)fragmentManager.findFragmentByTag(stringFragmentGame);
-        fragmentMenu = fragmentManager.findFragmentByTag(stringFragmentMenu) == null ? new FragmentMenu() : (FragmentMenu)fragmentManager.findFragmentByTag(stringFragmentMenu);
-        fragmentPlayer = fragmentManager.findFragmentByTag(stringFragmentPlayer) == null ? new FragmentPlayer() : (FragmentPlayer)fragmentManager.findFragmentByTag(stringFragmentPlayer);
-        fragmentStart = fragmentManager.findFragmentByTag(stringFragmentStart) == null ? new FragmentStart() : (FragmentStart)fragmentManager.findFragmentByTag(stringFragmentStart);
-        fragmentSummary = fragmentManager.findFragmentByTag(stringfragmentSummary) == null ? new FragmentSummary() : (FragmentSummary)fragmentManager.findFragmentByTag(stringfragmentSummary);
-        listFragmentMenu = fragmentManager.findFragmentByTag(stringListFragmentMenu) == null ? new ListFragmentMenu() : (ListFragmentMenu)fragmentManager.findFragmentByTag(stringListFragmentMenu);
-
         DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
         LinearLayout linearLayout = new LinearLayout(this);
-
-        intPadding = (displayMetrics.heightPixels < displayMetrics.widthPixels ? displayMetrics.heightPixels : displayMetrics.widthPixels) / 50;
 
         if (sqrt(pow(displayMetrics.widthPixels/ displayMetrics.xdpi, 2) + pow(displayMetrics.heightPixels / displayMetrics.ydpi, 2)) >= 6)
         {
             booleanTablet = true;
+        }
+        else
+        {
+            booleanTablet = false;
+        }
 
+        intColumnsCount = battleship.getColumnsCount();
+        intMargin = (displayMetrics.heightPixels < displayMetrics.widthPixels ? displayMetrics.heightPixels : displayMetrics.widthPixels) / 10;
+        intPadding = intMargin / 5;
+        intRowsCount = battleship.getRowsCount();
+        listPlayers = battleship.getPlayers();
+
+        fragmentManager = getSupportFragmentManager();
+
+        fragmentGame = fragmentManager.findFragmentByTag(stringFragmentGame) == null ? new FragmentGame() : (FragmentGame)fragmentManager.findFragmentByTag(stringFragmentGame);
+        fragmentGame.setColumnsCount(battleship.getColumnsCount());
+        fragmentGame.setPadding(intPadding);
+        fragmentGame.setPlayers(new ArrayList<Integer>(listPlayers));
+        fragmentGame.setRowsCount(intRowsCount);
+
+        fragmentMenu = fragmentManager.findFragmentByTag(stringFragmentMenu) == null ? new FragmentMenu() : (FragmentMenu)fragmentManager.findFragmentByTag(stringFragmentMenu);
+        fragmentMenu.setMargin(intMargin);
+
+        fragmentPlayer = fragmentManager.findFragmentByTag(stringFragmentPlayer) == null ? new FragmentPlayer() : (FragmentPlayer)fragmentManager.findFragmentByTag(stringFragmentPlayer);
+        fragmentPlayer.setColumnsCount(intColumnsCount);
+        fragmentPlayer.setMargin(intMargin);
+
+        fragmentStart = fragmentManager.findFragmentByTag(stringFragmentStart) == null ? new FragmentStart() : (FragmentStart)fragmentManager.findFragmentByTag(stringFragmentStart);
+        fragmentStart.setMargin(intMargin);
+
+        listFragmentMenu = fragmentManager.findFragmentByTag(stringListFragmentMenu) == null ? new ListFragmentMenu() : (ListFragmentMenu)fragmentManager.findFragmentByTag(stringListFragmentMenu);
+        listFragmentMenu.setGameStrings(getGameStrings());
+        listFragmentMenu.setPadding(intPadding);
+
+        frameLayoutGame = new FrameLayout(this);
+        frameLayoutGame.setId(R.id.frameLayoutGame);
+
+        if (booleanTablet)
+        {
             frameLayoutMenu = new FrameLayout(this);
             frameLayoutMenu.setId(R.id.frameLayoutMenu);
-
-            listFragmentMenu.setGameStrings(getGameStrings());
-            listFragmentMenu.setPadding(intPadding);
 
             linearLayout.addView(frameLayoutMenu);
         }
         else
         {
-            booleanTablet = false;
             frameLayoutMenu = null;
         }
 
-        frameLayoutGame = new FrameLayout(this);
-        frameLayoutGame.setId(R.id.frameLayoutGame);
-
-        fragmentPlayer.setColumnsCount(battleship.getColumnsCount());
-
         linearLayout.addView(frameLayoutGame);
 
-        replaceFragments();
+        addFragments();
+        attachFragments();
         setContentView(linearLayout);
         setLayoutParams();
     }
@@ -191,7 +366,6 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
         {
             battleship = Battleship.getBattleship();
 
-
             Log.e("deserialize", "Error: Unable to read Battleship. " + e.getMessage());
         }
     }
@@ -202,7 +376,7 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
         booleanPlayer = false;
         booleanStatus = battleship.getStatus(intGame);
 
-        replaceFragments();
+        attachFragments();
         setLayoutParams();
 
         fragmentPlayer.setText(false, false, booleanStatus, 0, battleship.getOpponent(intGame), battleship.getPlayer(intGame));
@@ -234,7 +408,7 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
             finish();
         }
 
-        replaceFragments();
+        attachFragments();
         setLayoutParams();
     }
 
@@ -263,14 +437,14 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
         {
             booleanPlayer = true;
 
-            replaceFragments();
+            attachFragments();
             setLayoutParams();
 
             fragmentGame.loadGame(battleship.getStatus(intGame), battleship.getOpponent(intGame), battleship.getPlayer(intGame), getShips(), battleship.getHits(intGame), battleship.getMisses(intGame));
         }
         else
         {
-            replaceFragments();
+            attachFragments();
             setLayoutParams();
 
 //            fragmentSummary.setText(battleship.getPlayer(intGame), battleship.getHitsCount(intGame, 0), battleship.getMissesCount(intGame, 0), battleship.getHitsCount(intGame, 1), battleship.getMissesCount(intGame, 1));
@@ -296,7 +470,7 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
 
         booleanPlayer = false;
 
-        replaceFragments();
+        attachFragments();
         setLayoutParams();
 
         booleanStatus = battleship.getStatus(intGame);;
@@ -314,7 +488,7 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
     {
         booleanStart = true;
 
-        replaceFragments();
+        attachFragments();
         setLayoutParams();
     }
 
@@ -324,57 +498,6 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
         super.onStop();
 
         serialize();
-    }
-
-    private void replaceFragments()
-    {
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-
-        if (booleanStart)
-        {
-            if (booleanGame)
-            {
-                if (booleanStatus)
-                {
-                    if (booleanPlayer)
-                    {
-                        fragmentTransaction.replace(frameLayoutGame.getId(), fragmentGame, stringFragmentGame);
-                    }
-                    else
-                    {
-                        fragmentTransaction.replace(frameLayoutGame.getId(), fragmentPlayer, stringFragmentPlayer);
-
-                        if (fragmentManager.getBackStackEntryAt(fragmentManager.getBackStackEntryCount() - 1).getName().equals(stringListFragmentMenu))
-                        {
-                            fragmentTransaction.addToBackStack(stringFragmentPlayer);
-                        }
-                    }
-                }
-                else
-                {
-                    fragmentTransaction.replace(frameLayoutGame.getId(), fragmentSummary, stringfragmentSummary);
-                }
-            }
-            else if (booleanTablet)
-            {
-                fragmentTransaction.replace(frameLayoutMenu.getId(), listFragmentMenu, stringListFragmentMenu);
-                fragmentTransaction.replace(frameLayoutGame.getId(), fragmentMenu, stringFragmentMenu);
-                fragmentTransaction.addToBackStack(stringListFragmentMenu);
-            }
-            else
-            {
-                fragmentTransaction.replace(frameLayoutGame.getId(), listFragmentMenu, stringListFragmentMenu);
-                fragmentTransaction.addToBackStack(stringListFragmentMenu);
-            }
-        }
-        else
-        {
-            fragmentTransaction.replace(frameLayoutGame.getId(), fragmentStart, stringFragmentStart);
-        }
-
-        fragmentTransaction.commitAllowingStateLoss();
-
-        fragmentManager.executePendingTransactions();
     }
 
     private void serialize()

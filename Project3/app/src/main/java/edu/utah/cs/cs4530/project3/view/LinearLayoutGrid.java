@@ -35,6 +35,8 @@ import static android.graphics.Color.WHITE;
 import static android.graphics.Color.rgb;
 import static android.graphics.Paint.ANTI_ALIAS_FLAG;
 import static android.graphics.Paint.Style.STROKE;
+import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
+import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 import static android.view.ViewTreeObserver.*;
 import static edu.utah.cs.cs4530.project3.view.Cell.*;
 
@@ -44,21 +46,27 @@ public class LinearLayoutGrid extends LinearLayout implements OnCellClickListene
 
     private boolean booleanStatus;
     private final Grid gridOpponent, gridPlayer;
-    private final int intColumnsCount, intRowsCount;
+    private final int intColumnsCount, intPadding, intRowsCount;
     private int intOpponent, intPlayer;
+    private final LinearLayout linearLayoutOpponent, linearLayoutPlayer;
     private final List<List<Cell>> listCells;
     private List<List<Ship>> listShips;
     private List<Set<Integer>> listHits, listMisses;
     private final OnShootListener onShootListener;
+    private String stringOpponent, stringPlayer;
+    private final TextView textView, textViewOpponent, textViewPlayer;
 
     // constructors
 
-    public LinearLayoutGrid(Context context, int rowsCount, int columnsCount, List<Integer> players, OnShootListener listener)
+    public LinearLayoutGrid(Context context, int rowsCount, int columnsCount, int padding, List<Integer> players, OnShootListener listener)
     {
         super(context);
 
         intColumnsCount = columnsCount;
+        intPadding = padding;
         intRowsCount = rowsCount;
+        linearLayoutOpponent = new LinearLayout(context);
+        linearLayoutPlayer = new LinearLayout(context);
         listHits = new ArrayList<>();
         listMisses = new ArrayList<>();
         listShips = new ArrayList<>();
@@ -83,9 +91,29 @@ public class LinearLayoutGrid extends LinearLayout implements OnCellClickListene
         gridOpponent = new Grid(context, false);
         gridPlayer = new Grid(context, true);
         onShootListener = listener;
+        textView = new TextView(context);
 
-        addView(gridOpponent);
-        addView(gridPlayer);
+        textViewOpponent = new TextView(context);
+        textViewOpponent.setText(stringOpponent);
+        textViewOpponent.setTextColor(BLACK);
+        textViewOpponent.setTextSize(TypedValue.COMPLEX_UNIT_SP, 25);
+
+        textViewPlayer = new TextView(context);
+        textViewPlayer.setText(stringPlayer);
+        textViewPlayer.setTextColor(BLACK);
+        textViewPlayer.setTextSize(TypedValue.COMPLEX_UNIT_SP, 25);
+
+        linearLayoutOpponent.addView(textViewOpponent);
+        linearLayoutOpponent.addView(gridOpponent);
+        linearLayoutOpponent.setOrientation(VERTICAL);
+
+        linearLayoutPlayer.addView(textViewPlayer);
+        linearLayoutPlayer.addView(gridPlayer);
+        linearLayoutPlayer.setOrientation(VERTICAL);
+
+        addView(linearLayoutOpponent);
+        addView(textView);
+        addView(linearLayoutPlayer);
         getViewTreeObserver().addOnGlobalLayoutListener(this);
     }
 
@@ -117,7 +145,7 @@ public class LinearLayoutGrid extends LinearLayout implements OnCellClickListene
         listShips = ships;
 
         setStatus(status);
-        setPlayers(opponent, player);
+        togglePlayers(opponent, player);
     }
 
     @Override
@@ -137,26 +165,39 @@ public class LinearLayoutGrid extends LinearLayout implements OnCellClickListene
     @Override
     public void onGlobalLayout()
     {
-        LayoutParams layoutParamsOpponent;
-        LayoutParams layoutParamsPlayer;
+        int height = getHeight();
+        int length, lengthOpponent, lengthPlayer;
+        int width = getWidth();
 
-        if (getHeight() < getWidth())
+        textViewOpponent.setLayoutParams(new LayoutParams(MATCH_PARENT, WRAP_CONTENT));
+        textViewOpponent.setPadding(0, 0, 0, intPadding);
+
+        textViewPlayer.setLayoutParams(new LayoutParams(MATCH_PARENT, WRAP_CONTENT));
+        textViewPlayer.setPadding(0, 0, 0, intPadding);
+
+        if (height < width)
         {
-            layoutParamsOpponent = new LayoutParams(0, getHeight(), 1);
-            layoutParamsPlayer = new LayoutParams(0, getHeight(), 1);
+            width = (width - intPadding) / 2;
+
+            textView.setLayoutParams(new LayoutParams(intPadding, height));
 
             setOrientation(HORIZONTAL);
         }
         else
         {
-            layoutParamsOpponent = new LayoutParams(getWidth(), getHeight() / 2);
-            layoutParamsPlayer = new LayoutParams(getWidth(), getHeight() / 2);
+            height = (height - intPadding - textViewOpponent.getHeight() - textViewPlayer.getHeight()) / 2;
+
+            textView.setLayoutParams(new LayoutParams(width, intPadding));
 
             setOrientation(VERTICAL);
         }
 
-        gridOpponent.setLayoutParams(layoutParamsOpponent);
-        gridPlayer.setLayoutParams(layoutParamsPlayer);
+        length = (height < width ? height : width);
+
+        gridOpponent.setLayoutParams(new LayoutParams(length, length));
+        gridPlayer.setLayoutParams(new LayoutParams(length, length));
+        linearLayoutOpponent.setLayoutParams(new LayoutParams(width, height));
+        linearLayoutPlayer.setLayoutParams(new LayoutParams(width, height));
     }
 
     public void setStatus(boolean status)
@@ -164,10 +205,30 @@ public class LinearLayoutGrid extends LinearLayout implements OnCellClickListene
         booleanStatus = status;
     }
 
-    public void setPlayers(int opponent, int player)
+    public void togglePlayers(int opponent, int player)
     {
         intOpponent = opponent;
         intPlayer = player;
+
+        if (booleanStatus)
+        {
+            stringOpponent = "Opponent";
+            stringPlayer = "Player " + (intPlayer + 1);
+
+            textViewOpponent.setTextColor(BLACK);
+            textViewPlayer.setTextColor(BLACK);
+        }
+        else
+        {
+            stringOpponent = "Player" + (intOpponent + 1) + " lost.";
+            stringPlayer = "Player " + (intPlayer + 1) + " won!";
+
+            textViewOpponent.setTextColor(rgb(132, 132, 130));
+            textViewPlayer.setTextColor(rgb(64, 164, 223));
+        }
+
+        textViewOpponent.invalidate();
+        textViewPlayer.invalidate();
 
         gridOpponent.togglePlayers();
         gridPlayer.togglePlayers();
@@ -200,7 +261,7 @@ public class LinearLayoutGrid extends LinearLayout implements OnCellClickListene
                 TextView textView = new TextView(context);
                 textView.setBackgroundColor(WHITE);
                 textView.setTextColor(BLACK);
-                textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 25);
+                textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12.5f);
 
                 if (i > 0 && i < intColumnsCount + 1)
                 {
@@ -220,6 +281,8 @@ public class LinearLayoutGrid extends LinearLayout implements OnCellClickListene
 
             addView(frameLayout);
             setBackgroundColor(BLACK);
+            setColumnCount(intColumnsCount);
+            setRowCount(intRowsCount);
         }
 
         // methods
@@ -249,7 +312,7 @@ public class LinearLayoutGrid extends LinearLayout implements OnCellClickListene
         {
             super.onLayout(changed, l, t, r, b);
 
-            floatLength = (getHeight() < getWidth() ? getHeight() : getWidth()) / ((intColumnsCount > intRowsCount ? intColumnsCount : intRowsCount) + 1);
+            floatLength = (float)(getHeight() < getWidth() ? getHeight() : getWidth()) / ((intColumnsCount > intRowsCount ? intColumnsCount : intRowsCount) + 1);
             floatMargin = floatLength / 25;
 
             View view;
@@ -297,6 +360,9 @@ public class LinearLayoutGrid extends LinearLayout implements OnCellClickListene
                 {
                     addView(c);
                 }
+
+                setColumnCount(intColumnsCount);
+                setRowCount(intRowsCount);
             }
 
             // methods
