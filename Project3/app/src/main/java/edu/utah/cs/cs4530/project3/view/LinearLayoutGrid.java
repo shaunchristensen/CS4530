@@ -138,16 +138,6 @@ public class LinearLayoutGrid extends LinearLayout implements OnCellClickListene
         }
     }
 
-    public void loadGame(boolean status, int opponent, int player, List<List<Ship>> ships, List<Set<Integer>> hits, List<Set<Integer>> misses)
-    {
-        listHits = hits;
-        listMisses = misses;
-        listShips = ships;
-
-        setStatus(status);
-        togglePlayers(opponent, player);
-    }
-
     @Override
     public void onCellClick(int cell)
     {
@@ -200,12 +190,17 @@ public class LinearLayoutGrid extends LinearLayout implements OnCellClickListene
         linearLayoutPlayer.setLayoutParams(new LayoutParams(width, height));
     }
 
-    public void setStatus(boolean status)
+    public void setGame(boolean status, int opponent, int player, List<List<Ship>> ships, List<Set<Integer>> hits, List<Set<Integer>> misses)
     {
-        booleanStatus = status;
+        listHits = hits;
+        listMisses = misses;
+        listShips = ships;
+
+        setStatus(status);
+        setPlayers(opponent, player);
     }
 
-    public void togglePlayers(int opponent, int player)
+    public void setPlayers(int opponent, int player)
     {
         intOpponent = opponent;
         intPlayer = player;
@@ -214,24 +209,22 @@ public class LinearLayoutGrid extends LinearLayout implements OnCellClickListene
         {
             stringOpponent = "Opponent";
             stringPlayer = "Player " + (intPlayer + 1);
-
-            textViewOpponent.setTextColor(BLACK);
-            textViewPlayer.setTextColor(BLACK);
         }
         else
         {
             stringOpponent = "Player" + (intOpponent + 1) + " lost.";
             stringPlayer = "Player " + (intPlayer + 1) + " won!";
-
-            textViewOpponent.setTextColor(rgb(132, 132, 130));
-            textViewPlayer.setTextColor(rgb(64, 164, 223));
         }
 
-        textViewOpponent.invalidate();
-        textViewPlayer.invalidate();
+        gridOpponent.invalidate();
+        gridPlayer.invalidate();
+        textViewOpponent.setText(stringOpponent);
+        textViewPlayer.setText(stringPlayer);
+    }
 
-        gridOpponent.togglePlayers();
-        gridPlayer.togglePlayers();
+    public void setStatus(boolean status)
+    {
+        booleanStatus = status;
     }
 
     // classes
@@ -308,6 +301,13 @@ public class LinearLayoutGrid extends LinearLayout implements OnCellClickListene
         }
 
         @Override
+        public void invalidate()
+        {
+            gridLayoutGrid.setEnabled();
+            viewGrid.invalidate();
+        }
+
+        @Override
         protected void onLayout(boolean changed, int l, int t, int r, int b)
         {
             super.onLayout(changed, l, t, r, b);
@@ -338,12 +338,6 @@ public class LinearLayoutGrid extends LinearLayout implements OnCellClickListene
                     view.layout((int)(floatLength), (int)(floatLength), (int)((intColumnsCount + 1) * floatLength), (int)((intRowsCount + 1) * floatLength));
                 }
             }
-        }
-
-        public void togglePlayers()
-        {
-            gridLayoutGrid.setEnabled();
-            viewGrid.invalidate();
         }
 
         // classes
@@ -424,17 +418,16 @@ public class LinearLayoutGrid extends LinearLayout implements OnCellClickListene
             {
                 super.onDraw(canvas);
 
-                int i, player;
+                int i;
+                int player = booleanPlayer ? 1 : 0;
 
                 Paint paint = new Paint(ANTI_ALIAS_FLAG);
                 paint.setStrokeWidth(floatLength / 25);
 
                 Path path;
 
-                if (booleanPlayer)
+                if (booleanPlayer || !booleanStatus)
                 {
-                    player = intPlayer;
-
                     for (Ship s : listShips.get(player))
                     {
                         path = s.getPath(floatLength, floatMargin);
@@ -449,10 +442,6 @@ public class LinearLayoutGrid extends LinearLayout implements OnCellClickListene
 
                         canvas.drawPath(path, paint);
                     }
-                }
-                else
-                {
-                    player = intOpponent;
                 }
 
                 for (Cell c : listCells.get(player))

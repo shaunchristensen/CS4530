@@ -65,11 +65,6 @@ public class FragmentGame extends Fragment
         linearLayoutGrid.addShot(hit, cell);
     }
 
-    public void loadGame(boolean status, int opponent, int player, List<List<Ship>> ships, List<Set<Integer>> hits, List<Set<Integer>> misses)
-    {
-        linearLayoutGrid.loadGame(status, opponent, player, ships, hits, misses);
-    }
-
     @Override
     public void onSaveInstanceState(Bundle outState)
     {
@@ -86,9 +81,19 @@ public class FragmentGame extends Fragment
         intColumnsCount = columnsCount;
     }
 
+    public void setGame(boolean status, int opponent, int player, List<List<Ship>> ships, List<Set<Integer>> hits, List<Set<Integer>> misses)
+    {
+        linearLayoutGrid.setGame(status, opponent, player, ships, hits, misses);
+    }
+
     public void setPadding(int padding)
     {
         intPadding = padding;
+    }
+
+    public void setPlayers(int opponent, int player)
+    {
+        linearLayoutGrid.setPlayers(opponent, player);
     }
 
     public void setPlayers(List<Integer> players)
@@ -104,10 +109,5 @@ public class FragmentGame extends Fragment
     public void setStatus(boolean status)
     {
         linearLayoutGrid.setStatus(status);
-    }
-
-    public void togglePlayers(int opponent, int player)
-    {
-        linearLayoutGrid.togglePlayers(opponent, player);
     }
 }

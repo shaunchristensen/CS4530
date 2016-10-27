@@ -7,6 +7,7 @@
 
 package edu.utah.cs.cs4530.project3.controller;
 
+import android.content.res.Configuration;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -133,8 +134,8 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
         booleanPlayer = false;
 
         setFragments();
+        setGame();
 
-        fragmentGame.loadGame(battleship.getStatus(intGame), battleship.getOpponent(intGame), battleship.getPlayer(intGame), getShips(), battleship.getHits(intGame), battleship.getMisses(intGame));
         fragmentPlayer.setText(battleship.getStatus(intGame), battleship.getOpponent(intGame), battleship.getPlayer(intGame));
     }
 
@@ -274,6 +275,7 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
 
         setContentView(linearLayout);
         setFragments();
+        setGame();
         setLayoutParams();
     }
 
@@ -327,7 +329,7 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
 
             fragmentGame.addShot(hit, cell);
             fragmentGame.setStatus(battleship.getStatus(intGame));
-            fragmentGame.togglePlayers(battleship.getOpponent(intGame), battleship.getPlayer(intGame));
+            fragmentGame.setPlayers(battleship.getOpponent(intGame), battleship.getPlayer(intGame));
             fragmentPlayer.setText(hit, battleship.getStatus(intGame), cell, battleship.getOpponent(intGame), battleship.getPlayer(intGame));
             listFragmentMenu.setGameString(intGame, battleship.getGameString(intGame));
         }
@@ -370,10 +372,17 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
     {
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.detach(fragmentGame);
-        fragmentTransaction.detach(fragmentMenu);
         fragmentTransaction.detach(fragmentPlayer);
         fragmentTransaction.detach(fragmentStart);
-        fragmentTransaction.detach(listFragmentMenu);
+
+        if (booleanTablet)
+        {
+            fragmentTransaction.detach(fragmentMenu);
+        }
+        else
+        {
+            fragmentTransaction.detach(listFragmentMenu);
+        }
 
         if (booleanStart)
         {
@@ -386,6 +395,7 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
                 else
                 {
                     fragmentTransaction.attach(fragmentPlayer);
+                    fragmentTransaction.addToBackStack(stringListFragmentMenu);
                 }
             }
             else
@@ -407,6 +417,11 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
         fragmentTransaction.commit();
 
         fragmentManager.executePendingTransactions();
+    }
+
+    private void setGame()
+    {
+        fragmentGame.setGame(battleship.getStatus(intGame), battleship.getOpponent(intGame), battleship.getPlayer(intGame), getShips(), battleship.getHits(intGame), battleship.getMisses(intGame));
     }
 
     private void setLayoutParams()

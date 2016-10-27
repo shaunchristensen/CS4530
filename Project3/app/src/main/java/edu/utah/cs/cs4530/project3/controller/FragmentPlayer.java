@@ -169,7 +169,7 @@ public class FragmentPlayer extends Fragment implements OnClickListener
 
     public void setText(boolean hit, boolean status, int cell, int opponent, int player)
     {
-        setText("Player " + (opponent + 1) + ": " + getRowColumnString(cell) + " ‐ " + (hit ? "Hit!" : "Miss."), status ? "Player " + (player + 1) + " press OK." : "Game Over.");
+        setText("Player " + (opponent + 1) + ": " + getRowColumnString(cell) + " ‐ " + (hit ? "Hit!" : "Miss."), "Player " + (player + 1) + (status ? " press OK." : " won!"));
     }
 
     public void setText(boolean status, int opponent, int player)
@@ -183,9 +183,6 @@ public class FragmentPlayer extends Fragment implements OnClickListener
         stringPlayer = player;
 
         textViewOpponent.setText(stringOpponent);
-        textViewOpponent.invalidate();
-
         textViewPlayer.setText(stringPlayer);
-        textViewPlayer.invalidate();
     }
 }
