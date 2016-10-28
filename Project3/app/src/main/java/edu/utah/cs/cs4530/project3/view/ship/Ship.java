@@ -41,6 +41,11 @@ public abstract class Ship extends View
         return (intLeft + (intHeading == 90 || intHeading == 270 ? intLength / 2f : .5f)) * length - margin / 2;
     }
 
+    protected float getTop(float length, float margin)
+    {
+        return (intTop + (intHeading == 0 || intHeading == 180 ? intLength / 2f : .5f)) * length - margin / 2;
+    }
+
     protected Matrix getMatrix(float length, float margin)
     {
         Matrix matrix = new Matrix();
@@ -52,9 +57,4 @@ public abstract class Ship extends View
     }
 
     public abstract Path getPath(float length, float margin);
-
-    protected float getTop(float length, float margin)
-    {
-        return (intTop + (intHeading == 0 || intHeading == 180 ? intLength / 2f : .5f)) * length - margin / 2;
-    }
 }

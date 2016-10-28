@@ -78,7 +78,7 @@ public class FragmentStart extends Fragment implements OnClickListener
         textViewBattleship.setTypeface(createFromAsset(getActivity().getAssets(), "fonts/ITC Machine Bold.ttf"));
 
         TextView textViewInstruction = new TextView(getActivity());
-        textViewInstruction.setText("Press Start.");
+        textViewInstruction.setText("Press Start");
         textViewInstruction.setTextColor(BLACK);
         textViewInstruction.setTextSize(COMPLEX_UNIT_SP, 50);
         textViewInstruction.setTypeface(null, BOLD);

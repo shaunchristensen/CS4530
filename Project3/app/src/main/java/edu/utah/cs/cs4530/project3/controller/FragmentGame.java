@@ -7,7 +7,6 @@
 
 package edu.utah.cs.cs4530.project3.controller;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -19,7 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import edu.utah.cs.cs4530.project3.R;
 import edu.utah.cs.cs4530.project3.view.LinearLayoutGrid;
 import edu.utah.cs.cs4530.project3.view.LinearLayoutGrid.OnShootListener;
 import edu.utah.cs.cs4530.project3.view.ship.Ship;
@@ -33,6 +31,18 @@ public class FragmentGame extends Fragment
     private List<Integer> listPlayers;
 
     // methods
+
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)
+    {
+        return linearLayoutGrid;
+    }
+
+    public void addShot(boolean hit, int cell)
+    {
+        linearLayoutGrid.addShot(hit, cell);
+    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState)
@@ -51,18 +61,6 @@ public class FragmentGame extends Fragment
         {
             linearLayoutGrid = new LinearLayoutGrid(getActivity(), intRowsCount, intColumnsCount, intPadding, listPlayers, (OnShootListener)getActivity());
         }
-    }
-
-    @Nullable
-    @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)
-    {
-        return linearLayoutGrid;
-    }
-
-    public void addShot(boolean hit, int cell)
-    {
-        linearLayoutGrid.addShot(hit, cell);
     }
 
     @Override

@@ -63,37 +63,26 @@ public class Battleship implements Serializable
         return listGames.get(game).getStatus();
     }
 
+    public boolean removeGame(int game)
+    {
+        if (game >= 0 && game < listGames.size())
+        {
+            listGames.remove(game);
+
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
     public boolean shoot(int game, int cell)
     {
         return listGames.get(game).shoot(cell);
     }
 
-    public int getColumnsCount()
-    {
-        return intColumnsCount;
-    }
-
-    public int getGamesCount()
-    {
-        return listGames.size();
-    }
-
-    public int getOpponent(int game)
-    {
-        return listGames.get(game).getOpponent();
-    }
-
-    public int getPlayer(int game)
-    {
-        return listGames.get(game).getPlayer();
-    }
-
-    public int getRowsCount()
-    {
-        return intRowsCount;
-    }
-
-    public int newGame()
+    public int addGame()
     {
         int cell, heading, minimum, stern;
         List<List<Ship>> ships = new ArrayList<>();
@@ -142,6 +131,31 @@ public class Battleship implements Serializable
         listGames.add(new Game(random.nextInt(listPlayers.size()), listPlayers.size(), ships, hits, misses));
 
         return listGames.size() - 1;
+    }
+
+    public int getColumnsCount()
+    {
+        return intColumnsCount;
+    }
+
+    public int getGamesCount()
+    {
+        return listGames.size();
+    }
+
+    public int getOpponent(int game)
+    {
+        return listGames.get(game).getOpponent();
+    }
+
+    public int getPlayer(int game)
+    {
+        return listGames.get(game).getPlayer();
+    }
+
+    public int getRowsCount()
+    {
+        return intRowsCount;
     }
 
     public List<Integer> getPlayers()

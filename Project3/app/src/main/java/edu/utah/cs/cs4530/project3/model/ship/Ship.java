@@ -8,9 +8,6 @@
 package edu.utah.cs.cs4530.project3.model.ship;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 
 public abstract class Ship implements Serializable

@@ -7,7 +7,6 @@
 
 package edu.utah.cs.cs4530.project3.controller;
 
-import android.content.res.Configuration;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -31,6 +30,7 @@ import edu.utah.cs.cs4530.project3.R;
 import edu.utah.cs.cs4530.project3.controller.FragmentPlayer.OnOKClickListener;
 import edu.utah.cs.cs4530.project3.controller.FragmentStart.OnStartClickListener;
 import edu.utah.cs.cs4530.project3.controller.ListFragmentMenu.OnGameClickListener;
+import edu.utah.cs.cs4530.project3.controller.ListFragmentMenu.OnGameFlingListener;
 import edu.utah.cs.cs4530.project3.controller.ListFragmentMenu.OnNewGameClickListener;
 import edu.utah.cs.cs4530.project3.model.Battleship;
 import edu.utah.cs.cs4530.project3.view.ship.Carrier;
@@ -39,13 +39,12 @@ import edu.utah.cs.cs4530.project3.view.ship.Destroyer;
 import edu.utah.cs.cs4530.project3.view.ship.Ship;
 import edu.utah.cs.cs4530.project3.view.ship.Submarine;
 
-import static android.graphics.Color.RED;
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static edu.utah.cs.cs4530.project3.view.LinearLayoutGrid.*;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 
-public class ActivityMain extends AppCompatActivity implements OnGameClickListener, OnNewGameClickListener, OnOKClickListener, OnShootListener, OnStartClickListener
+public class ActivityMain extends AppCompatActivity implements OnGameClickListener, OnGameFlingListener, OnNewGameClickListener, OnOKClickListener, OnShootListener, OnStartClickListener
 {
     // fields
 
@@ -68,6 +67,12 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
     private final String stringListFragmentMenu = "listFragmentMenu";
 
     // methods
+
+    @Override
+    public boolean onGameFling(int game)
+    {
+        return battleship.removeGame(game);
+    }
 
     private List<List<Ship>> getShips()
     {
@@ -174,14 +179,6 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-
-        for (File f : getFilesDir().listFiles())
-        {
-            if (f.getName().equals("Battleship"))
-            {
-//                f.delete();
-            }
-        }
 
         deserialize();
 
@@ -290,7 +287,7 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
     @Override
     public void onNewGameClick()
     {
-        intGame = battleship.newGame();
+        intGame = battleship.addGame();
 
         listFragmentMenu.addGameString(battleship.getGameString(intGame));
 
@@ -421,7 +418,10 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
 
     private void setGame()
     {
-        fragmentGame.setGame(battleship.getStatus(intGame), battleship.getOpponent(intGame), battleship.getPlayer(intGame), getShips(), battleship.getHits(intGame), battleship.getMisses(intGame));
+        if (booleanGame)
+        {
+            fragmentGame.setGame(battleship.getStatus(intGame), battleship.getOpponent(intGame), battleship.getPlayer(intGame), getShips(), battleship.getHits(intGame), battleship.getMisses(intGame));
+        }
     }
 
     private void setLayoutParams()

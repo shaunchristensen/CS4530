@@ -174,7 +174,7 @@ public class FragmentPlayer extends Fragment implements OnClickListener
 
     public void setText(boolean status, int opponent, int player)
     {
-        setText(status ? "" : "Player " + (player + 1) + " won.", status ? "Player " + (player + 1) + " press OK." : "Game Over.");
+        setText(status ? "" : "Player " + (player + 1) + " won.", status ? "Player " + (player + 1) + " press OK." : "Game Over");
     }
 
     private void setText(String opponent, String player)
