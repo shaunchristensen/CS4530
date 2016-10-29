@@ -68,12 +68,6 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
 
     // methods
 
-    @Override
-    public boolean onGameFling(int game)
-    {
-        return battleship.removeGame(game);
-    }
-
     private List<List<Ship>> getShips()
     {
         List<List<Ship>> ships = new ArrayList<>();
@@ -282,6 +276,15 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
         intGame = game;
 
         loadGame();
+    }
+
+    @Override
+    public void onGameFling(int game)
+    {
+        if (battleship.removeGame(game))
+        {
+            listFragmentMenu.removeGameString(game);
+        }
     }
 
     @Override

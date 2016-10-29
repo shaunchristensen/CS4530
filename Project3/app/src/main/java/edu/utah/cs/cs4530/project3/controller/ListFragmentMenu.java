@@ -7,18 +7,15 @@
 
 package edu.utah.cs.cs4530.project3.controller;
 
-import android.animation.ObjectAnimator;
 import android.database.DataSetObserver;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ListFragment;
-import android.view.GestureDetector;
-import android.view.GestureDetector.OnGestureListener;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.TranslateAnimation;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -34,18 +31,21 @@ import static android.graphics.Color.RED;
 import static android.graphics.Color.WHITE;
 import static android.graphics.Color.rgb;
 import static android.util.TypedValue.COMPLEX_UNIT_SP;
+import static android.view.MotionEvent.ACTION_DOWN;
+import static android.view.MotionEvent.ACTION_MOVE;
+import static android.view.MotionEvent.ACTION_UP;
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 import static android.widget.AdapterView.*;
 import static android.widget.LinearLayout.VERTICAL;
 import static java.lang.Math.abs;
 
-public class ListFragmentMenu extends ListFragment implements ListAdapter, OnClickListener, OnGestureListener, OnItemClickListener, OnItemLongClickListener, OnTouchListener
+public class ListFragmentMenu extends ListFragment implements ListAdapter, OnClickListener, OnItemClickListener, OnItemLongClickListener, OnTouchListener
 {
     // fields
 
-    private boolean booleanItemLongClick;
-    private GestureDetector gestureDetector;
+    private boolean booleanItemLongClick, booleanTouch;
+    private float floatX, floatY;
     private int intGame, intItemLongClick, intPadding;
     private List<String> listGameStrings;
     private OnGameClickListener onGameClickListener;
@@ -53,83 +53,65 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
     private OnNewGameClickListener onNewGameClickListener;
 
     @Override
-    public boolean onDown(MotionEvent e)
+    public boolean onTouch(View view, MotionEvent motionEvent)
     {
-        return false;
-    }
-
-    @Override
-    public void onShowPress(MotionEvent e)
-    {
-    }
-
-    @Override
-    public boolean onSingleTapUp(MotionEvent e)
-    {
-        return false;
-    }
-
-    @Override
-    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY)
-    {
-        return false;
-    }
-
-    @Override
-    public void onLongPress(MotionEvent e)
-    {
-    }
-
-    @Override
-    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY)
-    {
-        float x = e1.getX() - e2.getX();
-        float y = e1.getY() - e2.getY();
-
-        int width = getListView().getWidth() / 4;
-
-        if (booleanItemLongClick && abs(x) > abs(y) && abs(x) > width && velocityX > width)// && onGameFlingListener.onGameFling(intItemLongClick))
+        if (booleanItemLongClick)
         {
-            booleanItemLongClick = false;
-
-            ObjectAnimator objectAnimator = ObjectAnimator.ofInt(getListView().getChildAt(intItemLongClick), "x", (int)e2.getX());
-            objectAnimator.setDuration(5000);
-            objectAnimator.start();
-            // animate height to 0 in half a second?
-            if (x < 0)
+            if (motionEvent.getActionMasked() == ACTION_DOWN)
             {
-                // left
+                if (!booleanTouch)
+                booleanTouch = getListView().getPositionForView(view) == intItemLongClick ? true: false;
+                floatX = motionEvent.getRawX();
+                floatY = motionEvent.getRawY();
+            }
+            else if (motionEvent.getActionMasked() == ACTION_UP)
+            {
+                /* view.getHitRect(viewRect);
+ if(viewRect.contains(
+         Math.round(view.getX() + event.getX()),
+         Math.round(view.getY() + event.getY()))) {
+   // inside
+ } else {
+   // outside
+ }*/
+                booleanTouch = false;
+Log.i("xasdf", "X: " + abs(motionEvent.getRawX() - floatX) + " Width: " + view.getWidth());
+                if (abs(motionEvent.getRawX() - floatX) > abs(motionEvent.getRawY() - floatY) && abs(motionEvent.getRawX() - floatX) > view.getWidth())
+                {
+                    onGameFlingListener.onGameFling(intGame);
+                }
+                else
+                {
+                    view.setAlpha(1);
+                    view.setTranslationX(0);
+                    view.invalidate();
+                }
+                // check whether to delete
             }
             else
             {
-                // rght
+                Log.i("xczxcv", "X: " + motionEvent.getRawX() + " Y: " + motionEvent.getRawY());
+                view.setAlpha(abs(motionEvent.getRawX() - floatX) < view.getWidth() ? 1 - abs(motionEvent.getRawX() - floatX) / view.getWidth() : 0);
+                view.setTranslationX(motionEvent.getRawX() - floatX);
+                view.invalidate();
             }
 
-//            listGameStrings.remove(intItemLongClick);
-            invalidateViews();
-
-            return true;
+            return booleanTouch;
         }
 
         return false;
     }
 
-    @Override
-    public boolean onTouch(View v, MotionEvent event)
-    {
-        return gestureDetector.onTouchEvent(event);
-    }
-
     // interfaces
-
-    public interface OnGameFlingListener
-    {
-        boolean onGameFling(int game);
-    }
 
     public interface OnGameClickListener
     {
         void onGameClick(int game);
+    }
+
+    public interface OnGameFlingListener
+    {
+        void onGameFling(int game);
     }
 
     public interface OnNewGameClickListener
@@ -211,6 +193,7 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
             textView.setBackgroundColor(WHITE);
         }
 
+        textView.setOnTouchListener(this);
         textView.setPadding(intPadding, intPadding, intPadding, intPadding);
         textView.setText(listGameStrings.get(position));
         textView.setTextColor(BLACK);
@@ -221,13 +204,16 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
 
     public void addGameString(String gameString)
     {
-        listGameStrings.add(gameString);
+        synchronized (listGameStrings)
+        {
+            listGameStrings.add(gameString);
 
-        booleanItemLongClick = false;
-        intGame = listGameStrings.size() - 1;
+            intGame = listGameStrings.size() - 1;
 
-        invalidateViews();
-        getListView().smoothScrollToPosition(intGame);
+            getListView().requestLayout();
+//            getListView().invalidateViews();
+            getListView().smoothScrollToPosition(intGame);
+        }
     }
 
     public void clearSelection()
@@ -253,7 +239,6 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
 
         getListView().setOnItemClickListener(this);
         getListView().setOnItemLongClickListener(this);
-        getListView().setOnTouchListener(this);
         setListAdapter(this);
     }
 
@@ -278,7 +263,6 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
             listGameStrings = new ArrayList<>(savedInstanceState.getStringArrayList("listGameStrings"));
         }
 
-        gestureDetector = new GestureDetector(getActivity(), this);
         onGameClickListener = (OnGameClickListener)getActivity();
         onGameFlingListener = (OnGameFlingListener)getActivity();
         onNewGameClickListener = (OnNewGameClickListener)getActivity();
@@ -306,8 +290,8 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
         booleanItemLongClick = false;
         intGame = position;
 
+        getListView().getChildAt(intItemLongClick).setOnTouchListener(null);
         onGameClickListener.onGameClick(position);
-
         invalidateViews();
     }
 
@@ -317,6 +301,8 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
         booleanItemLongClick = true;
         intItemLongClick = position;
 
+        getListView().getChildAt(intItemLongClick).setOnTouchListener(null);
+        getListView().getChildAt(position).setOnTouchListener(this);
         invalidateViews();
 
         return true;
@@ -341,9 +327,12 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
 
     public void removeGameString(int game)
     {
+        getListView().getChildAt(intGame).setOnTouchListener(null);
+
         listGameStrings.remove(game);
 
         clearSelection();
+        getListView().invalidateViews();
     }
 
     public void setGameString(int game, String gameString)
