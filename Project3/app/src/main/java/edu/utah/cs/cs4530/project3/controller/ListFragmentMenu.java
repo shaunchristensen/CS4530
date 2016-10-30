@@ -8,10 +8,11 @@
 package edu.utah.cs.cs4530.project3.controller;
 
 import android.database.DataSetObserver;
+import android.graphics.PointF;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ListFragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -25,14 +26,16 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TimerTask;
 
 import static android.graphics.Color.BLACK;
 import static android.graphics.Color.RED;
 import static android.graphics.Color.WHITE;
 import static android.graphics.Color.rgb;
 import static android.util.TypedValue.COMPLEX_UNIT_SP;
+import static android.view.MotionEvent.ACTION_CANCEL;
 import static android.view.MotionEvent.ACTION_DOWN;
-import static android.view.MotionEvent.ACTION_MOVE;
+import static android.view.MotionEvent.ACTION_OUTSIDE;
 import static android.view.MotionEvent.ACTION_UP;
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
@@ -45,61 +48,17 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
     // fields
 
     private boolean booleanItemLongClick, booleanTouch;
-    private float floatX, floatY;
-    private int intGame, intItemLongClick, intPadding;
+    private float floatX;
+    private Handler handler;
+    private int intItemClick, intItemLongClick, intPadding;
     private List<String> listGameStrings;
     private OnGameClickListener onGameClickListener;
-    private OnGameFlingListener onGameFlingListener;
     private OnNewGameClickListener onNewGameClickListener;
+    private OnGameTouchListener onGameTouchListener;
+    private PointF pointF;
+    private Runnable runnable;
 
-    @Override
-    public boolean onTouch(View view, MotionEvent motionEvent)
-    {
-        if (booleanItemLongClick)
-        {
-            if (motionEvent.getActionMasked() == ACTION_DOWN)
-            {
-                if (!booleanTouch)
-                booleanTouch = getListView().getPositionForView(view) == intItemLongClick ? true: false;
-                floatX = motionEvent.getRawX();
-                floatY = motionEvent.getRawY();
-            }
-            else if (motionEvent.getActionMasked() == ACTION_UP)
-            {
-                /* view.getHitRect(viewRect);
- if(viewRect.contains(
-         Math.round(view.getX() + event.getX()),
-         Math.round(view.getY() + event.getY()))) {
-   // inside
- } else {
-   // outside
- }*/
-                booleanTouch = false;
-Log.i("xasdf", "X: " + abs(motionEvent.getRawX() - floatX) + " Width: " + view.getWidth());
-                if (abs(motionEvent.getRawX() - floatX) > abs(motionEvent.getRawY() - floatY) && abs(motionEvent.getRawX() - floatX) > view.getWidth())
-                {
-                    onGameFlingListener.onGameFling(intGame);
-                }
-                else
-                {
-                    view.setAlpha(1);
-                    view.setTranslationX(0);
-                    view.invalidate();
-                }
-                // check whether to delete
-            }
-            else
-            {
-                Log.i("xczxcv", "X: " + motionEvent.getRawX() + " Y: " + motionEvent.getRawY());
-                view.setAlpha(abs(motionEvent.getRawX() - floatX) < view.getWidth() ? 1 - abs(motionEvent.getRawX() - floatX) / view.getWidth() : 0);
-                view.setTranslationX(motionEvent.getRawX() - floatX);
-                view.invalidate();
-            }
-
-            return booleanTouch;
-        }
-
-        return false;
+    public ListFragmentMenu() {
     }
 
     // interfaces
@@ -109,14 +68,14 @@ Log.i("xasdf", "X: " + abs(motionEvent.getRawX() - floatX) + " Width: " + view.g
         void onGameClick(int game);
     }
 
-    public interface OnGameFlingListener
-    {
-        void onGameFling(int game);
-    }
-
     public interface OnNewGameClickListener
     {
         void onNewGameClick();
+    }
+
+    public interface OnGameTouchListener
+    {
+        void onGameTouch(int game);
     }
 
     // methods
@@ -143,6 +102,75 @@ Log.i("xasdf", "X: " + abs(motionEvent.getRawX() - floatX) + " Width: " + view.g
     public boolean isEnabled(int position)
     {
         return true;
+    }
+
+    @Override
+    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id)
+    {
+        longClickItem(position);
+
+        return true;
+    }
+
+    @Override
+    public boolean onTouch(View view, MotionEvent motionEvent)
+    {
+        if (booleanItemLongClick && getListView().getPositionForView(view) == intItemLongClick)
+        {
+            if (motionEvent.getActionMasked() == ACTION_DOWN)
+            {
+                booleanTouch = true;
+                floatX = view.getX();
+                pointF = new PointF(motionEvent.getRawX(), motionEvent.getRawY());
+                runnable = new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        longClickItem(intItemLongClick);
+
+                    }
+                };
+
+                handler.postDelayed(runnable, 500);
+
+                return true;
+            }
+
+            handler.removeCallbacks(runnable);
+
+            float absX = abs(view.getX() - floatX);
+
+            if (motionEvent.getActionMasked() == ACTION_CANCEL || motionEvent.getActionMasked() == ACTION_OUTSIDE || motionEvent.getActionMasked() == ACTION_UP)
+            {
+                if (abs(motionEvent.getRawX() - pointF.x) > abs(motionEvent.getRawY() - pointF.y) && absX >= view.getWidth() / 2)
+                {
+                    onGameTouchListener.onGameTouch(intItemLongClick);
+                }
+                else if (booleanTouch)
+                {
+                    clickItem(intItemLongClick);
+                }
+                else
+                {
+                    view.setAlpha(1);
+                    view.setX(floatX);
+                    view.invalidate();
+                }
+
+                return false;
+            }
+
+            booleanTouch = false;
+
+            view.setAlpha(absX < view.getWidth() / 2 ? 1 - absX / (view.getWidth() / 2) : 0);
+            view.setX(floatX + (motionEvent.getRawX() - pointF.x));
+            view.invalidate();
+
+            return true;
+        }
+
+        return false;
     }
 
     @Override
@@ -184,7 +212,7 @@ Log.i("xasdf", "X: " + abs(motionEvent.getRawX() - floatX) + " Width: " + view.g
         {
             textView.setBackgroundColor(RED);
         }
-        else if (position == intGame)
+        else if (position == intItemClick)
         {
             textView.setBackgroundColor(rgb(64, 164, 223));
         }
@@ -202,34 +230,94 @@ Log.i("xasdf", "X: " + abs(motionEvent.getRawX() - floatX) + " Width: " + view.g
         return textView;
     }
 
-    public void addGameString(String gameString)
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
-        synchronized (listGameStrings)
+        if (savedInstanceState != null)
         {
-            listGameStrings.add(gameString);
-
-            intGame = listGameStrings.size() - 1;
-
-            getListView().requestLayout();
-//            getListView().invalidateViews();
-            getListView().smoothScrollToPosition(intGame);
+            booleanItemLongClick = savedInstanceState.getBoolean("booleanItemLongClick");
+            intItemClick = savedInstanceState.getInt("intItemClick");
+            intItemLongClick = savedInstanceState.getInt("intItemLongClick");
+            intPadding = savedInstanceState.getInt("intPadding");
+            listGameStrings = new ArrayList<>(savedInstanceState.getStringArrayList("listGameStrings"));
         }
+
+        onGameClickListener = (OnGameClickListener)getActivity();
+        onGameTouchListener = (OnGameTouchListener)getActivity();
+        onNewGameClickListener = (OnNewGameClickListener)getActivity();
+        handler = new Handler();
+
+        Button button = new Button(getActivity());
+        button.setBackgroundColor(rgb(192, 192, 192));
+        button.setOnClickListener(this);
+        button.setText("New Game");
+
+        ListView listView = new ListView(getActivity());
+        listView.setId(android.R.id.list);
+        listView.setPadding(0, intPadding, 0, 0);
+
+        LinearLayout linearLayout = new LinearLayout(getActivity());
+        linearLayout.addView(button, new LayoutParams(MATCH_PARENT, WRAP_CONTENT));
+        linearLayout.addView(listView, new LinearLayout.LayoutParams(MATCH_PARENT, 0, 1));
+        linearLayout.setOrientation(VERTICAL);
+
+        return linearLayout;
     }
 
-    public void clearSelection()
+    public void addGameString(String gameString)
+    {
+        listGameStrings.add(gameString);
+
+        intItemClick = listGameStrings.size() - 1;
+
+        clearItemLongClick();
+        setListAdapter(this);
+        getListView().invalidateViews();
+        getListView().setSelection(intItemClick);
+    }
+
+    public void clearItemClick()
+    {
+        intItemClick = -1;
+    }
+
+    public void clearItemLongClick()
     {
         booleanItemLongClick = false;
-        intGame = -1;
+        intItemLongClick = -1;
+    }
 
+    private void clickItem(int position)
+    {
+        onGameClickListener.onGameClick(position);
+
+        intItemClick = position;
+
+        clearItemLongClick();
         invalidateViews();
     }
 
-    private void invalidateViews()
+    public void invalidateViews()
     {
         if (isAdded())
         {
             getListView().invalidateViews();
         }
+    }
+
+    private void longClickItem(int position)
+    {
+        if (position == intItemLongClick)
+        {
+            clearItemLongClick();
+        }
+        else
+        {
+            booleanItemLongClick = true;
+            intItemLongClick = position;
+        }
+
+        invalidateViews();
     }
 
     @Override
@@ -252,67 +340,16 @@ Log.i("xasdf", "X: " + abs(motionEvent.getRawX() - floatX) + " Width: " + view.g
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
-    {
-        if (savedInstanceState != null)
-        {
-            booleanItemLongClick = savedInstanceState.getBoolean("booleanItemLongClick");
-            intGame = savedInstanceState.getInt("intGame");
-            intItemLongClick = savedInstanceState.getInt("intItemLongClick");
-            intPadding = savedInstanceState.getInt("intPadding");
-            listGameStrings = new ArrayList<>(savedInstanceState.getStringArrayList("listGameStrings"));
-        }
-
-        onGameClickListener = (OnGameClickListener)getActivity();
-        onGameFlingListener = (OnGameFlingListener)getActivity();
-        onNewGameClickListener = (OnNewGameClickListener)getActivity();
-
-        Button button = new Button(getActivity());
-        button.setBackgroundColor(rgb(192, 192, 192));
-        button.setOnClickListener(this);
-        button.setText("New Game");
-
-        ListView listView = new ListView(getActivity());
-        listView.setId(android.R.id.list);
-        listView.setPadding(0, intPadding, 0, 0);
-
-        LinearLayout linearLayout = new LinearLayout(getActivity());
-        linearLayout.addView(button, new LayoutParams(MATCH_PARENT, WRAP_CONTENT));
-        linearLayout.addView(listView, new LinearLayout.LayoutParams(MATCH_PARENT, 0, 1));
-        linearLayout.setOrientation(VERTICAL);
-
-        return linearLayout;
-    }
-
-    @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id)
     {
-        booleanItemLongClick = false;
-        intGame = position;
-
-        getListView().getChildAt(intItemLongClick).setOnTouchListener(null);
-        onGameClickListener.onGameClick(position);
-        invalidateViews();
-    }
-
-    @Override
-    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id)
-    {
-        booleanItemLongClick = true;
-        intItemLongClick = position;
-
-        getListView().getChildAt(intItemLongClick).setOnTouchListener(null);
-        getListView().getChildAt(position).setOnTouchListener(this);
-        invalidateViews();
-
-        return true;
+        clickItem(position);
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState)
     {
         outState.putBoolean("booleanItemLongClick", booleanItemLongClick);
-        outState.putInt("intGame", intGame);
+        outState.putInt("intItemClick", intItemClick);
         outState.putInt("intItemLongClick", intItemLongClick);
         outState.putInt("intPadding", intPadding);
         outState.putStringArrayList("listGameStrings", (ArrayList<String>)listGameStrings);
@@ -327,25 +364,33 @@ Log.i("xasdf", "X: " + abs(motionEvent.getRawX() - floatX) + " Width: " + view.g
 
     public void removeGameString(int game)
     {
-        getListView().getChildAt(intGame).setOnTouchListener(null);
-
         listGameStrings.remove(game);
 
-        clearSelection();
-        getListView().invalidateViews();
+        if (intItemClick == intItemLongClick)
+        {
+            clearItemClick();
+        }
+        else if (game < intItemClick)
+        {
+            intItemClick--;
+        }
+
+        clearItemLongClick();
+        invalidateViews();
     }
 
     public void setGameString(int game, String gameString)
     {
         listGameStrings.set(game, gameString);
-
         invalidateViews();
     }
 
     public void setGameStrings(List<String> gameStrings)
     {
-        intGame = -1;
         listGameStrings = gameStrings;
+
+        clearItemClick();
+        clearItemLongClick();
     }
 
     public void setPadding(int padding)

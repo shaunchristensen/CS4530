@@ -30,7 +30,7 @@ import edu.utah.cs.cs4530.project3.R;
 import edu.utah.cs.cs4530.project3.controller.FragmentPlayer.OnOKClickListener;
 import edu.utah.cs.cs4530.project3.controller.FragmentStart.OnStartClickListener;
 import edu.utah.cs.cs4530.project3.controller.ListFragmentMenu.OnGameClickListener;
-import edu.utah.cs.cs4530.project3.controller.ListFragmentMenu.OnGameFlingListener;
+import edu.utah.cs.cs4530.project3.controller.ListFragmentMenu.OnGameTouchListener;
 import edu.utah.cs.cs4530.project3.controller.ListFragmentMenu.OnNewGameClickListener;
 import edu.utah.cs.cs4530.project3.model.Battleship;
 import edu.utah.cs.cs4530.project3.view.ship.Carrier;
@@ -44,7 +44,7 @@ import static edu.utah.cs.cs4530.project3.view.LinearLayoutGrid.*;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 
-public class ActivityMain extends AppCompatActivity implements OnGameClickListener, OnGameFlingListener, OnNewGameClickListener, OnOKClickListener, OnShootListener, OnStartClickListener
+public class ActivityMain extends AppCompatActivity implements OnGameClickListener, OnGameTouchListener, OnNewGameClickListener, OnOKClickListener, OnShootListener, OnStartClickListener
 {
     // fields
 
@@ -116,6 +116,7 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
             FileInputStream fileInputStream = getApplicationContext().openFileInput(stringBattleship);
             ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
             battleship = (Battleship)objectInputStream.readObject();
+
             objectInputStream.close();
             fileInputStream.close();
         }
@@ -134,7 +135,6 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
 
         setFragments();
         setGame();
-
         fragmentPlayer.setText(battleship.getStatus(intGame), battleship.getOpponent(intGame), battleship.getPlayer(intGame));
     }
 
@@ -151,7 +151,7 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
 
             booleanGame = false;
 
-            listFragmentMenu.clearSelection();
+            listFragmentMenu.clearItemClick();
         }
         else if (booleanStart)
         {
@@ -165,6 +165,9 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
         {
             finish();
         }
+
+        listFragmentMenu.clearItemLongClick();
+        listFragmentMenu.invalidateViews();
 
         setFragments();
     }
@@ -279,11 +282,24 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
     }
 
     @Override
-    public void onGameFling(int game)
+    public void onGameTouch(int game)
     {
         if (battleship.removeGame(game))
         {
             listFragmentMenu.removeGameString(game);
+
+            if (game == intGame)
+            {
+                fragmentManager.popBackStack(stringListFragmentMenu, 0);
+
+                booleanGame = false;
+
+                setFragments();
+            }
+            else if (game < intGame)
+            {
+                intGame--;
+            }
         }
     }
 
@@ -293,7 +309,6 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
         intGame = battleship.addGame();
 
         listFragmentMenu.addGameString(battleship.getGameString(intGame));
-
         loadGame();
     }
 
@@ -301,6 +316,9 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
     public void onOKClick(Fragment fragment)
     {
         booleanPlayer = true;
+
+        listFragmentMenu.clearItemLongClick();
+        listFragmentMenu.invalidateViews();
 
         setFragments();
     }
@@ -321,16 +339,18 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
     {
         if (battleship.getStatus(intGame))
         {
+            boolean hit = battleship.shoot(intGame, cell);
             booleanPlayer = false;
 
             setFragments();
 
-            boolean hit = battleship.shoot(intGame, cell);
-
             fragmentGame.addShot(hit, cell);
             fragmentGame.setStatus(battleship.getStatus(intGame));
             fragmentGame.setPlayers(battleship.getOpponent(intGame), battleship.getPlayer(intGame));
+
             fragmentPlayer.setText(hit, battleship.getStatus(intGame), cell, battleship.getOpponent(intGame), battleship.getPlayer(intGame));
+
+            listFragmentMenu.clearItemLongClick();
             listFragmentMenu.setGameString(intGame, battleship.getGameString(intGame));
         }
     }
@@ -342,7 +362,8 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
 
         setFragments();
         setLayoutParams();
-    }
+
+   }
 
     @Override
     protected void onStop()
@@ -357,9 +378,11 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
         try
         {
             FileOutputStream fileOutputStream = new FileOutputStream(new File(getFilesDir(), stringBattleship));
+
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
             objectOutputStream.writeObject(battleship);
             objectOutputStream.close();
+
             fileOutputStream.close();
         }
         catch(Exception e)
@@ -395,7 +418,7 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
                 else
                 {
                     fragmentTransaction.attach(fragmentPlayer);
-                    fragmentTransaction.addToBackStack(stringListFragmentMenu);
+                    fragmentTransaction.addToBackStack(stringFragmentPlayer);
                 }
             }
             else
@@ -415,7 +438,6 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
         }
 
         fragmentTransaction.commit();
-
         fragmentManager.executePendingTransactions();
     }
 
