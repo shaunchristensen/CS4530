@@ -113,9 +113,13 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
     }
 
     @Override
-    public boolean onTouch(View view, MotionEvent motionEvent)
+    public boolean onTouch(final View view, MotionEvent motionEvent)
     {
-        if (booleanItemLongClick && getListView().getPositionForView(view) == intItemLongClick)
+        if (booleanItemLongClick)
+        {
+        }
+
+        if (getListView().getPositionForView(view) == intItemLongClick)
         {
             if (motionEvent.getActionMasked() == ACTION_DOWN)
             {
@@ -127,8 +131,11 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
                     @Override
                     public void run()
                     {
-                        longClickItem(intItemLongClick);
+                        intItemLongClick = -1;
 
+                        view.setAlpha(1);
+                        view.setX(floatX);
+                        view.invalidate();
                     }
                 };
 
@@ -137,40 +144,50 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
                 return true;
             }
 
-            handler.removeCallbacks(runnable);
-
             float absX = abs(view.getX() - floatX);
 
-            if (motionEvent.getActionMasked() == ACTION_CANCEL || motionEvent.getActionMasked() == ACTION_OUTSIDE || motionEvent.getActionMasked() == ACTION_UP)
+            if (booleanTouch && absX >= view.getWidth() / 25)
             {
-                if (abs(motionEvent.getRawX() - pointF.x) > abs(motionEvent.getRawY() - pointF.y) && absX >= view.getWidth() / 2)
+                handler.removeCallbacks(runnable);
+
+                booleanTouch = false;
+            }
+
+            if (motionEvent.getActionMasked() == ACTION_CANCEL || /*motionEvent.getActionMasked() == ACTION_OUTSIDE || */motionEvent.getActionMasked() == ACTION_UP)
+            {
+                if (booleanTouch)
                 {
-                    onGameTouchListener.onGameTouch(intItemLongClick);
-                }
-                else if (booleanTouch)
-                {
+                    handler.removeCallbacks(runnable);
                     clickItem(intItemLongClick);
                 }
-                else
+                else if (abs(motionEvent.getRawX() - pointF.x) < abs(motionEvent.getRawY() - pointF.y) ||  absX < view.getWidth() / 2)
                 {
                     view.setAlpha(1);
                     view.setX(floatX);
                     view.invalidate();
                 }
-
-                return false;
+                else
+                {
+                    onGameTouchListener.onGameTouch(intItemLongClick);
+                }
             }
-
-            booleanTouch = false;
-
-            view.setAlpha(absX < view.getWidth() / 2 ? 1 - absX / (view.getWidth() / 2) : 0);
-            view.setX(floatX + (motionEvent.getRawX() - pointF.x));
-            view.invalidate();
-
-            return true;
+            else
+            {
+                view.setAlpha(absX < view.getWidth() / 2 ? 1 - absX / view.getWidth() / 2 : 0);
+                view.setX(floatX);
+                view.invalidate();
+            }
+        }
+        else if (motionEvent.getActionMasked() == ACTION_CANCEL || motionEvent.getActionMasked() == ACTION_UP)
+        {
+            booleanItemLongClick = false;
+        }
+        else
+        {
+            return false;
         }
 
-        return false;
+        return true;
     }
 
     @Override
@@ -307,15 +324,8 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
 
     private void longClickItem(int position)
     {
-        if (position == intItemLongClick)
-        {
-            clearItemLongClick();
-        }
-        else
-        {
-            booleanItemLongClick = true;
-            intItemLongClick = position;
-        }
+        booleanItemLongClick = true;
+        intItemLongClick = position;
 
         invalidateViews();
     }
