@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ListFragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -47,7 +48,7 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
 {
     // fields
 
-    private boolean booleanItemLongClick, booleanTouch;
+    private boolean booleanItemLongClick, booleanItemClick;
     private float floatX;
     private Handler handler;
     private int intItemClick, intItemLongClick, intPadding;
@@ -57,9 +58,6 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
     private OnGameTouchListener onGameTouchListener;
     private PointF pointF;
     private Runnable runnable;
-
-    public ListFragmentMenu() {
-    }
 
     // interfaces
 
@@ -107,7 +105,17 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
     @Override
     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id)
     {
-        longClickItem(position);
+        if (position == intItemLongClick)
+        {
+            clearItemLongClick();
+        }
+        else
+        {
+            booleanItemLongClick = true;
+            intItemLongClick = position;
+        }
+
+        invalidateViews();
 
         return true;
     }
@@ -115,79 +123,80 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
     @Override
     public boolean onTouch(final View view, MotionEvent motionEvent)
     {
-        if (booleanItemLongClick)
-        {
-        }
-
         if (getListView().getPositionForView(view) == intItemLongClick)
         {
-            if (motionEvent.getActionMasked() == ACTION_DOWN)
+            if (booleanItemLongClick)
             {
-                booleanTouch = true;
-                floatX = view.getX();
-                pointF = new PointF(motionEvent.getRawX(), motionEvent.getRawY());
-                runnable = new Runnable()
+                if (motionEvent.getActionMasked() == ACTION_DOWN)
                 {
-                    @Override
-                    public void run()
+                    booleanItemClick = true;
+                    floatX = view.getX();
+                    pointF = new PointF(motionEvent.getRawX(), motionEvent.getRawY());
+                    runnable = new Runnable()
                     {
-                        intItemLongClick = -1;
+                        @Override
+                        public void run()
+                        {
+                            booleanItemLongClick = false;
 
-                        view.setAlpha(1);
-                        view.setX(floatX);
-                        view.invalidate();
-                    }
-                };
+                            view.setAlpha(1);
+                            view.setBackgroundColor(intItemClick == intItemLongClick ? rgb(64, 164, 223) : WHITE);
+                            view.setX(floatX);
+                            view.invalidate();
+                        }
+                    };
 
-                handler.postDelayed(runnable, 500);
-
-                return true;
-            }
-
-            float absX = abs(view.getX() - floatX);
-
-            if (booleanTouch && absX >= view.getWidth() / 25)
-            {
-                handler.removeCallbacks(runnable);
-
-                booleanTouch = false;
-            }
-
-            if (motionEvent.getActionMasked() == ACTION_CANCEL || /*motionEvent.getActionMasked() == ACTION_OUTSIDE || */motionEvent.getActionMasked() == ACTION_UP)
-            {
-                if (booleanTouch)
-                {
-                    handler.removeCallbacks(runnable);
-                    clickItem(intItemLongClick);
-                }
-                else if (abs(motionEvent.getRawX() - pointF.x) < abs(motionEvent.getRawY() - pointF.y) ||  absX < view.getWidth() / 2)
-                {
-                    view.setAlpha(1);
-                    view.setX(floatX);
-                    view.invalidate();
+                    handler.postDelayed(runnable, 500);
                 }
                 else
                 {
-                    onGameTouchListener.onGameTouch(intItemLongClick);
+                    float absX = abs(view.getX() - floatX);
+
+                    if (booleanItemClick && absX >= view.getWidth() / 25 || motionEvent.getActionMasked() == ACTION_CANCEL)
+                    {
+                        handler.removeCallbacks(runnable);
+
+                        booleanItemClick = false;
+                    }
+
+                    if (motionEvent.getActionMasked() == ACTION_CANCEL || motionEvent.getActionMasked() == ACTION_UP)
+                    {
+                        if (booleanItemClick)
+                        {
+                            handler.removeCallbacks(runnable);
+
+                            getListView().performItemClick(view, getListView().getPositionForView(view), view.getId());
+                        }
+                        else if (abs(motionEvent.getRawX() - pointF.x) < abs(motionEvent.getRawY() - pointF.y) ||  absX < view.getWidth() / 2)
+                        {
+                            view.setAlpha(1);
+                            view.setX(floatX);
+                            view.invalidate();
+                        }
+                        else
+                        {
+                            onGameTouchListener.onGameTouch(intItemLongClick);
+                        }
+                    }
+                    else
+                    {
+                        view.setAlpha(absX < view.getWidth() / 2 ? 1 - absX / view.getWidth() / 2 : 0);
+                        view.setX(floatX + motionEvent.getRawX() - pointF.x);
+                        view.invalidate();
+                    }
                 }
             }
-            else
+            else if (motionEvent.getActionMasked() == ACTION_CANCEL || motionEvent.getActionMasked() == ACTION_UP)
             {
-                view.setAlpha(absX < view.getWidth() / 2 ? 1 - absX / view.getWidth() / 2 : 0);
-                view.setX(floatX);
-                view.invalidate();
+                intItemLongClick = -1;
             }
-        }
-        else if (motionEvent.getActionMasked() == ACTION_CANCEL || motionEvent.getActionMasked() == ACTION_UP)
-        {
-            booleanItemLongClick = false;
+
+            return true;
         }
         else
         {
             return false;
         }
-
-        return true;
     }
 
     @Override
@@ -295,6 +304,7 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
 
     public void clearItemClick()
     {
+        booleanItemClick = false;
         intItemClick = -1;
     }
 
@@ -304,30 +314,12 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
         intItemLongClick = -1;
     }
 
-    private void clickItem(int position)
-    {
-        onGameClickListener.onGameClick(position);
-
-        intItemClick = position;
-
-        clearItemLongClick();
-        invalidateViews();
-    }
-
     public void invalidateViews()
     {
         if (isAdded())
         {
             getListView().invalidateViews();
         }
-    }
-
-    private void longClickItem(int position)
-    {
-        booleanItemLongClick = true;
-        intItemLongClick = position;
-
-        invalidateViews();
     }
 
     @Override
@@ -352,7 +344,12 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id)
     {
-        clickItem(position);
+        onGameClickListener.onGameClick(position);
+
+        intItemClick = position;
+
+        clearItemLongClick();
+        invalidateViews();
     }
 
     @Override
