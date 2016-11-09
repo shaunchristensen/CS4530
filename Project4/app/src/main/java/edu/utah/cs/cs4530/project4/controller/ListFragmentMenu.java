@@ -13,21 +13,25 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ListFragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.TimerTask;
+
+import edu.utah.cs.cs4530.project4.R;
 
 import static android.graphics.Color.BLACK;
 import static android.graphics.Color.RED;
@@ -36,7 +40,6 @@ import static android.graphics.Color.rgb;
 import static android.util.TypedValue.COMPLEX_UNIT_SP;
 import static android.view.MotionEvent.ACTION_CANCEL;
 import static android.view.MotionEvent.ACTION_DOWN;
-import static android.view.MotionEvent.ACTION_OUTSIDE;
 import static android.view.MotionEvent.ACTION_UP;
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
@@ -44,20 +47,33 @@ import static android.widget.AdapterView.*;
 import static android.widget.LinearLayout.VERTICAL;
 import static java.lang.Math.abs;
 
-public class ListFragmentMenu extends ListFragment implements ListAdapter, OnClickListener, OnItemClickListener, OnItemLongClickListener, OnTouchListener
+public class ListFragmentMenu extends ListFragment implements ListAdapter, OnClickListener, OnItemClickListener, OnItemLongClickListener, OnItemSelectedListener, OnTouchListener, SpinnerAdapter
 {
     // fields
 
     private boolean booleanItemLongClick, booleanItemClick;
     private float floatX;
     private Handler handler;
-    private int intItemClick, intItemLongClick, intPadding;
+    private int intItemClick, intItemLongClick, intItemSelected, intPadding;
     private List<String> listGameStrings;
     private OnGameClickListener onGameClickListener;
     private OnNewGameClickListener onNewGameClickListener;
     private OnGameTouchListener onGameTouchListener;
     private PointF pointF;
     private Runnable runnable;
+    private final String stringAll = "All";
+    private final String stringDone = "Game Over";
+    private final String stringMy = "My Games";
+    private final String stringPlaying = "In Progress";
+    private final String stringWaiting = "Waiting";
+
+    @Override
+    public View getDropDownView(int position, View view, ViewGroup viewGroup)
+    {
+        View v = new View(getActivity());
+        v.setPadding(intPadding, intPadding, intPadding, intPadding);
+        return v;
+    }
 
     // interfaces
 
@@ -264,6 +280,7 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
             booleanItemLongClick = savedInstanceState.getBoolean("booleanItemLongClick");
             intItemClick = savedInstanceState.getInt("intItemClick");
             intItemLongClick = savedInstanceState.getInt("intItemLongClick");
+            intItemSelected = savedInstanceState.getInt("intItemSelected");
             intPadding = savedInstanceState.getInt("intPadding");
             listGameStrings = new ArrayList<>(savedInstanceState.getStringArrayList("listGameStrings"));
         }
@@ -273,6 +290,9 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
         onNewGameClickListener = (OnNewGameClickListener)getActivity();
         handler = new Handler();
 
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_spinner_item, Arrays.asList(stringAll, stringMy, stringWaiting, stringPlaying, stringDone));
+//        arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
         Button button = new Button(getActivity());
         button.setBackgroundColor(rgb(192, 192, 192));
         button.setOnClickListener(this);
@@ -280,10 +300,22 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
 
         ListView listView = new ListView(getActivity());
         listView.setId(android.R.id.list);
-        listView.setPadding(0, intPadding, 0, 0);
+
+        Spinner spinner = new Spinner(getActivity());
+        spinner.setAdapter(arrayAdapter);
+        spinner.setOnItemSelectedListener(this);
+        spinner.setPadding(intPadding, intPadding, intPadding, intPadding);
+
+        LinearLayout linearLayoutSpinner = new LinearLayout(getActivity());
+        linearLayoutSpinner.addView(spinner, new LayoutParams(MATCH_PARENT, MATCH_PARENT));
+        linearLayoutSpinner.setBackgroundColor(WHITE);
+
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
+        layoutParams.setMargins(0, intPadding, 0, intPadding);
 
         LinearLayout linearLayout = new LinearLayout(getActivity());
         linearLayout.addView(button, new LayoutParams(MATCH_PARENT, WRAP_CONTENT));
+        linearLayout.addView(linearLayoutSpinner, layoutParams);
         linearLayout.addView(listView, new LinearLayout.LayoutParams(MATCH_PARENT, 0, 1));
         linearLayout.setOrientation(VERTICAL);
 
@@ -353,11 +385,27 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
     }
 
     @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
+    {
+        intItemSelected = position;
+
+//        spinner.getSelectedView().setBackgroundColor(getResources().getColor(R.color.white));
+
+//        view.setBackgroundColor(WHITE);
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent)
+    {
+    }
+
+    @Override
     public void onSaveInstanceState(Bundle outState)
     {
         outState.putBoolean("booleanItemLongClick", booleanItemLongClick);
         outState.putInt("intItemClick", intItemClick);
         outState.putInt("intItemLongClick", intItemLongClick);
+        outState.putInt("intItemSelected", intItemSelected);
         outState.putInt("intPadding", intPadding);
         outState.putStringArrayList("listGameStrings", (ArrayList<String>)listGameStrings);
 
