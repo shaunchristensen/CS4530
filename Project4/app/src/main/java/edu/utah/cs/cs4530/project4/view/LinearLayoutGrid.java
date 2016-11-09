@@ -71,7 +71,7 @@ public class LinearLayoutGrid extends LinearLayout implements OnCellClickListene
 
         List<List<Cell>> cells = new ArrayList<>();
 
-        for (int i : players)
+        for (int i = 0; i < 2; i++)
         {
             cells.add(new ArrayList<Cell>());
 

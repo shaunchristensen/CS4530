@@ -8,78 +8,63 @@
 package edu.utah.cs.cs4530.project4.controller;
 
 import android.database.DataSetObserver;
-import android.graphics.PointF;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ListFragment;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.LinearLayout.LayoutParams;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import edu.utah.cs.cs4530.project4.R;
+import edu.utah.cs.cs4530.project4.model.Game;
 
 import static android.graphics.Color.BLACK;
-import static android.graphics.Color.RED;
 import static android.graphics.Color.WHITE;
 import static android.graphics.Color.rgb;
 import static android.util.TypedValue.COMPLEX_UNIT_SP;
-import static android.view.MotionEvent.ACTION_CANCEL;
-import static android.view.MotionEvent.ACTION_DOWN;
-import static android.view.MotionEvent.ACTION_UP;
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
-import static android.widget.AdapterView.*;
 import static android.widget.LinearLayout.VERTICAL;
-import static java.lang.Math.abs;
 
-public class ListFragmentMenu extends ListFragment implements ListAdapter, OnClickListener, OnItemClickListener, OnItemLongClickListener, OnItemSelectedListener, OnTouchListener, SpinnerAdapter
+public class ListFragmentMenu extends ListFragment implements OnClickListener, OnItemClickListener, OnItemSelectedListener
 {
     // fields
 
-    private boolean booleanItemLongClick, booleanItemClick;
-    private float floatX;
-    private Handler handler;
-    private int intItemClick, intItemLongClick, intItemSelected, intPadding;
-    private List<String> listGameStrings;
+    private Gson gson;
+    private int intIndex, intPadding;
+    private List<Game> listGames;
+    private List<String> listStrings;
+    private ListAdapterMenu listAdapterMenu;
     private OnGameClickListener onGameClickListener;
     private OnNewGameClickListener onNewGameClickListener;
-    private OnGameTouchListener onGameTouchListener;
-    private PointF pointF;
-    private Runnable runnable;
-    private final String stringAll = "All";
-    private final String stringDone = "Game Over";
-    private final String stringMy = "My Games";
-    private final String stringPlaying = "In Progress";
-    private final String stringWaiting = "Waiting";
-
-    @Override
-    public View getDropDownView(int position, View view, ViewGroup viewGroup)
-    {
-        View v = new View(getActivity());
-        v.setPadding(intPadding, intPadding, intPadding, intPadding);
-        return v;
-    }
+    private OnGameStatusSelectListener onGameStatusSelectListener;
+    private String stringID;
+    private Type type;
 
     // interfaces
 
     public interface OnGameClickListener
     {
-        void onGameClick(int game);
+        void onGameClick(String id);
     }
 
     public interface OnNewGameClickListener
@@ -87,211 +72,32 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
         void onNewGameClick();
     }
 
-    public interface OnGameTouchListener
+    public interface OnGameStatusSelectListener
     {
-        void onGameTouch(int game);
+        void onGameStatusSelect(int index);
     }
 
     // methods
 
     @Override
-    public boolean areAllItemsEnabled()
-    {
-        return true;
-    }
-
-    @Override
-    public boolean hasStableIds()
-    {
-        return true;
-    }
-
-    @Override
-    public boolean isEmpty()
-    {
-        return false;
-    }
-
-    @Override
-    public boolean isEnabled(int position)
-    {
-        return true;
-    }
-
-    @Override
-    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id)
-    {
-        if (position == intItemLongClick)
-        {
-            clearItemLongClick();
-        }
-        else
-        {
-            booleanItemLongClick = true;
-            intItemLongClick = position;
-        }
-
-        invalidateViews();
-
-        return true;
-    }
-
-    @Override
-    public boolean onTouch(final View view, MotionEvent motionEvent)
-    {
-        if (getListView().getPositionForView(view) == intItemLongClick)
-        {
-            if (booleanItemLongClick)
-            {
-                if (motionEvent.getActionMasked() == ACTION_DOWN)
-                {
-                    booleanItemClick = true;
-                    floatX = view.getX();
-                    pointF = new PointF(motionEvent.getRawX(), motionEvent.getRawY());
-                    runnable = new Runnable()
-                    {
-                        @Override
-                        public void run()
-                        {
-                            booleanItemLongClick = false;
-
-                            view.setAlpha(1);
-                            view.setBackgroundColor(intItemClick == intItemLongClick ? rgb(64, 164, 223) : WHITE);
-                            view.setX(floatX);
-                            view.invalidate();
-                        }
-                    };
-
-                    handler.postDelayed(runnable, 500);
-                }
-                else
-                {
-                    float absX = abs(view.getX() - floatX);
-
-                    if (booleanItemClick && absX >= view.getWidth() / 25 || motionEvent.getActionMasked() == ACTION_CANCEL)
-                    {
-                        handler.removeCallbacks(runnable);
-
-                        booleanItemClick = false;
-                    }
-
-                    if (motionEvent.getActionMasked() == ACTION_CANCEL || motionEvent.getActionMasked() == ACTION_UP)
-                    {
-                        if (booleanItemClick)
-                        {
-                            handler.removeCallbacks(runnable);
-
-                            getListView().performItemClick(view, getListView().getPositionForView(view), view.getId());
-                        }
-                        else if (abs(motionEvent.getRawX() - pointF.x) < abs(motionEvent.getRawY() - pointF.y) ||  absX < view.getWidth() / 2)
-                        {
-                            view.setAlpha(1);
-                            view.setX(floatX);
-                            view.invalidate();
-                        }
-                        else
-                        {
-                            onGameTouchListener.onGameTouch(intItemLongClick);
-                        }
-                    }
-                    else
-                    {
-                        view.setAlpha(absX < view.getWidth() / 2 ? 1 - absX / view.getWidth() / 2 : 0);
-                        view.setX(floatX + motionEvent.getRawX() - pointF.x);
-                        view.invalidate();
-                    }
-                }
-            }
-            else if (motionEvent.getActionMasked() == ACTION_CANCEL || motionEvent.getActionMasked() == ACTION_UP)
-            {
-                intItemLongClick = -1;
-            }
-
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    @Override
-    public int getCount()
-    {
-        return listGameStrings.size();
-    }
-
-    @Override
-    public int getItemViewType(int position)
-    {
-        return 0;
-    }
-
-    @Override
-    public int getViewTypeCount()
-    {
-        return 1;
-    }
-
-    @Override
-    public long getItemId(int position)
-    {
-        return 0;
-    }
-
-    @Override
-    public Object getItem(int position)
-    {
-        return null;
-    }
-
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent)
-    {
-        TextView textView = new TextView(getActivity());
-
-        if (booleanItemLongClick && position == intItemLongClick)
-        {
-            textView.setBackgroundColor(RED);
-        }
-        else if (position == intItemClick)
-        {
-            textView.setBackgroundColor(rgb(64, 164, 223));
-        }
-        else
-        {
-            textView.setBackgroundColor(WHITE);
-        }
-
-        textView.setOnTouchListener(this);
-        textView.setPadding(intPadding, intPadding, intPadding, intPadding);
-        textView.setText(listGameStrings.get(position));
-        textView.setTextColor(BLACK);
-        textView.setTextSize(COMPLEX_UNIT_SP, 12.5f);
-
-        return textView;
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
+        gson = new Gson();
+        listGames = new ArrayList<>();
+        listStrings = Arrays.asList("All", "My Games", "Waiting", "In Progress", "Game Over");
+        type = new TypeToken<List<Game>>(){}.getType();
+
         if (savedInstanceState != null)
         {
-            booleanItemLongClick = savedInstanceState.getBoolean("booleanItemLongClick");
-            intItemClick = savedInstanceState.getInt("intItemClick");
-            intItemLongClick = savedInstanceState.getInt("intItemLongClick");
-            intItemSelected = savedInstanceState.getInt("intItemSelected");
+            intIndex = savedInstanceState.getInt("intIndex");
             intPadding = savedInstanceState.getInt("intPadding");
-            listGameStrings = new ArrayList<>(savedInstanceState.getStringArrayList("listGameStrings"));
+            listGames = gson.fromJson(savedInstanceState.getString("listGames"), type);
+            stringID = savedInstanceState.getString("stringID");
         }
 
         onGameClickListener = (OnGameClickListener)getActivity();
-        onGameTouchListener = (OnGameTouchListener)getActivity();
         onNewGameClickListener = (OnNewGameClickListener)getActivity();
-        handler = new Handler();
-
-        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_spinner_item, Arrays.asList(stringAll, stringMy, stringWaiting, stringPlaying, stringDone));
-//        arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        onGameStatusSelectListener = (OnGameStatusSelectListener)getActivity();
 
         Button button = new Button(getActivity());
         button.setBackgroundColor(rgb(192, 192, 192));
@@ -302,48 +108,34 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
         listView.setId(android.R.id.list);
 
         Spinner spinner = new Spinner(getActivity());
-        spinner.setAdapter(arrayAdapter);
+        spinner.setAdapter(new SpinnerAdapterMenu());
         spinner.setOnItemSelectedListener(this);
-        spinner.setPadding(intPadding, intPadding, intPadding, intPadding);
 
         LinearLayout linearLayoutSpinner = new LinearLayout(getActivity());
         linearLayoutSpinner.addView(spinner, new LayoutParams(MATCH_PARENT, MATCH_PARENT));
         linearLayoutSpinner.setBackgroundColor(WHITE);
 
-        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
+        LayoutParams layoutParams = new LayoutParams(MATCH_PARENT, WRAP_CONTENT);
         layoutParams.setMargins(0, intPadding, 0, intPadding);
 
         LinearLayout linearLayout = new LinearLayout(getActivity());
         linearLayout.addView(button, new LayoutParams(MATCH_PARENT, WRAP_CONTENT));
         linearLayout.addView(linearLayoutSpinner, layoutParams);
-        linearLayout.addView(listView, new LinearLayout.LayoutParams(MATCH_PARENT, 0, 1));
+        linearLayout.addView(listView, new LayoutParams(MATCH_PARENT, 0, 1));
         linearLayout.setOrientation(VERTICAL);
 
         return linearLayout;
     }
 
-    public void addGameString(String gameString)
+    public void addGame(Game game)
     {
-        listGameStrings.add(gameString);
+        listGames.add(game);
 
-        intItemClick = listGameStrings.size() - 1;
+        stringID = game.getID();
 
-        clearItemLongClick();
-        setListAdapter(this);
+        setListAdapter(listAdapterMenu);
         getListView().invalidateViews();
-        getListView().setSelection(intItemClick);
-    }
-
-    public void clearItemClick()
-    {
-        booleanItemClick = false;
-        intItemClick = -1;
-    }
-
-    public void clearItemLongClick()
-    {
-        booleanItemLongClick = false;
-        intItemLongClick = -1;
+        getListView().setSelection(listGames.size() - 1);
     }
 
     public void invalidateViews()
@@ -360,8 +152,7 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
         super.onActivityCreated(savedInstanceState);
 
         getListView().setOnItemClickListener(this);
-        getListView().setOnItemLongClickListener(this);
-        setListAdapter(this);
+        setListAdapter(new ListAdapterMenu());
     }
 
     @Override
@@ -374,78 +165,58 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
     }
 
     @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id)
+    public void onItemClick(AdapterView<?> parent, View view, int i, long id)
     {
-        onGameClickListener.onGameClick(position);
+        String s = listGames.get(i).toString();
 
-        intItemClick = position;
+        if (!stringID.equalsIgnoreCase(s))
+        {
+            stringID = s;
 
-        clearItemLongClick();
-        invalidateViews();
+            onGameClickListener.onGameClick(stringID);
+
+            invalidateViews();
+        }
     }
 
     @Override
-    public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
+    public void onItemSelected(AdapterView<?> parent, View view, int i, long id)
     {
-        intItemSelected = position;
+        if (intIndex != i)
+        {
+            intIndex = i;
 
-//        spinner.getSelectedView().setBackgroundColor(getResources().getColor(R.color.white));
-
-//        view.setBackgroundColor(WHITE);
+            onGameStatusSelectListener.onGameStatusSelect(intIndex);
+        }
     }
 
     @Override
-    public void onNothingSelected(AdapterView<?> parent)
+    public void onNothingSelected(AdapterView<?> adapterView)
     {
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState)
     {
-        outState.putBoolean("booleanItemLongClick", booleanItemLongClick);
-        outState.putInt("intItemClick", intItemClick);
-        outState.putInt("intItemLongClick", intItemLongClick);
-        outState.putInt("intItemSelected", intItemSelected);
+        outState.putInt("intIndex", intIndex);
         outState.putInt("intPadding", intPadding);
-        outState.putStringArrayList("listGameStrings", (ArrayList<String>)listGameStrings);
+        outState.putString("listGames", gson.toJson(listGames, type));
+        outState.putString("stringID", stringID);
 
         super.onSaveInstanceState(outState);
     }
 
-    @Override
-    public void registerDataSetObserver(DataSetObserver observer)
+    public void setGame(int index, Game game)
     {
-    }
-
-    public void removeGameString(int game)
-    {
-        listGameStrings.remove(game);
-
-        if (intItemClick == intItemLongClick)
-        {
-            clearItemClick();
-        }
-        else if (game < intItemClick)
-        {
-            intItemClick--;
-        }
-
-        clearItemLongClick();
+        listGames.set(index, game);
         invalidateViews();
     }
 
-    public void setGameString(int game, String gameString)
+    public void setGames(List<Game> games)
     {
-        listGameStrings.set(game, gameString);
+        listGames = games;
+
         invalidateViews();
-    }
-
-    public void setGameStrings(List<String> gameStrings)
-    {
-        listGameStrings = gameStrings;
-
-        clearItemClick();
-        clearItemLongClick();
     }
 
     public void setPadding(int padding)
@@ -453,8 +224,178 @@ public class ListFragmentMenu extends ListFragment implements ListAdapter, OnCli
         intPadding = padding;
     }
 
-    @Override
-    public void unregisterDataSetObserver(DataSetObserver observer)
+    // classes
+
+    private class ListAdapterMenu implements ListAdapter
     {
+        @Override
+        public boolean areAllItemsEnabled()
+        {
+            return true;
+        }
+
+        @Override
+        public boolean hasStableIds()
+        {
+            return true;
+        }
+
+        @Override
+        public boolean isEmpty()
+        {
+            return false;
+        }
+
+        @Override
+        public boolean isEnabled(int i)
+        {
+            return true;
+        }
+
+        @Override
+        public int getCount()
+        {
+            return listGames.size();
+        }
+
+        @Override
+        public int getItemViewType(int i)
+        {
+            return 0;
+        }
+
+        @Override
+        public int getViewTypeCount()
+        {
+            return 1;
+        }
+
+        @Override
+        public long getItemId(int i)
+        {
+            return 0;
+        }
+
+        @Override
+        public Object getItem(int i)
+        {
+            return null;
+        }
+
+        @Override
+        public View getView(int i, View view, ViewGroup viewGroup)
+        {
+            TextView textView = new TextView(getActivity());
+
+            if (listGames.get(i).getID().equalsIgnoreCase(stringID))
+            {
+                textView.setBackgroundColor(rgb(64, 164, 223));
+            }
+            else
+            {
+                textView.setBackgroundColor(WHITE);
+            }
+
+            textView.setPadding(intPadding, intPadding, intPadding, intPadding);
+            textView.setText(listGames.get(i).toString());
+            textView.setTextColor(BLACK);
+            textView.setTextSize(COMPLEX_UNIT_SP, 12.5f);
+
+            return textView;
+        }
+
+        @Override
+        public void registerDataSetObserver(DataSetObserver dataSetObserver)
+        {
+        }
+
+        @Override
+        public void unregisterDataSetObserver(DataSetObserver dataSetObserver)
+        {
+        }
+    }
+
+    private class SpinnerAdapterMenu implements SpinnerAdapter
+    {
+        @Override
+        public boolean hasStableIds()
+        {
+            return true;
+        }
+
+        @Override
+        public boolean isEmpty()
+        {
+            return false;
+        }
+
+        @Override
+        public int getCount()
+        {
+            return listStrings.size();
+        }
+
+        @Override
+        public int getItemViewType(int i)
+        {
+            return 0;
+        }
+
+        @Override
+        public int getViewTypeCount()
+        {
+            return 1;
+        }
+
+        @Override
+        public long getItemId(int i)
+        {
+            return 0;
+        }
+
+        @Override
+        public Object getItem(int i)
+        {
+            return null;
+        }
+
+        @Override
+        public View getDropDownView(int i, View view, ViewGroup viewGroup)
+        {
+            TextView textView = (TextView)getView(i, view, viewGroup);
+
+            if (i == intIndex)
+            {
+                textView.setBackgroundColor(rgb(64, 164, 223));
+            }
+            else
+            {
+                textView.setBackgroundColor(WHITE);
+            }
+
+            return textView;
+        }
+
+        @Override
+        public View getView(int i, View view, ViewGroup viewGroup)
+        {
+            TextView textView = new TextView(getActivity());
+            textView.setPadding(intPadding, intPadding, intPadding, intPadding);
+            textView.setText(listStrings.get(i));
+            textView.setTextColor(BLACK);
+            textView.setTextSize(COMPLEX_UNIT_SP, 12.5f);
+
+            return textView;
+        }
+
+        @Override
+        public void registerDataSetObserver(DataSetObserver dataSetObserver)
+        {
+        }
+
+        @Override
+        public void unregisterDataSetObserver(DataSetObserver dataSetObserver)
+        {
+        }
     }
 }

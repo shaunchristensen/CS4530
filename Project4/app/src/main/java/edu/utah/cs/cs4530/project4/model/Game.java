@@ -8,120 +8,65 @@
 package edu.utah.cs.cs4530.project4.model;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-
-import edu.utah.cs.cs4530.project4.model.ship.Ship;
-
-import static java.lang.Math.round;
 
 public class Game implements Serializable
 {
     // fields
 
-    private boolean booleanStatus;
-    private int intPlayer;
-    private final int intPlayersCount;
-    private final List<List<Ship>> listShips;
-    private final List<Set<Integer>> listHits, listMisses;
+    private String id, name, status;
 
     // constructors
 
-    public Game(int player, int playersCount, List<List<Ship>> ships, List<Set<Integer>> hits, List<Set<Integer>> misses)
+    public Game()
     {
-        booleanStatus = true;
-        intPlayer = player;
-        intPlayersCount = playersCount;
-        listHits = Collections.unmodifiableList(hits);
-        listMisses = Collections.unmodifiableList(misses);
-        listShips = Collections.unmodifiableList(ships);
     }
 
     // methods
 
-    public boolean getStatus()
+    public String getID()
     {
-        return booleanStatus;
+        return id;
     }
 
-    public boolean shoot(final int cell)
+    public String getName()
     {
-        int opponent = getOpponent();
-
-        for (Ship s : listShips.get(opponent))
-        {
-            if (s.containsCell(cell))
-            {
-                listHits.get(opponent).add(cell);
-                s.removeCell(cell);
-
-                for (Ship t : listShips.get(opponent))
-                {
-                    if (t.getStatus())
-                    {
-                        intPlayer = opponent;
-
-                        return true;
-                    }
-                }
-
-                booleanStatus = false;
-
-                return true;
-            }
-        }
-
-        intPlayer = opponent;
-
-        listMisses.get(opponent).add(cell);
-
-        return false;
+        return name;
     }
 
-    public int getOpponent()
+    public String getStatus()
     {
-        return (intPlayer + 1) % intPlayersCount;
-    }
-
-    public int getPlayer()
-    {
-        return intPlayer;
-    }
-
-    public List<Set<Integer>> getHits()
-    {
-        return new ArrayList<>(listHits);
-    }
-
-    public List<Set<Integer>> getMisses()
-    {
-        return new ArrayList<>(listMisses);
-    }
-
-    public List<Ship> getShips(int player)
-    {
-        return new ArrayList<>(listShips.get(player));
+        return status;
     }
 
     @Override
     public String toString()
     {
-        int hitsCount, missesCount, shotsCount;
+        return name + " - " + status;
+    }
 
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append((booleanStatus ? "In Progress" : "Game Over") + ". Player " + (intPlayer + 1) + ". Shots ‐");
+    public void setID(String id)
+    {
+        this.id = id;
+    }
 
-        for (int i = 0; i < intPlayersCount; i++)
+    public void setName(String name)
+    {
+        this.name = name;
+    }
+
+    public void setStatus(String status)
+    {
+        if (status.equalsIgnoreCase("waiting"))
         {
-            hitsCount = listHits.get(i).size();
-            missesCount = listMisses.get(i).size();
-            shotsCount = hitsCount + missesCount;
-
-            stringBuilder.append(" Player " + (i + 1) + ": " + hitsCount + "/" + (shotsCount) + " (" + round(hitsCount * 100d / (shotsCount)) + "%).");
+            this.status = "Waiting";
         }
-
-        return stringBuilder.toString();
+        else if (status.equalsIgnoreCase("playing"))
+        {
+            this.status = "In Progress";
+        }
+        else
+        {
+            this.status = "Game Over";
+        }
     }
 }
