@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">Battleship</string>
+    <string-array name="GameSets">
+        <item>All</item>
+        <item>My Games</item>
+        <item>Waiting</item>
+        <item>In Progress</item>
+        <item>Over</item>
+    </string-array>
 </resources>

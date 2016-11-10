@@ -7,6 +7,10 @@
 
 package edu.utah.cs.cs4530.project4.controller;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.AsyncTask;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -18,11 +22,24 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,6 +49,7 @@ import edu.utah.cs.cs4530.project4.controller.FragmentStart.OnStartClickListener
 import edu.utah.cs.cs4530.project4.controller.ListFragmentMenu.OnGameClickListener;
 import edu.utah.cs.cs4530.project4.controller.ListFragmentMenu.OnGameStatusSelectListener;
 import edu.utah.cs.cs4530.project4.controller.ListFragmentMenu.OnNewGameClickListener;
+import edu.utah.cs.cs4530.project4.model.Game;
 
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static edu.utah.cs.cs4530.project4.view.LinearLayoutGrid.*;
@@ -41,6 +59,10 @@ import static java.lang.Math.sqrt;
 public class ActivityMain extends AppCompatActivity implements OnGameClickListener, OnNewGameClickListener, OnGameStatusSelectListener, OnShootListener, OnStartClickListener
 {
     // fields
+
+    private List<Game> listGames;
+
+private Gson gson = new Gson();
 
     private boolean booleanGame, booleanPlayer, booleanStart, booleanTablet;
     private FragmentGame fragmentGame;
@@ -216,12 +238,116 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
             fragmentManager.executePendingTransactions();
         }
 
+
+
+
+
+
+        if (isConnected())
+        {
+           new test().execute("lobby");
+        }
+
         setContentView(linearLayout);
         setFragments();
         setGame();
         setLayoutParams();
     }
-/*
+
+    private boolean isConnected()
+    {
+        NetworkInfo networkInfo = ((ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
+
+        return networkInfo != null && networkInfo.isConnected();
+    }
+
+    private class test extends AsyncTask<String, Void, String>
+    {
+        @Override
+        protected String doInBackground(String... params)
+        {
+            HttpURLConnection httpURLConnection = null;
+            StringBuilder stringBuilder = new StringBuilder();
+
+            try
+            {
+                URL url = new URL("http://battleship.pixio.com/api/v2/" + params[0]);
+
+                httpURLConnection = (HttpURLConnection)url.openConnection();
+                httpURLConnection.setChunkedStreamingMode(0);
+                httpURLConnection.setDoOutput(true);
+
+                httpURLConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+                httpURLConnection.setRequestMethod("POST");
+
+                try
+                (
+                    OutputStream outputStream = httpURLConnection.getOutputStream();
+                    OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream);
+                    BufferedWriter bufferedWriter = new BufferedWriter(outputStreamWriter);
+                )
+                {
+                    Log.i("Shiiiit", "{\"gameName=\"Hello\",\"playerName\":\"It's Me\"}");
+                    bufferedWriter.write("{\"gameName\":\"Hello\",\"playerName\":\"It's Me\"}");
+//                    bufferedWriter.flush();
+                }
+                catch (Exception e)
+                {
+                    Log.e("Write", "Error: " + e.getMessage());
+                }
+
+                if (httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_OK)
+                {
+                    try
+                    (
+                            InputStream inputStream = httpURLConnection.getInputStream();
+                            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                            BufferedReader bufferedReader = new BufferedReader(inputStreamReader)
+                    )
+                    {
+                        String s;
+
+                        while ((s = bufferedReader.readLine()) != null)
+                        {
+                            stringBuilder.append(s);
+                        }
+                        Log.i("Hello", "It's me4");
+                    }
+                    catch (Exception e)
+                    {
+                        Log.e("Read", "Error: " + e.getMessage());
+                    }
+                }
+                else
+                {
+                    Log.i("Shit", "" + httpURLConnection.getResponseCode());
+                    // shit shit shit shit shit
+                }
+            }
+            catch (Exception e)
+            {
+            }
+            finally
+            {
+                if (httpURLConnection != null)
+                {
+                    httpURLConnection.disconnect();
+                }
+            }
+
+            return stringBuilder.toString();
+        }
+
+        @Override
+        protected void onPostExecute(String s)
+        {
+
+//            listGames = gson.fromJson(s, new TypeToken<List<Game>>(){}.getType());
+//            listFragmentMenu.setGames(listGames);
+        }
+    }
+
+    /*
     @Override
     public void onGameClick(int game)
     {

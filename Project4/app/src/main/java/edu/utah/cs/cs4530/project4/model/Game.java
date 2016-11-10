@@ -7,9 +7,7 @@
 
 package edu.utah.cs.cs4530.project4.model;
 
-import java.io.Serializable;
-
-public class Game implements Serializable
+public class Game
 {
     // fields
 
@@ -26,11 +24,6 @@ public class Game implements Serializable
     public String getID()
     {
         return id;
-    }
-
-    public String getName()
-    {
-        return name;
     }
 
     public String getStatus()
