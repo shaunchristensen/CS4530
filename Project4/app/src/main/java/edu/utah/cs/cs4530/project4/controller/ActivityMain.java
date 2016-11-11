@@ -44,6 +44,8 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import edu.utah.cs.cs4530.project4.R;
@@ -52,6 +54,7 @@ import edu.utah.cs.cs4530.project4.controller.ListFragmentMenu.OnGameClickListen
 import edu.utah.cs.cs4530.project4.controller.ListFragmentMenu.OnNewGameClickListener;
 import edu.utah.cs.cs4530.project4.model.Battleship;
 import edu.utah.cs.cs4530.project4.model.Game;
+import edu.utah.cs.cs4530.project4.model.GameSets;
 
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static edu.utah.cs.cs4530.project4.view.LinearLayoutGrid.*;
@@ -246,6 +249,7 @@ private int intSpinnerIndex;
 
         if (listGames == null)
         {
+            listMyGames = new ArrayList<>();
             listGames = new ArrayList<>();
         }
 
@@ -265,6 +269,8 @@ private int intSpinnerIndex;
         };
 
         handler.post(runnableGetGames);
+
+        listFragmentMenu.setGameSets(GameSets.getGameSets());
 
         setContentView(linearLayout);
         setFragments();
@@ -297,7 +303,7 @@ private int intSpinnerIndex;
     @Override
     public void onNewGameClick()
     {
-
+        new test2().execute("lobby");
     }
 
     private class test extends AsyncTask<String, Void, String>
@@ -317,10 +323,85 @@ private int intSpinnerIndex;
                 if (httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_OK)
                 {
                     try
+                            (
+                                    InputStream inputStream = httpURLConnection.getInputStream();
+                                    InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                                    BufferedReader bufferedReader = new BufferedReader(inputStreamReader)
+                            )
+                    {
+                        String s;
+
+                        while ((s = bufferedReader.readLine()) != null)
+                        {
+                            stringBuilder.append(s);
+                        }
+                    }
+                }
+                else
+                {
+                    Log.i("responseCode", "Error " + httpURLConnection.getResponseCode() + ": Unable to connect to the server. " + httpURLConnection.getResponseMessage());
+                }
+            }
+            catch (Exception e)
+            {
+                Log.i("openConnection", "Error: Unable to connect to the server. " + e.getMessage());
+            }
+            finally
+            {
+                if (httpURLConnection != null)
+                {
+                    httpURLConnection.disconnect();
+                }
+            }
+
+            return stringBuilder.toString();
+        }
+
+        @Override
+        protected void onPostExecute(String s)
+        {
+
+            listGames = gson.fromJson(s, new TypeToken<List<Game>>(){}.getType());
+
+            setGames();
+        }
+    }
+
+    private class test2 extends AsyncTask<String, Void, String>
+    {
+        @Override
+        protected String doInBackground(String... params)
+        {
+            HttpURLConnection httpURLConnection = null;
+            StringBuilder stringBuilder = new StringBuilder();
+
+            try
+            {
+                URL url = new URL("http://battleship.pixio.com/api/v2/" + params[0]);
+
+                httpURLConnection = (HttpURLConnection)url.openConnection();
+                httpURLConnection.setDoOutput(true);
+                httpURLConnection.setRequestMethod("POST");
+                httpURLConnection.setRequestProperty("Content-Type", "application/json");
+
+                try
+                (
+                        OutputStream outputStream = httpURLConnection.getOutputStream();
+                        OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream);
+                        BufferedWriter bufferedWriter = new BufferedWriter(outputStreamWriter);
+                )
+                {
+                    bufferedWriter.write("{\"gameName\":\"gameName2\",\"playerName\":\"playerName2\"}");
+                    bufferedWriter.flush();
+                }
+
+                if (httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_OK)
+                {
+                    try
                     (
-                            InputStream inputStream = httpURLConnection.getInputStream();
-                            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-                            BufferedReader bufferedReader = new BufferedReader(inputStreamReader)
+                        InputStream inputStream = httpURLConnection.getInputStream();
+                        InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                        BufferedReader bufferedReader = new BufferedReader(inputStreamReader)
                     )
                     {
                         String s;
@@ -354,22 +435,23 @@ private int intSpinnerIndex;
         @Override
         protected void onPostExecute(String s)
         {
-            listGames = gson.fromJson(s, new TypeToken<List<Game>>(){}.getType());
-
+            // not game
+            Game game = gson.fromJson(s, Game.class);
+//            {"playerId":"0724bbd1-ca85-41be-8738-016b6348c8a3","gameId":"5a007e4e-a509-4d91-ba68-46e0fa73c785"}
+            listGames.add(game);
+            listMyGames.add(game);
             setGames();
         }
     }
 
     private void setGames()
     {
-        List<Game> games = new ArrayList<>();
+       List<Game> games = new ArrayList<>();
         String gameSet;
 
         if (intSpinnerIndex == 1)
         {
-            // my games
-            // temp
-            games.add(listGames.get(1));
+            games.addAll(listMyGames);
         }
         else
         {

@@ -33,23 +33,12 @@ public class Game
 
     public String getStatus()
     {
-        if (status.equalsIgnoreCase("Waiting"))
-        {
-            return "Waiting";
-        }
-        else if (status.equalsIgnoreCase("Playing"))
-        {
-            return "In Progress";
-        }
-        else
-        {
-            return "Over";
-        }
+        return GameSets.getGameSet(status);
     }
 
     @Override
     public String toString()
     {
-        return getName() + " - " + getStatus();
+        return getName();
     }
 }

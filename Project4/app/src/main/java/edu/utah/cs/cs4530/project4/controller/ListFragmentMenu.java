@@ -52,7 +52,7 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
     // fields
 
     private Gson gson;
-    private int intPadding, intSpinnerIndex;
+    private int intGameSet, intPadding;
     private List<Game> listGames;
     private List<String> listGameSets;
     private OnGameClickListener onGameClickListener;
@@ -84,22 +84,6 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
-        gson = new Gson();
-        listGameSets = Arrays.asList(getResources().getStringArray(R.array.GameSets));
-        type = new TypeToken<List<Game>>(){}.getType();
-
-        if (savedInstanceState != null)
-        {
-            intPadding = savedInstanceState.getInt("intPadding");
-            intSpinnerIndex = savedInstanceState.getInt("intSpinnerIndex");
-            listGames = gson.fromJson(savedInstanceState.getString("listGames"), type);
-            stringGameID = savedInstanceState.getString("stringGameID");
-        }
-        else
-        {
-            listGames = new ArrayList<>();
-        }
-
         onGameClickListener = (OnGameClickListener)getActivity();
         onGameSetSelectListener = (OnGameSetSelectListener)getActivity();
         onNewGameClickListener = (OnNewGameClickListener)getActivity();
@@ -159,6 +143,29 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
     }
 
     @Override
+    public void onCreate(@Nullable Bundle savedInstanceState)
+    {
+        super.onCreate(savedInstanceState);
+
+        gson = new Gson();
+        type = new TypeToken<List<Game>>(){}.getType();
+
+        if (savedInstanceState != null)
+        {
+            intGameSet = savedInstanceState.getInt("intGameSet");
+            intPadding = savedInstanceState.getInt("intPadding");
+            listGames = gson.fromJson(savedInstanceState.getString("listGames"), type);
+            stringGameID = savedInstanceState.getString("stringGameID");
+        }
+        else
+        {
+            listGames = new ArrayList<>();
+            listGameSets = new ArrayList<>();
+
+        }
+    }
+
+    @Override
     public void onItemClick(AdapterView<?> parent, View view, int i, long id)
     {
         String s = listGames.get(i).toString();
@@ -175,9 +182,9 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int i, long id)
     {
-        if (intSpinnerIndex != i)
+        if (intGameSet != i)
         {
-            intSpinnerIndex = i;
+            intGameSet = i;
 
             onGameSetSelectListener.onGameSetSelect(i);
         }
@@ -191,8 +198,8 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
     @Override
     public void onSaveInstanceState(Bundle outState)
     {
+        outState.putInt("intGameSet", intGameSet);
         outState.putInt("intPadding", intPadding);
-        outState.putInt("intSpinnerIndex", intSpinnerIndex);
         outState.putString("listGames", gson.toJson(listGames, type));
         outState.putString("stringGameID", stringGameID);
 
@@ -206,14 +213,19 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
         invalidateViews();
     }
 
+    public void setGameSets(List<String> gameSets)
+    {
+        listGameSets = gameSets;
+    }
+
     public void setPadding(int padding)
     {
         intPadding = padding;
     }
 
-    public void setSelection(int index)
+    public void setSelection(int gameSet)
     {
-        spinner.setSelection(index);
+        spinner.setSelection(gameSet);
     }
 
     // classes
@@ -278,7 +290,7 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
         public View getView(int i, View view, ViewGroup viewGroup)
         {
             TextView textView = new TextView(getActivity());
-
+Log.i("Null", "" + listGames.get(i).getID());
             if (listGames.get(i).getID().equalsIgnoreCase(stringGameID))
             {
                 textView.setBackgroundColor(rgb(64, 164, 223));
@@ -356,7 +368,7 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
         {
             TextView textView = (TextView)getView(i, view, viewGroup);
 
-            if (i == intSpinnerIndex)
+            if (i == intGameSet)
             {
                 textView.setBackgroundColor(rgb(64, 164, 223));
             }
