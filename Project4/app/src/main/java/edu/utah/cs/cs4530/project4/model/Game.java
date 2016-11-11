@@ -26,40 +26,30 @@ public class Game
         return id;
     }
 
+    public String getName()
+    {
+        return name;
+    }
+
     public String getStatus()
     {
-        return status;
+        if (status.equalsIgnoreCase("Waiting"))
+        {
+            return "Waiting";
+        }
+        else if (status.equalsIgnoreCase("Playing"))
+        {
+            return "In Progress";
+        }
+        else
+        {
+            return "Over";
+        }
     }
 
     @Override
     public String toString()
     {
-        return name + " - " + status;
-    }
-
-    public void setID(String id)
-    {
-        this.id = id;
-    }
-
-    public void setName(String name)
-    {
-        this.name = name;
-    }
-
-    public void setStatus(String status)
-    {
-        if (status.equalsIgnoreCase("waiting"))
-        {
-            this.status = "Waiting";
-        }
-        else if (status.equalsIgnoreCase("playing"))
-        {
-            this.status = "In Progress";
-        }
-        else
-        {
-            this.status = "Game Over";
-        }
+        return getName() + " - " + getStatus();
     }
 }

@@ -11,6 +11,7 @@ import android.database.DataSetObserver;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ListFragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -51,14 +52,14 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
     // fields
 
     private Gson gson;
-    private int intIndex, intPadding;
+    private int intPadding, intSpinnerIndex;
     private List<Game> listGames;
     private List<String> listGameSets;
     private OnGameClickListener onGameClickListener;
+    private OnGameSetSelectListener onGameSetSelectListener;
     private OnNewGameClickListener onNewGameClickListener;
-    private OnGameStatusSelectListener onGameStatusSelectListener;
     private Spinner spinner;
-    private String stringID;
+    private String stringGameID;
     private Type type;
 
     // interfaces
@@ -68,14 +69,14 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
         void onGameClick(String id);
     }
 
+    public interface OnGameSetSelectListener
+    {
+        void onGameSetSelect(int index);
+    }
+
     public interface OnNewGameClickListener
     {
         void onNewGameClick();
-    }
-
-    public interface OnGameStatusSelectListener
-    {
-        void onGameStatusSelect(int index);
     }
 
     // methods
@@ -89,10 +90,10 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
 
         if (savedInstanceState != null)
         {
-            intIndex = savedInstanceState.getInt("intIndex");
             intPadding = savedInstanceState.getInt("intPadding");
+            intSpinnerIndex = savedInstanceState.getInt("intSpinnerIndex");
             listGames = gson.fromJson(savedInstanceState.getString("listGames"), type);
-            stringID = savedInstanceState.getString("stringID");
+            stringGameID = savedInstanceState.getString("stringGameID");
         }
         else
         {
@@ -100,8 +101,8 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
         }
 
         onGameClickListener = (OnGameClickListener)getActivity();
+        onGameSetSelectListener = (OnGameSetSelectListener)getActivity();
         onNewGameClickListener = (OnNewGameClickListener)getActivity();
-        onGameStatusSelectListener = (OnGameStatusSelectListener)getActivity();
 
         Button button = new Button(getActivity());
         button.setBackgroundColor(rgb(192, 192, 192));
@@ -162,12 +163,11 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
     {
         String s = listGames.get(i).toString();
 
-        if (!stringID.equalsIgnoreCase(s))
+        if (!stringGameID.equalsIgnoreCase(s))
         {
-            stringID = s;
+            stringGameID = s;
 
             onGameClickListener.onGameClick(s);
-
             invalidateViews();
         }
     }
@@ -175,11 +175,11 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int i, long id)
     {
-        if (intIndex != i)
+        if (intSpinnerIndex != i)
         {
-            intIndex = i;
+            intSpinnerIndex = i;
 
-            onGameStatusSelectListener.onGameStatusSelect(i);
+            onGameSetSelectListener.onGameSetSelect(i);
         }
     }
 
@@ -191,10 +191,10 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
     @Override
     public void onSaveInstanceState(Bundle outState)
     {
-        outState.putInt("intIndex", intIndex);
         outState.putInt("intPadding", intPadding);
+        outState.putInt("intSpinnerIndex", intSpinnerIndex);
         outState.putString("listGames", gson.toJson(listGames, type));
-        outState.putString("stringID", stringID);
+        outState.putString("stringGameID", stringGameID);
 
         super.onSaveInstanceState(outState);
     }
@@ -247,7 +247,7 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
         @Override
         public int getCount()
         {
-            return 0;//listGames.size();
+            return listGames.size();
         }
 
         @Override
@@ -279,7 +279,7 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
         {
             TextView textView = new TextView(getActivity());
 
-            if (listGames.get(i).getID().equalsIgnoreCase(stringID))
+            if (listGames.get(i).getID().equalsIgnoreCase(stringGameID))
             {
                 textView.setBackgroundColor(rgb(64, 164, 223));
             }
@@ -356,7 +356,7 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
         {
             TextView textView = (TextView)getView(i, view, viewGroup);
 
-            if (i == intIndex)
+            if (i == intSpinnerIndex)
             {
                 textView.setBackgroundColor(rgb(64, 164, 223));
             }

@@ -11,6 +11,8 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -41,14 +43,14 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import edu.utah.cs.cs4530.project4.R;
-import edu.utah.cs.cs4530.project4.controller.FragmentPlayer.OnOKClickListener;
 import edu.utah.cs.cs4530.project4.controller.FragmentStart.OnStartClickListener;
 import edu.utah.cs.cs4530.project4.controller.ListFragmentMenu.OnGameClickListener;
-import edu.utah.cs.cs4530.project4.controller.ListFragmentMenu.OnGameStatusSelectListener;
 import edu.utah.cs.cs4530.project4.controller.ListFragmentMenu.OnNewGameClickListener;
+import edu.utah.cs.cs4530.project4.model.Battleship;
 import edu.utah.cs.cs4530.project4.model.Game;
 
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
@@ -56,14 +58,18 @@ import static edu.utah.cs.cs4530.project4.view.LinearLayoutGrid.*;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 
-public class ActivityMain extends AppCompatActivity implements OnGameClickListener, OnNewGameClickListener, OnGameStatusSelectListener, OnShootListener, OnStartClickListener
+public class ActivityMain extends AppCompatActivity implements OnGameClickListener, ListFragmentMenu.OnGameSetSelectListener, OnNewGameClickListener, OnShootListener, OnStartClickListener
 {
     // fields
 
     private List<Game> listGames;
-
+private List<Game> listMyGames;
+private Handler handler;
+private Runnable runnableGetGames;
 private Gson gson = new Gson();
-
+private String stringGameID;
+private int intSpinnerIndex;
+    private Battleship battleship;
     private boolean booleanGame, booleanPlayer, booleanStart, booleanTablet;
     private FragmentGame fragmentGame;
     private FragmentManager fragmentManager;
@@ -89,14 +95,14 @@ private Gson gson = new Gson();
         {
             FileInputStream fileInputStream = getApplicationContext().openFileInput(stringBattleship);
             ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
-//            battleship = (Battleship)objectInputStream.readObject();
+            battleship = (Battleship)objectInputStream.readObject();
 
             objectInputStream.close();
             fileInputStream.close();
         }
         catch (Exception e)
         {
-//            battleship = Battleship.getBattleship();
+            battleship = Battleship.getBattleship();
 
             Log.e("deserialize", "Error: Unable to read Battleship. " + e.getMessage());
         }
@@ -169,11 +175,11 @@ private Gson gson = new Gson();
             booleanTablet = false;
         }
 
-//        intColumnsCount = battleship.getColumnsCount();
+        intColumnsCount = battleship.getColumnsCount();
         intMargin = (displayMetrics.heightPixels < displayMetrics.widthPixels ? displayMetrics.heightPixels : displayMetrics.widthPixels) / 10;
         intPadding = intMargin / 5;
-//        intRowsCount = battleship.getRowsCount();
-//        listPlayers = battleship.getPlayers();
+        intRowsCount = battleship.getRowsCount();
+        listPlayers = battleship.getPlayers();
 
         LinearLayout linearLayout = new LinearLayout(this);
 
@@ -197,9 +203,9 @@ private Gson gson = new Gson();
         fragmentManager = getSupportFragmentManager();
 
         fragmentGame = fragmentManager.findFragmentByTag(stringFragmentGame) == null ? new FragmentGame() : (FragmentGame)fragmentManager.findFragmentByTag(stringFragmentGame);
-//        fragmentGame.setColumnsCount(battleship.getColumnsCount());
+        fragmentGame.setColumnsCount(battleship.getColumnsCount());
         fragmentGame.setPadding(intPadding);
-//        fragmentGame.setPlayers(new ArrayList<Integer>(listPlayers));
+        fragmentGame.setPlayers(new ArrayList<Integer>(listPlayers));
         fragmentGame.setRowsCount(intRowsCount);
 
         fragmentMenu = fragmentManager.findFragmentByTag(stringFragmentMenu) == null ? new FragmentMenu() : (FragmentMenu)fragmentManager.findFragmentByTag(stringFragmentMenu);
@@ -238,15 +244,27 @@ private Gson gson = new Gson();
             fragmentManager.executePendingTransactions();
         }
 
-
-
-
-
-
-        if (isConnected())
+        if (listGames == null)
         {
-           new test().execute("lobby");
+            listGames = new ArrayList<>();
         }
+
+        handler = new Handler();
+        runnableGetGames = new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                if (isConnected())
+                {
+                    new test().execute("lobby");
+                }
+
+                handler.postDelayed(runnableGetGames, 5000);
+            }
+        };
+
+        handler.post(runnableGetGames);
 
         setContentView(linearLayout);
         setFragments();
@@ -259,6 +277,27 @@ private Gson gson = new Gson();
         NetworkInfo networkInfo = ((ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
 
         return networkInfo != null && networkInfo.isConnected();
+    }
+
+    @Override
+    public void onGameClick(String gameID)
+    {
+        stringGameID = gameID;
+
+    }
+
+    @Override
+    public void onGameSetSelect(int spinnerIndex)
+    {
+        intSpinnerIndex = spinnerIndex;
+
+        setGames();
+    }
+
+    @Override
+    public void onNewGameClick()
+    {
+
     }
 
     private class test extends AsyncTask<String, Void, String>
@@ -274,27 +313,6 @@ private Gson gson = new Gson();
                 URL url = new URL("http://battleship.pixio.com/api/v2/" + params[0]);
 
                 httpURLConnection = (HttpURLConnection)url.openConnection();
-                httpURLConnection.setChunkedStreamingMode(0);
-                httpURLConnection.setDoOutput(true);
-
-                httpURLConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
-                httpURLConnection.setRequestMethod("POST");
-
-                try
-                (
-                    OutputStream outputStream = httpURLConnection.getOutputStream();
-                    OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream);
-                    BufferedWriter bufferedWriter = new BufferedWriter(outputStreamWriter);
-                )
-                {
-                    Log.i("Shiiiit", "{\"gameName=\"Hello\",\"playerName\":\"It's Me\"}");
-                    bufferedWriter.write("{\"gameName\":\"Hello\",\"playerName\":\"It's Me\"}");
-//                    bufferedWriter.flush();
-                }
-                catch (Exception e)
-                {
-                    Log.e("Write", "Error: " + e.getMessage());
-                }
 
                 if (httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_OK)
                 {
@@ -311,21 +329,16 @@ private Gson gson = new Gson();
                         {
                             stringBuilder.append(s);
                         }
-                        Log.i("Hello", "It's me4");
-                    }
-                    catch (Exception e)
-                    {
-                        Log.e("Read", "Error: " + e.getMessage());
                     }
                 }
                 else
                 {
-                    Log.i("Shit", "" + httpURLConnection.getResponseCode());
-                    // shit shit shit shit shit
+                    Log.i("responseCode", "Error " + httpURLConnection.getResponseCode() + ": Unable to connect to the server. " + httpURLConnection.getResponseMessage());
                 }
             }
             catch (Exception e)
             {
+                Log.i("openConnection", "Error: Unable to connect to the server. " + e.getMessage());
             }
             finally
             {
@@ -341,30 +354,56 @@ private Gson gson = new Gson();
         @Override
         protected void onPostExecute(String s)
         {
+            listGames = gson.fromJson(s, new TypeToken<List<Game>>(){}.getType());
 
-//            listGames = gson.fromJson(s, new TypeToken<List<Game>>(){}.getType());
-//            listFragmentMenu.setGames(listGames);
+            setGames();
         }
     }
 
-    /*
-    @Override
-    public void onGameClick(int game)
+    private void setGames()
     {
-        intGame = game;
+        List<Game> games = new ArrayList<>();
+        String gameSet;
 
-        loadGame();
+        if (intSpinnerIndex == 1)
+        {
+            // my games
+            // temp
+            games.add(listGames.get(1));
+        }
+        else
+        {
+            switch (intSpinnerIndex)
+            {
+                case 2:
+                    gameSet = "Waiting";
+                    break;
+
+                case 3:
+                    gameSet = "In Progress";
+                    break;
+
+                case 4:
+                    gameSet = "Over";
+                    break;
+
+                default:
+                    gameSet = "";
+                    break;
+            }
+
+            for (Game g : listGames)
+            {
+                if (g.getStatus().contains(gameSet))
+                {
+                    games.add(g);
+                }
+            }
+        }
+
+        listFragmentMenu.setGames(games);
     }
 
-    @Override
-    public void onNewGameClick()
-    {
-//        intGame = battleship.addGame();
-
-//        listFragmentMenu.addGameString(battleship.getGameString(intGame));
-        loadGame();
-    }
-*/
     @Override
     protected void onSaveInstanceState(Bundle outState)
     {
@@ -423,7 +462,7 @@ private Gson gson = new Gson();
             FileOutputStream fileOutputStream = new FileOutputStream(new File(getFilesDir(), stringBattleship));
 
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-//            objectOutputStream.writeObject(battleship);
+            objectOutputStream.writeObject(battleship);
             objectOutputStream.close();
 
             fileOutputStream.close();
@@ -512,20 +551,5 @@ private Gson gson = new Gson();
         }
 
         frameLayoutGame.setPadding(intPadding, intPadding, intPadding, intPadding);
-    }
-
-    @Override
-    public void onGameClick(String id) {
-
-    }
-
-    @Override
-    public void onGameStatusSelect(int index) {
-
-    }
-
-    @Override
-    public void onNewGameClick() {
-
     }
 }
