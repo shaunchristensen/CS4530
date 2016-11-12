@@ -7,19 +7,25 @@
 
 package edu.utah.cs.cs4530.project4.model;
 
-public class Game
+public class GameSummary
 {
     // fields
 
-    private String id, name, status;
+    private int missilesLaunched;
+    private String id, name, player1, player2, status, winner;
 
     // constructors
 
-    public Game()
+    public GameSummary()
     {
     }
 
     // methods
+
+    public int getMissilesLaunched()
+    {
+        return missilesLaunched;
+    }
 
     public String getID()
     {
@@ -31,14 +37,23 @@ public class Game
         return name;
     }
 
+    public String getPlayer1()
+    {
+        return player1;
+    }
+
+    public String getPlayer2()
+    {
+        return player2;
+    }
+
     public String getStatus()
     {
         return GameSets.getInstance().getGameSet(status);
     }
 
-    @Override
-    public String toString()
+    public String getWinner()
     {
-        return getStatus() + " - " + getName();
+        return winner;
     }
 }

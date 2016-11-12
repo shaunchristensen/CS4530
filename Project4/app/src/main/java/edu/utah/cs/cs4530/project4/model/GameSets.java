@@ -8,51 +8,58 @@
 package edu.utah.cs.cs4530.project4.model;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
-public abstract class GameSets
+public class GameSets
 {
     // fields
 
-    private static List<String> listGameSets = Arrays.asList("All", "My Games", "Waiting", "In Progress", "Over");
+    private static GameSets gameSets;
+    private final List<String> listGameSets;
+    private final Map<String, String> mapGameSets;
+
+    // constructors
+
+    private GameSets()
+    {
+        listGameSets = new ArrayList<>();
+        listGameSets.add("All");
+        listGameSets.add("My Games");
+
+        mapGameSets = new LinkedHashMap<>();
+        mapGameSets.put("WAITING", "Waiting");
+        mapGameSets.put("PLAYING", "In Progress");
+        mapGameSets.put("DONE", "Over");
+
+        listGameSets.addAll(mapGameSets.values());
+    }
 
     // methods
 
-    public static int getGameSetIndex(String gameSet)
+    public static GameSets getInstance()
     {
-        if (listGameSets.contains(gameSet))
+        if (gameSets == null)
         {
-            return listGameSets.indexOf(gameSet);
+            gameSets = new GameSets();
         }
-        else
-        {
-            return 0;
-        }
+
+        return gameSets;
     }
 
-    public static List<String> getGameSets()
+    public List<String> getGameSets()
     {
         return new ArrayList<>(listGameSets);
     }
 
-    public static String getGameSet(String gameSet)
+    public String getGameSet(int gameSet)
     {
-        if (gameSet.equalsIgnoreCase("Waiting"))
-        {
-            return listGameSets.get(2);
-        }
-        else if (gameSet.equalsIgnoreCase("Playing"))
-        {
-            return listGameSets.get(3);
-        }
-        else if (gameSet.equalsIgnoreCase("Done"))
-        {
-            return listGameSets.get(4);
-        }
-        else
-        {
-            return listGameSets.get(0);
-        }
+        return listGameSets.get(gameSet);
+    }
+
+    public String getGameSet(String gameSet)
+    {
+        return mapGameSets.get(gameSet);
     }
 }

@@ -11,7 +11,6 @@ import android.database.DataSetObserver;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ListFragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -33,10 +32,8 @@ import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-import edu.utah.cs.cs4530.project4.R;
 import edu.utah.cs.cs4530.project4.model.Game;
 
 import static android.graphics.Color.BLACK;
@@ -148,29 +145,29 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
         super.onCreate(savedInstanceState);
 
         gson = new Gson();
-        type = new TypeToken<List<Game>>(){}.getType();
+        type = new TypeToken<List<String>>(){}.getType();
 
         if (savedInstanceState != null)
         {
             intGameSet = savedInstanceState.getInt("intGameSet");
             intPadding = savedInstanceState.getInt("intPadding");
             listGames = gson.fromJson(savedInstanceState.getString("listGames"), type);
+            listGameSets = gson.fromJson(savedInstanceState.getString("listGameSets"), type);
             stringGameID = savedInstanceState.getString("stringGameID");
         }
         else
         {
             listGames = new ArrayList<>();
             listGameSets = new ArrayList<>();
-
         }
     }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int i, long id)
     {
-        String s = listGames.get(i).toString();
+        String s = listGames.get(i).getID();
 
-        if (!stringGameID.equalsIgnoreCase(s))
+        if (!s.equalsIgnoreCase(stringGameID))
         {
             stringGameID = s;
 
@@ -182,7 +179,7 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int i, long id)
     {
-        if (intGameSet != i)
+        if (i != intGameSet)
         {
             intGameSet = i;
 
@@ -201,6 +198,7 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
         outState.putInt("intGameSet", intGameSet);
         outState.putInt("intPadding", intPadding);
         outState.putString("listGames", gson.toJson(listGames, type));
+        outState.putString("listGameSets", gson.toJson(listGameSets, type));
         outState.putString("stringGameID", stringGameID);
 
         super.onSaveInstanceState(outState);
@@ -221,11 +219,6 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
     public void setPadding(int padding)
     {
         intPadding = padding;
-    }
-
-    public void setSelection(int gameSet)
-    {
-        spinner.setSelection(gameSet);
     }
 
     // classes
@@ -290,7 +283,7 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
         public View getView(int i, View view, ViewGroup viewGroup)
         {
             TextView textView = new TextView(getActivity());
-Log.i("Null", "" + listGames.get(i).getID());
+
             if (listGames.get(i).getID().equalsIgnoreCase(stringGameID))
             {
                 textView.setBackgroundColor(rgb(64, 164, 223));

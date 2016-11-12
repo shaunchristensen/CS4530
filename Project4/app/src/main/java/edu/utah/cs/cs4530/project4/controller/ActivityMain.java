@@ -12,7 +12,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Handler;
-import android.os.Looper;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -32,21 +31,19 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import edu.utah.cs.cs4530.project4.R;
 import edu.utah.cs.cs4530.project4.controller.FragmentStart.OnStartClickListener;
@@ -54,6 +51,8 @@ import edu.utah.cs.cs4530.project4.controller.ListFragmentMenu.OnGameClickListen
 import edu.utah.cs.cs4530.project4.controller.ListFragmentMenu.OnNewGameClickListener;
 import edu.utah.cs.cs4530.project4.model.Battleship;
 import edu.utah.cs.cs4530.project4.model.Game;
+import edu.utah.cs.cs4530.project4.model.GameIDPlayerID;
+import edu.utah.cs.cs4530.project4.model.GameNamePlayerName;
 import edu.utah.cs.cs4530.project4.model.GameSets;
 
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
@@ -64,14 +63,15 @@ import static java.lang.Math.sqrt;
 public class ActivityMain extends AppCompatActivity implements OnGameClickListener, ListFragmentMenu.OnGameSetSelectListener, OnNewGameClickListener, OnShootListener, OnStartClickListener
 {
     // fields
-
-    private List<Game> listGames;
-private List<Game> listMyGames;
+private GameSets gameSets;
+private Map<String, String> mapGames;
+private List<Game> listGames;
 private Handler handler;
 private Runnable runnableGetGames;
 private Gson gson = new Gson();
 private String stringGameID;
-private int intSpinnerIndex;
+private int intGameSet;
+private Type type;
     private Battleship battleship;
     private boolean booleanGame, booleanPlayer, booleanStart, booleanTablet;
     private FragmentGame fragmentGame;
@@ -247,12 +247,13 @@ private int intSpinnerIndex;
             fragmentManager.executePendingTransactions();
         }
 
+        gameSets = GameSets.getInstance();
         if (listGames == null)
         {
-            listMyGames = new ArrayList<>();
+            mapGames = new HashMap<>();
             listGames = new ArrayList<>();
         }
-
+        type = new TypeToken<List<Game>>(){}.getType();
         handler = new Handler();
         runnableGetGames = new Runnable()
         {
@@ -270,7 +271,7 @@ private int intSpinnerIndex;
 
         handler.post(runnableGetGames);
 
-        listFragmentMenu.setGameSets(GameSets.getGameSets());
+        listFragmentMenu.setGameSets(gameSets.getGameSets());
 
         setContentView(linearLayout);
         setFragments();
@@ -290,12 +291,14 @@ private int intSpinnerIndex;
     {
         stringGameID = gameID;
 
+        // here
+        // new test2().execute("lobby");
     }
 
     @Override
-    public void onGameSetSelect(int spinnerIndex)
+    public void onGameSetSelect(int gameSet)
     {
-        intSpinnerIndex = spinnerIndex;
+        intGameSet = gameSet;
 
         setGames();
     }
@@ -303,11 +306,13 @@ private int intSpinnerIndex;
     @Override
     public void onNewGameClick()
     {
-        new test2().execute("lobby");
+        new test2().execute("lobby/", "GET", new GameNamePlayerName("GameName", "PlayerName"));
     }
 
     private class test extends AsyncTask<String, Void, String>
     {
+        // methods
+
         @Override
         protected String doInBackground(String... params)
         {
@@ -360,28 +365,29 @@ private int intSpinnerIndex;
         @Override
         protected void onPostExecute(String s)
         {
-
-            listGames = gson.fromJson(s, new TypeToken<List<Game>>(){}.getType());
+            listGames = gson.fromJson(s, type);
 
             setGames();
         }
     }
 
-    private class test2 extends AsyncTask<String, Void, String>
+    private class test2 extends AsyncTask<Object, Void, String>
     {
+        // methods
+
         @Override
-        protected String doInBackground(String... params)
+        protected String doInBackground(Object... params)
         {
             HttpURLConnection httpURLConnection = null;
             StringBuilder stringBuilder = new StringBuilder();
 
             try
             {
-                URL url = new URL("http://battleship.pixio.com/api/v2/" + params[0]);
+                URL url = new URL("http://battleship.pixio.com/api/v2/" + params[0].toString());
 
                 httpURLConnection = (HttpURLConnection)url.openConnection();
                 httpURLConnection.setDoOutput(true);
-                httpURLConnection.setRequestMethod("POST");
+                httpURLConnection.setRequestMethod(params[1].toString());
                 httpURLConnection.setRequestProperty("Content-Type", "application/json");
 
                 try
@@ -391,7 +397,7 @@ private int intSpinnerIndex;
                         BufferedWriter bufferedWriter = new BufferedWriter(outputStreamWriter);
                 )
                 {
-                    bufferedWriter.write("{\"gameName\":\"gameName2\",\"playerName\":\"playerName2\"}");
+                    bufferedWriter.write(gson.toJson(params[2]));
                     bufferedWriter.flush();
                 }
 
@@ -435,56 +441,16 @@ private int intSpinnerIndex;
         @Override
         protected void onPostExecute(String s)
         {
-            // not game
-            Game game = gson.fromJson(s, Game.class);
-//            {"playerId":"0724bbd1-ca85-41be-8738-016b6348c8a3","gameId":"5a007e4e-a509-4d91-ba68-46e0fa73c785"}
-            listGames.add(game);
-            listMyGames.add(game);
+            handler.removeCallbacks(runnableGetGames);
+            handler.post(runnableGetGames);
+
+            GameIDPlayerID gameIDPlayerID = gson.fromJson(s, GameIDPlayerID.class);
+
+            mapGames.put(gameIDPlayerID.getGameID(), gameIDPlayerID.getPlayerID());
             setGames();
         }
     }
 
-    private void setGames()
-    {
-       List<Game> games = new ArrayList<>();
-        String gameSet;
-
-        if (intSpinnerIndex == 1)
-        {
-            games.addAll(listMyGames);
-        }
-        else
-        {
-            switch (intSpinnerIndex)
-            {
-                case 2:
-                    gameSet = "Waiting";
-                    break;
-
-                case 3:
-                    gameSet = "In Progress";
-                    break;
-
-                case 4:
-                    gameSet = "Over";
-                    break;
-
-                default:
-                    gameSet = "";
-                    break;
-            }
-
-            for (Game g : listGames)
-            {
-                if (g.getStatus().contains(gameSet))
-                {
-                    games.add(g);
-                }
-            }
-        }
-
-        listFragmentMenu.setGames(games);
-    }
 
     @Override
     protected void onSaveInstanceState(Bundle outState)
@@ -633,5 +599,87 @@ private int intSpinnerIndex;
         }
 
         frameLayoutGame.setPadding(intPadding, intPadding, intPadding, intPadding);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    private void setGames()
+    {
+        List<Game> games = new ArrayList<>();
+
+        if (intGameSet == 1)
+        {
+            for (Game g : listGames)
+            {
+                if (mapGames.containsKey(g.getID()))
+                {
+                    games.add((g));
+                }
+            }
+        }
+        else if (intGameSet > 1)
+        {
+            for (Game g : listGames)
+            {
+                if (gameSets.getGameSet(intGameSet).equalsIgnoreCase(g.getStatus()))
+                {
+                    games.add((g));
+                }
+            }
+        }
+        else
+        {
+            games.addAll(listGames);
+        }
+
+        listFragmentMenu.setGames(games);
     }
 }
