@@ -21,6 +21,11 @@ public class Game
 
     // methods
 
+    public int getStatus()
+    {
+        return GameSets.getInstance().getGameSet(status);
+    }
+
     public String getID()
     {
         return id;
@@ -31,14 +36,9 @@ public class Game
         return name;
     }
 
-    public String getStatus()
-    {
-        return GameSets.getInstance().getGameSet(status);
-    }
-
     @Override
     public String toString()
     {
-        return getStatus() + " - " + getName();
+        return getName() + " - " + GameSets.getInstance().getGameSet(getStatus());
     }
 }

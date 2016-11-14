@@ -8,7 +8,7 @@
 package edu.utah.cs.cs4530.project4.model;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -17,23 +17,38 @@ public class GameSets
     // fields
 
     private static GameSets gameSets;
-    private final List<String> listGameSets;
-    private final Map<String, String> mapGameSets;
+    public final int ALL, IN_PROGRESS, MY_GAMES, OVER, WAITING;
+    private List<String> listGameSets;
+    private Map<String, Integer> mapGameSets;
+    private String stringAll, stringInProgress, stringMyGames, stringOver, stringWaiting;
 
     // constructors
 
     private GameSets()
     {
+        stringAll = "All";
+        stringInProgress = "In Progress";
+        stringMyGames = "My Games";
+        stringOver = "Over";
+        stringWaiting = "Waiting";
+
         listGameSets = new ArrayList<>();
-        listGameSets.add("All");
-        listGameSets.add("My Games");
+        listGameSets.add(stringAll);
+        listGameSets.add(stringMyGames);
+        listGameSets.add(stringWaiting);
+        listGameSets.add(stringInProgress);
+        listGameSets.add(stringOver);
 
-        mapGameSets = new LinkedHashMap<>();
-        mapGameSets.put("WAITING", "Waiting");
-        mapGameSets.put("PLAYING", "In Progress");
-        mapGameSets.put("DONE", "Over");
+        ALL = listGameSets.indexOf(stringAll);
+        IN_PROGRESS = listGameSets.indexOf(stringInProgress);
+        MY_GAMES = listGameSets.indexOf(stringMyGames);
+        OVER = listGameSets.indexOf(stringOver);
+        WAITING = listGameSets.indexOf(stringWaiting);
 
-        listGameSets.addAll(mapGameSets.values());
+        mapGameSets = new HashMap<>();
+        mapGameSets.put("WAITING", WAITING);
+        mapGameSets.put("PLAYING", IN_PROGRESS);
+        mapGameSets.put("DONE", OVER);
     }
 
     // methods
@@ -48,6 +63,11 @@ public class GameSets
         return gameSets;
     }
 
+    public int getGameSet(String gameSet)
+    {
+        return mapGameSets.get(gameSet);
+    }
+
     public List<String> getGameSets()
     {
         return new ArrayList<>(listGameSets);
@@ -56,10 +76,5 @@ public class GameSets
     public String getGameSet(int gameSet)
     {
         return listGameSets.get(gameSet);
-    }
-
-    public String getGameSet(String gameSet)
-    {
-        return mapGameSets.get(gameSet);
     }
 }

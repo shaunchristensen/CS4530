@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.utah.cs.cs4530.project4.model.Game;
+import edu.utah.cs.cs4530.project4.model.GameSets;
 
 import static android.graphics.Color.BLACK;
 import static android.graphics.Color.WHITE;
@@ -48,6 +49,7 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
 {
     // fields
 
+    private GameSets gameSets;
     private Gson gson;
     private int intGameSet, intPadding;
     private List<Game> listGames;
@@ -63,7 +65,7 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
 
     public interface OnGameClickListener
     {
-        void onGameClick(String id);
+        void onGameClick(Game game);
     }
 
     public interface OnGameSetSelectListener
@@ -144,7 +146,9 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
     {
         super.onCreate(savedInstanceState);
 
+        gameSets = GameSets.getInstance();
         gson = new Gson();
+        listGameSets = gameSets.getGameSets();
         type = new TypeToken<List<String>>(){}.getType();
 
         if (savedInstanceState != null)
@@ -152,26 +156,20 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
             intGameSet = savedInstanceState.getInt("intGameSet");
             intPadding = savedInstanceState.getInt("intPadding");
             listGames = gson.fromJson(savedInstanceState.getString("listGames"), type);
-            listGameSets = gson.fromJson(savedInstanceState.getString("listGameSets"), type);
             stringGameID = savedInstanceState.getString("stringGameID");
         }
         else
         {
             listGames = new ArrayList<>();
-            listGameSets = new ArrayList<>();
         }
     }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int i, long id)
     {
-        String s = listGames.get(i).getID();
-
-        if (!s.equalsIgnoreCase(stringGameID))
+        if (!listGames.get(i).getID().equalsIgnoreCase(stringGameID))
         {
-            stringGameID = s;
-
-            onGameClickListener.onGameClick(s);
+            onGameClickListener.onGameClick(listGames.get(i));
             invalidateViews();
         }
     }
@@ -204,6 +202,13 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
         super.onSaveInstanceState(outState);
     }
 
+    public void setGame(String gameID)
+    {
+        stringGameID = gameID;
+
+        invalidateViews();
+    }
+
     public void setGames(List<Game> games)
     {
         listGames = games;
@@ -211,9 +216,17 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
         invalidateViews();
     }
 
-    public void setGameSets(List<String> gameSets)
+    public void setSelection(int gameSet)
     {
-        listGameSets = gameSets;
+        spinner.setSelection(gameSet);
+
+        for (Game g : listGames)
+        {
+            if (g.getID().equalsIgnoreCase(stringGameID))
+            {
+                getListView().setSelection(listGames.indexOf(g));
+            }
+        }
     }
 
     public void setPadding(int padding)
@@ -283,18 +296,9 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
         public View getView(int i, View view, ViewGroup viewGroup)
         {
             TextView textView = new TextView(getActivity());
-
-            if (listGames.get(i).getID().equalsIgnoreCase(stringGameID))
-            {
-                textView.setBackgroundColor(rgb(64, 164, 223));
-            }
-            else
-            {
-                textView.setBackgroundColor(WHITE);
-            }
-
+            textView.setBackgroundColor(listGames.get(i).getID().equalsIgnoreCase(stringGameID) ? rgb(64, 164, 223) : WHITE);
             textView.setPadding(intPadding, intPadding, intPadding, intPadding);
-            textView.setText(listGames.get(i).toString());
+            textView.setText(intGameSet == gameSets.ALL || intGameSet == gameSets.MY_GAMES ? listGames.get(i).toString() : listGames.get(i).getName());
             textView.setTextColor(BLACK);
             textView.setTextSize(COMPLEX_UNIT_SP, 12.5f);
 
@@ -360,15 +364,7 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
         public View getDropDownView(int i, View view, ViewGroup viewGroup)
         {
             TextView textView = (TextView)getView(i, view, viewGroup);
-
-            if (i == intGameSet)
-            {
-                textView.setBackgroundColor(rgb(64, 164, 223));
-            }
-            else
-            {
-                textView.setBackgroundColor(WHITE);
-            }
+            textView.setBackgroundColor(i == intGameSet ? rgb(64, 164, 223) : WHITE);
 
             return textView;
         }

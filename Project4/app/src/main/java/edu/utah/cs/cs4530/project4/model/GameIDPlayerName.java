@@ -11,13 +11,25 @@ public class GameIDPlayerName
 {
     // fields
 
-    private String gameId, playerName;
+    private String playerName, id;
 
     // constructors
 
     public GameIDPlayerName(String gameId, String playerName)
     {
-        this.gameId = gameId;
+        this.id = gameId;
         this.playerName = playerName;
+    }
+
+    // methods
+
+    public String getGameID()
+    {
+        return id;
+    }
+
+    public String getPlayerName()
+    {
+        return playerName;
     }
 }

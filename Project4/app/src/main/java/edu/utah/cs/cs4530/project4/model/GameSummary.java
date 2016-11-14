@@ -49,7 +49,7 @@ public class GameSummary
 
     public String getStatus()
     {
-        return GameSets.getInstance().getGameSet(status);
+        return GameSets.getInstance().getGameSet(GameSets.getInstance().getGameSet(status));
     }
 
     public String getWinner()

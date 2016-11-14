@@ -8,6 +8,7 @@
 package edu.utah.cs.cs4530.project4.controller;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -15,10 +16,12 @@ import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
@@ -52,10 +55,13 @@ import edu.utah.cs.cs4530.project4.controller.ListFragmentMenu.OnNewGameClickLis
 import edu.utah.cs.cs4530.project4.model.Battleship;
 import edu.utah.cs.cs4530.project4.model.Game;
 import edu.utah.cs.cs4530.project4.model.GameIDPlayerID;
+import edu.utah.cs.cs4530.project4.model.GameIDPlayerName;
 import edu.utah.cs.cs4530.project4.model.GameNamePlayerName;
 import edu.utah.cs.cs4530.project4.model.GameSets;
+import edu.utah.cs.cs4530.project4.model.PlayerID;
 
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
+import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 import static edu.utah.cs.cs4530.project4.view.LinearLayoutGrid.*;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
@@ -63,15 +69,17 @@ import static java.lang.Math.sqrt;
 public class ActivityMain extends AppCompatActivity implements OnGameClickListener, ListFragmentMenu.OnGameSetSelectListener, OnNewGameClickListener, OnShootListener, OnStartClickListener
 {
     // fields
+private String stringGameID;
 private GameSets gameSets;
 private Map<String, String> mapGames;
 private List<Game> listGames;
 private Handler handler;
 private Runnable runnableGetGames;
 private Gson gson = new Gson();
-private String stringGameID;
 private int intGameSet;
 private Type type;
+private boolean booleanSetSelection;
+private String stringGameName, stringPlayerName;
     private Battleship battleship;
     private boolean booleanGame, booleanPlayer, booleanStart, booleanTablet;
     private FragmentGame fragmentGame;
@@ -165,6 +173,13 @@ private Type type;
             booleanPlayer = savedInstanceState.getBoolean("booleanPlayer");
             booleanStart = savedInstanceState.getBoolean("booleanStart");
             intGame = savedInstanceState.getInt("intGame");
+            stringGameName = savedInstanceState.getString("stringGameName");
+            stringPlayerName = savedInstanceState.getString("stringGameName");
+        }
+        else
+        {
+            stringGameName = "";
+            stringPlayerName = "";
         }
 
         DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
@@ -253,6 +268,7 @@ private Type type;
             mapGames = new HashMap<>();
             listGames = new ArrayList<>();
         }
+
         type = new TypeToken<List<Game>>(){}.getType();
         handler = new Handler();
         runnableGetGames = new Runnable()
@@ -260,18 +276,13 @@ private Type type;
             @Override
             public void run()
             {
-                if (isConnected())
-                {
-                    new test().execute("lobby");
-                }
-
+                new AsyncTaskGetGames().execute();
                 handler.postDelayed(runnableGetGames, 5000);
             }
         };
 
         handler.post(runnableGetGames);
-
-        listFragmentMenu.setGameSets(gameSets.getGameSets());
+//        listFragmentMenu.setGameSets(gameSets.getGameSets());
 
         setContentView(linearLayout);
         setFragments();
@@ -279,177 +290,61 @@ private Type type;
         setLayoutParams();
     }
 
-    private boolean isConnected()
-    {
-        NetworkInfo networkInfo = ((ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
-
-        return networkInfo != null && networkInfo.isConnected();
-    }
-
     @Override
-    public void onGameClick(String gameID)
+    public void onGameClick(final Game game)
     {
-        stringGameID = gameID;
-
-        // here
-        // new test2().execute("lobby");
-    }
-
-    @Override
-    public void onGameSetSelect(int gameSet)
-    {
-        intGameSet = gameSet;
-
-        setGames();
-    }
-
-    @Override
-    public void onNewGameClick()
-    {
-        new test2().execute("lobby/", "GET", new GameNamePlayerName("GameName", "PlayerName"));
-    }
-
-    private class test extends AsyncTask<String, Void, String>
-    {
-        // methods
-
-        @Override
-        protected String doInBackground(String... params)
+        if (mapGames.containsKey(game.getID()))
         {
-            HttpURLConnection httpURLConnection = null;
-            StringBuilder stringBuilder = new StringBuilder();
-
-            try
+            if (game.getStatus() == gameSets.IN_PROGRESS || game.getStatus() == gameSets.OVER)
             {
-                URL url = new URL("http://battleship.pixio.com/api/v2/" + params[0]);
-
-                httpURLConnection = (HttpURLConnection)url.openConnection();
-
-                if (httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_OK)
-                {
-                    try
-                            (
-                                    InputStream inputStream = httpURLConnection.getInputStream();
-                                    InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-                                    BufferedReader bufferedReader = new BufferedReader(inputStreamReader)
-                            )
-                    {
-                        String s;
-
-                        while ((s = bufferedReader.readLine()) != null)
-                        {
-                            stringBuilder.append(s);
-                        }
-                    }
-                }
-                else
-                {
-                    Log.i("responseCode", "Error " + httpURLConnection.getResponseCode() + ": Unable to connect to the server. " + httpURLConnection.getResponseMessage());
-                }
+                // post runnable to check turn every half second
+                // load game
             }
-            catch (Exception e)
-            {
-                Log.i("openConnection", "Error: Unable to connect to the server. " + e.getMessage());
-            }
-            finally
-            {
-                if (httpURLConnection != null)
-                {
-                    httpURLConnection.disconnect();
-                }
-            }
-
-            return stringBuilder.toString();
         }
-
-        @Override
-        protected void onPostExecute(String s)
+        else  if (game.getStatus() == gameSets.WAITING)
         {
-            listGames = gson.fromJson(s, type);
+            AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
+            alertDialog.setMessage("Enter player information and press Start.");
+            alertDialog.setTitle("Join Game");
 
-            setGames();
+            final EditText editTextPlayerName = new EditText(this);
+            editTextPlayerName.setHint("Player Name");
+            editTextPlayerName.setText(stringPlayerName);
+
+            LinearLayout linearLayout = new LinearLayout(this);
+            linearLayout.addView(editTextPlayerName, new LayoutParams(MATCH_PARENT, WRAP_CONTENT));
+            linearLayout.setOrientation(VERTICAL);
+            linearLayout.setPadding(intPadding, intPadding, intPadding, intPadding);
+
+            alertDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener()
+            {
+                @Override
+                public void onClick(DialogInterface dialog, int which)
+                {
+                    dialog.cancel();
+                }
+            });
+            alertDialog.setPositiveButton("Start", new DialogInterface.OnClickListener()
+            {
+                @Override
+                public void onClick(DialogInterface dialog, int which)
+                {
+                    stringPlayerName = editTextPlayerName.getText().toString();
+
+                    new AsyncTaskJoinGame().execute(game.getID(), stringPlayerName);
+                    dialog.dismiss();
+                }
+            });
+            alertDialog.setView(linearLayout);
+            alertDialog.show();
+        }
+        else
+        {
+            // load game summary
         }
     }
 
-    private class test2 extends AsyncTask<Object, Void, String>
-    {
-        // methods
 
-        @Override
-        protected String doInBackground(Object... params)
-        {
-            HttpURLConnection httpURLConnection = null;
-            StringBuilder stringBuilder = new StringBuilder();
-
-            try
-            {
-                URL url = new URL("http://battleship.pixio.com/api/v2/" + params[0].toString());
-
-                httpURLConnection = (HttpURLConnection)url.openConnection();
-                httpURLConnection.setDoOutput(true);
-                httpURLConnection.setRequestMethod(params[1].toString());
-                httpURLConnection.setRequestProperty("Content-Type", "application/json");
-
-                try
-                (
-                        OutputStream outputStream = httpURLConnection.getOutputStream();
-                        OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream);
-                        BufferedWriter bufferedWriter = new BufferedWriter(outputStreamWriter);
-                )
-                {
-                    bufferedWriter.write(gson.toJson(params[2]));
-                    bufferedWriter.flush();
-                }
-
-                if (httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_OK)
-                {
-                    try
-                    (
-                        InputStream inputStream = httpURLConnection.getInputStream();
-                        InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-                        BufferedReader bufferedReader = new BufferedReader(inputStreamReader)
-                    )
-                    {
-                        String s;
-
-                        while ((s = bufferedReader.readLine()) != null)
-                        {
-                            stringBuilder.append(s);
-                        }
-                    }
-                }
-                else
-                {
-                    Log.i("responseCode", "Error " + httpURLConnection.getResponseCode() + ": Unable to connect to the server. " + httpURLConnection.getResponseMessage());
-                }
-            }
-            catch (Exception e)
-            {
-                Log.i("openConnection", "Error: Unable to connect to the server. " + e.getMessage());
-            }
-            finally
-            {
-                if (httpURLConnection != null)
-                {
-                    httpURLConnection.disconnect();
-                }
-            }
-
-            return stringBuilder.toString();
-        }
-
-        @Override
-        protected void onPostExecute(String s)
-        {
-            handler.removeCallbacks(runnableGetGames);
-            handler.post(runnableGetGames);
-
-            GameIDPlayerID gameIDPlayerID = gson.fromJson(s, GameIDPlayerID.class);
-
-            mapGames.put(gameIDPlayerID.getGameID(), gameIDPlayerID.getPlayerID());
-            setGames();
-        }
-    }
 
 
     @Override
@@ -484,23 +379,6 @@ private Type type;
             listFragmentMenu.setGameString(intGame, battleship.getGameString(intGame));
         }
         */
-    }
-
-    @Override
-    public void onStartClick(Fragment fragment)
-    {
-        booleanStart = true;
-
-        setFragments();
-        setLayoutParams();
-    }
-
-    @Override
-    protected void onStop()
-    {
-        super.onStop();
-
-        serialize();
     }
 
     private void serialize()
@@ -655,7 +533,7 @@ private Type type;
     {
         List<Game> games = new ArrayList<>();
 
-        if (intGameSet == 1)
+        if (intGameSet == gameSets.MY_GAMES)
         {
             for (Game g : listGames)
             {
@@ -665,11 +543,11 @@ private Type type;
                 }
             }
         }
-        else if (intGameSet > 1)
+        else if (intGameSet == gameSets.WAITING || intGameSet == gameSets.IN_PROGRESS || intGameSet == gameSets.OVER)
         {
             for (Game g : listGames)
             {
-                if (gameSets.getGameSet(intGameSet).equalsIgnoreCase(g.getStatus()))
+                if (g.getStatus() == intGameSet)
                 {
                     games.add((g));
                 }
@@ -681,5 +559,356 @@ private Type type;
         }
 
         listFragmentMenu.setGames(games);
+
+        if (booleanSetSelection)
+        {
+            booleanSetSelection = false;
+
+            listFragmentMenu.setSelection(intGameSet);
+        }
+    }
+
+    @Override
+    public void onGameSetSelect(int gameSet)
+    {
+        booleanSetSelection = true;
+        intGameSet = gameSet;
+
+        setGames();
+    }
+
+
+
+    private boolean isConnected()
+    {
+        NetworkInfo networkInfo = ((ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
+
+        return networkInfo != null && networkInfo.isConnected();
+    }
+
+
+
+    @Override
+    public void onStartClick(Fragment fragment)
+    {
+        booleanStart = true;
+
+        setFragments();
+        setLayoutParams();
+    }
+
+    @Override
+    protected void onStop()
+    {
+        super.onStop();
+
+        serialize();
+    }
+
+    @Override
+    public void onNewGameClick()
+    {
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
+        alertDialog.setMessage("Enter game and player information and press Start.");
+        alertDialog.setTitle("New Game");
+
+        final EditText editTextGameName = new EditText(this);
+        editTextGameName.setHint("Game Name");
+        editTextGameName.setText(stringGameName);
+
+        final EditText editTextPlayerName = new EditText(this);
+        editTextPlayerName.setHint("Player Name");
+        editTextPlayerName.setText(stringPlayerName);
+
+        LinearLayout linearLayout = new LinearLayout(this);
+        linearLayout.addView(editTextGameName, new LayoutParams(MATCH_PARENT, WRAP_CONTENT));
+        linearLayout.addView(editTextPlayerName, new LayoutParams(MATCH_PARENT, WRAP_CONTENT));
+        linearLayout.setOrientation(VERTICAL);
+        linearLayout.setPadding(intPadding, intPadding, intPadding, intPadding);
+
+        alertDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener()
+        {
+            @Override
+            public void onClick(DialogInterface dialog, int which)
+            {
+                dialog.cancel();
+            }
+        });
+        alertDialog.setPositiveButton("Start", new DialogInterface.OnClickListener()
+        {
+            @Override
+            public void onClick(DialogInterface dialog, int which)
+            {
+                stringGameName = editTextGameName.getText().toString();
+                stringPlayerName = editTextPlayerName.getText().toString();
+
+                new AsyncTaskNewGame().execute(stringGameName, stringPlayerName);
+                dialog.dismiss();
+            }
+        });
+        alertDialog.setView(linearLayout);
+        alertDialog.show();
+    }
+
+    // classes
+
+    private class AsyncTaskGetGames extends AsyncTask<String, Void, String>
+    {
+        // fields
+
+        private boolean booleanPostExecute;
+
+        // methods
+
+        @Override
+        protected String doInBackground(String... params)
+        {
+            if (isConnected())
+            {
+            }
+
+
+            HttpURLConnection httpURLConnection = null;
+            StringBuilder stringBuilder = new StringBuilder();
+
+            try
+            {
+                URL url = new URL("http://battleship.pixio.com/api/v2/lobby");
+                httpURLConnection = (HttpURLConnection)url.openConnection();
+
+                if (httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_OK)
+                {
+                    try (InputStream inputStream = httpURLConnection.getInputStream(); InputStreamReader inputStreamReader = new InputStreamReader(inputStream); BufferedReader bufferedReader = new BufferedReader(inputStreamReader))
+                    {
+                        String s;
+
+                        while ((s = bufferedReader.readLine()) != null)
+                        {
+                            stringBuilder.append(s);
+                        }
+
+                        booleanPostExecute = true;
+                    }
+                }
+                else
+                {
+                    Log.i("responseCode", "Error " + httpURLConnection.getResponseCode() + ": Unable to connect to the server. " + httpURLConnection.getResponseMessage());
+                }
+            }
+            catch (Exception e)
+            {
+                Log.i("openConnection", "Error: Unable to connect to the server. " + e.getMessage());
+            }
+            finally
+            {
+                if (httpURLConnection != null)
+                {
+                    httpURLConnection.disconnect();
+                }
+            }
+
+            return stringBuilder.toString();
+        }
+
+        @Override
+        protected void onPostExecute(String s)
+        {
+            if (booleanPostExecute)
+            {
+                listGames = gson.fromJson(s, type);
+
+                setGames();
+            }
+        }
+    }
+
+    private class AsyncTaskJoinGame extends AsyncTask<String, Void, String>
+    {
+        // fields
+
+        private boolean booleanPostExecute;
+        private GameIDPlayerName gameIDPlayerName;
+
+        // methods
+
+        @Override
+        protected String doInBackground(String... params)
+        {
+            if (isConnected())
+            {
+                gameIDPlayerName = new GameIDPlayerName(params[0], params[1]);
+                HttpURLConnection httpURLConnection = null;
+                StringBuilder stringBuilder = new StringBuilder();
+
+                try
+                {
+                    URL url = new URL("http://battleship.pixio.com/api/v2/lobby/" + gameIDPlayerName.getGameID());
+
+                    httpURLConnection = (HttpURLConnection)url.openConnection();
+                    httpURLConnection.setDoOutput(true);
+                    httpURLConnection.setRequestMethod("PUT");
+                    httpURLConnection.setRequestProperty("Content-Type", "application/json");
+
+                    try (OutputStream outputStream = httpURLConnection.getOutputStream(); OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream); BufferedWriter bufferedWriter = new BufferedWriter(outputStreamWriter);)
+                    {
+                        bufferedWriter.write(gson.toJson(gameIDPlayerName));
+                        bufferedWriter.flush();
+                    }
+
+                    if (httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_OK)
+                    {
+                        try (InputStream inputStream = httpURLConnection.getInputStream(); InputStreamReader inputStreamReader = new InputStreamReader(inputStream); BufferedReader bufferedReader = new BufferedReader(inputStreamReader))
+                        {
+                            String s;
+
+                            while ((s = bufferedReader.readLine()) != null)
+                            {
+                                stringBuilder.append(s);
+                            }
+
+                            booleanPostExecute = true;
+                        }
+                    }
+                    else
+                    {
+                        Log.i("responseCode", "Error " + httpURLConnection.getResponseCode() + ": Unable to connect to the server. " + httpURLConnection.getResponseMessage());
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.i("openConnection", "Error: Unable to connect to the server. " + e.getMessage());
+                }
+                finally
+                {
+                    if (httpURLConnection != null)
+                    {
+                        httpURLConnection.disconnect();
+                    }
+                }
+
+                return stringBuilder.toString();
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String s)
+        {
+            if (booleanPostExecute)
+            {
+                handler.removeCallbacks(runnableGetGames);
+
+                booleanSetSelection = true;
+                PlayerID playerID = gson.fromJson(s, PlayerID.class);
+
+                if (intGameSet == gameSets.WAITING || intGameSet == gameSets.OVER)
+                {
+                    intGameSet = gameSets.IN_PROGRESS;
+                }
+
+                stringGameID = gameIDPlayerName.getGameID();
+
+                handler.post(runnableGetGames);
+                listFragmentMenu.setGame(gameIDPlayerName.getGameID());
+                mapGames.put(gameIDPlayerName.getGameID(), playerID.getPlayerID());
+            }
+        }
+    }
+
+    private class AsyncTaskNewGame extends AsyncTask<String, Void, String>
+    {
+        // fields
+
+        private boolean booleanPostExecute;
+
+        // methods
+
+        @Override
+        protected String doInBackground(String... params)
+        {
+            if (isConnected())
+            {
+                HttpURLConnection httpURLConnection = null;
+                StringBuilder stringBuilder = new StringBuilder();
+
+                try
+                {
+                    URL url = new URL("http://battleship.pixio.com/api/v2/lobby");
+
+                    httpURLConnection = (HttpURLConnection)url.openConnection();
+                    httpURLConnection.setDoOutput(true);
+                    httpURLConnection.setRequestMethod("POST");
+                    httpURLConnection.setRequestProperty("Content-Type", "application/json");
+
+                    try (OutputStream outputStream = httpURLConnection.getOutputStream(); OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream); BufferedWriter bufferedWriter = new BufferedWriter(outputStreamWriter);)
+                    {
+                        bufferedWriter.write(gson.toJson(new GameNamePlayerName(params[0], params[1])));
+                        bufferedWriter.flush();
+                    }
+
+                    if (httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_OK)
+                    {
+                        try (InputStream inputStream = httpURLConnection.getInputStream(); InputStreamReader inputStreamReader = new InputStreamReader(inputStream); BufferedReader bufferedReader = new BufferedReader(inputStreamReader))
+                        {
+                            String s;
+
+                            while ((s = bufferedReader.readLine()) != null)
+                            {
+                                stringBuilder.append(s);
+                            }
+
+                            booleanPostExecute = true;
+                        }
+                    }
+                    else
+                    {
+                        Log.i("responseCode", "Error " + httpURLConnection.getResponseCode() + ": Unable to connect to the server. " + httpURLConnection.getResponseMessage());
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.i("openConnection", "Error: Unable to connect to the server. " + e.getMessage());
+                }
+                finally
+                {
+                    if (httpURLConnection != null)
+                    {
+                        httpURLConnection.disconnect();
+                    }
+                }
+
+                return stringBuilder.toString();
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String s)
+        {
+            if (booleanPostExecute)
+            {
+                handler.removeCallbacks(runnableGetGames);
+
+                booleanSetSelection = true;
+                GameIDPlayerID gameIDPlayerID = gson.fromJson(s, GameIDPlayerID.class);
+
+                if (intGameSet == gameSets.IN_PROGRESS || intGameSet == gameSets.OVER)
+                {
+                    intGameSet = gameSets.WAITING;
+                }
+
+                stringGameID = gameIDPlayerID.getGameID();
+
+                handler.post(runnableGetGames);
+                listFragmentMenu.setGame(gameIDPlayerID.getGameID());
+                mapGames.put(gameIDPlayerID.getGameID(), gameIDPlayerID.getPlayerID());
+            }
+        }
     }
 }
