@@ -34,8 +34,8 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.utah.cs.cs4530.project4.model.Battleship;
 import edu.utah.cs.cs4530.project4.model.Game;
-import edu.utah.cs.cs4530.project4.model.GameSets;
 
 import static android.graphics.Color.BLACK;
 import static android.graphics.Color.WHITE;
@@ -49,7 +49,7 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
 {
     // fields
 
-    private GameSets gameSets;
+    private Battleship battleship;
     private Gson gson;
     private int intGameSet, intPadding;
     private List<Game> listGames;
@@ -146,10 +146,10 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
     {
         super.onCreate(savedInstanceState);
 
-        gameSets = GameSets.getInstance();
+        battleship = Battleship.getBattleship();
         gson = new Gson();
-        listGameSets = gameSets.getGameSets();
-        type = new TypeToken<List<String>>(){}.getType();
+        listGameSets = battleship.getGameSets();
+        type = new TypeToken<List<Game>>(){}.getType();
 
         if (savedInstanceState != null)
         {
@@ -196,7 +196,6 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
         outState.putInt("intGameSet", intGameSet);
         outState.putInt("intPadding", intPadding);
         outState.putString("listGames", gson.toJson(listGames, type));
-        outState.putString("listGameSets", gson.toJson(listGameSets, type));
         outState.putString("stringGameID", stringGameID);
 
         super.onSaveInstanceState(outState);
@@ -298,7 +297,7 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
             TextView textView = new TextView(getActivity());
             textView.setBackgroundColor(listGames.get(i).getID().equalsIgnoreCase(stringGameID) ? rgb(64, 164, 223) : WHITE);
             textView.setPadding(intPadding, intPadding, intPadding, intPadding);
-            textView.setText(intGameSet == gameSets.ALL || intGameSet == gameSets.MY_GAMES ? listGames.get(i).toString() : listGames.get(i).getName());
+            textView.setText(intGameSet == battleship.ALL || intGameSet == battleship.MY_GAMES ? listGames.get(i).toString() : listGames.get(i).getName());
             textView.setTextColor(BLACK);
             textView.setTextSize(COMPLEX_UNIT_SP, 12.5f);
 

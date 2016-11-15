@@ -33,7 +33,7 @@ public class Grids
 
     // classes
 
-    private class Cell
+    public class Cell
     {
         // fields
 

@@ -20,7 +20,6 @@ import java.util.Set;
 
 import edu.utah.cs.cs4530.project4.view.LinearLayoutGrid;
 import edu.utah.cs.cs4530.project4.view.LinearLayoutGrid.OnShootListener;
-import edu.utah.cs.cs4530.project4.view.ship.Ship;
 
 public class FragmentGame extends Fragment
 {
@@ -59,7 +58,7 @@ public class FragmentGame extends Fragment
 
         if (linearLayoutGrid == null)
         {
-            linearLayoutGrid = new LinearLayoutGrid(getActivity(), intRowsCount, intColumnsCount, intPadding, listPlayers, (OnShootListener)getActivity());
+            linearLayoutGrid = new LinearLayoutGrid(getActivity(), intRowsCount, intColumnsCount, intPadding, (OnShootListener)getActivity());
         }
     }
 
@@ -79,9 +78,9 @@ public class FragmentGame extends Fragment
         intColumnsCount = columnsCount;
     }
 
-    public void setGame(boolean status, int opponent, int player, List<List<Ship>> ships, List<Set<Integer>> hits, List<Set<Integer>> misses)
+    public void setGame(List<Set<Integer>> cells, List<Set<Integer>> hits, List<Set<Integer>> misses, List<Set<Integer>> ships)
     {
-        linearLayoutGrid.setGame(status, opponent, player, ships, hits, misses);
+        linearLayoutGrid.setGame(cells, hits, misses, ships);
     }
 
     public void setPadding(int padding)
@@ -91,7 +90,7 @@ public class FragmentGame extends Fragment
 
     public void setPlayers(int opponent, int player)
     {
-        linearLayoutGrid.setPlayers(opponent, player);
+//        linearLayoutGrid.setPlayers(opponent, player);
     }
 
     public void setPlayers(List<Integer> players)

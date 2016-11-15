@@ -33,21 +33,13 @@ import static android.view.Gravity.CENTER_HORIZONTAL;
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 import static android.widget.LinearLayout.VERTICAL;
 
-public class FragmentPlayer extends Fragment implements OnClickListener
+public class FragmentSummary extends Fragment
 {
     // fields
 
     private int intColumnsCount, intMargin;
-    private OnOKClickListener onOKClickListener;
     private String stringOpponent, stringPlayer;
     private TextView textViewOpponent, textViewPlayer;
-
-    // interfaces
-
-    public interface OnOKClickListener
-    {
-        void onOKClick(Fragment fragment);
-    }
 
     // methods
 
@@ -75,15 +67,6 @@ public class FragmentPlayer extends Fragment implements OnClickListener
         return stringBuilder.toString();
     }
 
-    @Override
-    public void onClick(View v)
-    {
-        if (v instanceof Button)
-        {
-            onOKClickListener.onOKClick(this);
-        }
-    }
-
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)
@@ -96,11 +79,8 @@ public class FragmentPlayer extends Fragment implements OnClickListener
             stringPlayer = savedInstanceState.getString("stringPlayer");
         }
 
-        onOKClickListener = (OnOKClickListener)getActivity();
-
         Button button = new Button(getActivity());
         button.setBackgroundColor(rgb(192, 192, 192));
-        button.setOnClickListener(this);
         button.setText("OK");
         button.setTextColor(BLACK);
         button.setTextSize(COMPLEX_UNIT_SP, 25);

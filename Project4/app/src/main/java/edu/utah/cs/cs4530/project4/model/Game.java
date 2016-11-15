@@ -23,7 +23,7 @@ public class Game
 
     public int getStatus()
     {
-        return GameSets.getInstance().getGameSet(status);
+        return Battleship.getBattleship().getGameSet(status);
     }
 
     public String getID()
@@ -39,6 +39,11 @@ public class Game
     @Override
     public String toString()
     {
-        return getName() + " - " + GameSets.getInstance().getGameSet(getStatus());
+        return getName() + " - " + Battleship.getBattleship().getGameSet(getStatus());
+    }
+
+    public void setStatus(boolean status)
+    {
+        this.status = Battleship.getBattleship().getGameSet(status);
     }
 }

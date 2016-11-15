@@ -16,24 +16,22 @@ public class PlayerIDCell
 
     // constructors
 
-    public PlayerIDCell()
+    public PlayerIDCell(String playerId, int xPos, int yPos)
     {
+        this.playerId = playerId;
+        this.xPos = xPos;
+        this.yPos = yPos;
     }
 
     // methods
 
-    public int getXPos()
+    public int getColumn()
     {
         return xPos;
     }
 
-    public int getYPos()
+    public int getRow()
     {
         return yPos;
-    }
-
-    public String getPlayerID()
-    {
-        return playerId;
     }
 }

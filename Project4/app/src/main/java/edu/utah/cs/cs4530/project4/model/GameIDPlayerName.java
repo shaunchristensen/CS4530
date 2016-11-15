@@ -27,9 +27,4 @@ public class GameIDPlayerName
     {
         return id;
     }
-
-    public String getPlayerName()
-    {
-        return playerName;
-    }
 }

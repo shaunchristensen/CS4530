@@ -7,7 +7,9 @@
 
 package edu.utah.cs.cs4530.project4.model;
 
-public class Status
+import java.io.Serializable;
+
+public class Status implements Serializable
 {
     // fields
 

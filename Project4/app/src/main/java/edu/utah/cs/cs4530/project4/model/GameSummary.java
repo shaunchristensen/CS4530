@@ -49,7 +49,7 @@ public class GameSummary
 
     public String getStatus()
     {
-        return GameSets.getInstance().getGameSet(GameSets.getInstance().getGameSet(status));
+        return Battleship.getBattleship().getGameSet(Battleship.getBattleship().getGameSet(status));
     }
 
     public String getWinner()

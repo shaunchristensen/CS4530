@@ -26,9 +26,4 @@ public class Shot
     {
         return hit;
     }
-
-    public int getShipSunk()
-    {
-        return shipSunk;
-    }
 }
