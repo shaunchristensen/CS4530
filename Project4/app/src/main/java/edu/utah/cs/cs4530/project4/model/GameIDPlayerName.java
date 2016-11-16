@@ -15,9 +15,9 @@ public class GameIDPlayerName
 
     // constructors
 
-    public GameIDPlayerName(String gameId, String playerName)
+    public GameIDPlayerName(String id, String playerName)
     {
-        this.id = gameId;
+        this.id = id;
         this.playerName = playerName;
     }
 

@@ -16,22 +16,18 @@ public class PlayerIDCell
 
     // constructors
 
-    public PlayerIDCell(String playerId, int xPos, int yPos)
+    public PlayerIDCell(String playerId, int cell)
     {
+        int columnsCount = Battleship.getBattleship().getColumnsCount();
         this.playerId = playerId;
-        this.xPos = xPos;
-        this.yPos = yPos;
+        xPos = cell % columnsCount;
+        yPos = cell / columnsCount;
     }
 
     // methods
 
-    public int getColumn()
+    public int getCell()
     {
-        return xPos;
-    }
-
-    public int getRow()
-    {
-        return yPos;
+        return xPos + yPos * Battleship.getBattleship().getColumnsCount();
     }
 }

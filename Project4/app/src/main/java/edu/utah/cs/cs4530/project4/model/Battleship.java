@@ -20,11 +20,11 @@ public class Battleship
 
     private static Battleship battleship;
     private final int intColumnsCount, intRowsCount;
-    public final int ALL, HIT, IN_PROGRESS, MISS, MY_GAMES, GAME_OVER, SHIP, WAITING;
+    public final int ALL, HIT, IN_PROGRESS, MISS, NONE, MY_GAMES, GAME_OVER, SHIP, WAITING;
     private final List<Integer> listPlayers;
     private final List<String> listGameSets;
     private final Map<String, Integer> mapCellSets, mapGameSets;
-    private final String stringAll, stringHit, stringInProgress, stringMiss, stringMyGames, stringGameOver, stringShip, stringWaiting;
+    private final String stringAll, stringInProgress, stringMyGames, stringGameOver, stringWaiting;
 
     // constructors
 
@@ -33,27 +33,27 @@ public class Battleship
         intColumnsCount = intRowsCount = 10;
 
         stringAll = "All";
-        stringHit = "Hit";
         stringInProgress = "In Progress";
-        stringMiss = "Miss";
         stringMyGames = "My Games";
         stringGameOver = "Game Over";
-        stringShip = "Ship";
         stringWaiting = "Waiting";
 
         listGameSets  = Collections.unmodifiableList(Arrays.asList(stringAll, stringMyGames, stringWaiting, stringInProgress, stringGameOver));
         listPlayers = Collections.unmodifiableList(Arrays.asList(0, 1));
 
+        NONE = 0;
+        HIT = 1;
+        MISS = 2;
+        SHIP = 3;
+
         ALL = listGameSets.indexOf(stringAll);
-        HIT = 0;
         IN_PROGRESS = listGameSets.indexOf(stringInProgress);
-        MISS = 1;
         MY_GAMES = listGameSets.indexOf(stringMyGames);
         GAME_OVER = listGameSets.indexOf(stringGameOver);
-        SHIP = 2;
         WAITING = listGameSets.indexOf(stringWaiting);
 
         mapCellSets = new HashMap<>();
+        mapCellSets.put("NONE", NONE);
         mapCellSets.put("HIT", HIT);
         mapCellSets.put("MISS", MISS);
         mapCellSets.put("SHIP", SHIP);

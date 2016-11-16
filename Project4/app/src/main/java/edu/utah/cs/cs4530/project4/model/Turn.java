@@ -7,7 +7,9 @@
 
 package edu.utah.cs.cs4530.project4.model;
 
-public class Turn
+import java.io.Serializable;
+
+public class Turn implements Serializable
 {
     // fields
 

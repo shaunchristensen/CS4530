@@ -44,6 +44,7 @@ import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -61,7 +62,8 @@ import edu.utah.cs.cs4530.project4.model.Game;
 import edu.utah.cs.cs4530.project4.model.GameIDPlayerID;
 import edu.utah.cs.cs4530.project4.model.GameIDPlayerName;
 import edu.utah.cs.cs4530.project4.model.GameNamePlayerName;
-import edu.utah.cs.cs4530.project4.model.GameSummary;
+import edu.utah.cs.cs4530.project4.model.Player;
+import edu.utah.cs.cs4530.project4.model.Summary;
 import edu.utah.cs.cs4530.project4.model.PlayerID;
 import edu.utah.cs.cs4530.project4.model.PlayerIDCell;
 import edu.utah.cs.cs4530.project4.model.Shot;
@@ -69,56 +71,96 @@ import edu.utah.cs.cs4530.project4.model.Turn;
 
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
-import static edu.utah.cs.cs4530.project4.model.Cells.*;
 import static edu.utah.cs.cs4530.project4.view.LinearLayoutGrid.*;
+import static java.lang.Math.log;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 
 public class ActivityMain extends AppCompatActivity implements OnGameClickListener, OnGameSetSelectListener, OnNewGameClickListener, OnShootListener, OnStartClickListener
 {
     // fields
-private String stringGameID;
-private List<Game> listGames;
-private Handler handler;
-private Runnable runnableGetGames, runnableGetTurns;
-private Gson gson = new Gson();
-private int intGameSet;
-private Type type;
-private boolean booleanSetSelection;
-private String stringGameName, stringPlayerName;
-private Map<String, String> mapPlayerIDs;
-private Map<String, Turn> mapTurns;
-private boolean booleanStatus, booleanTurn;
-private List<Set<Integer>> listHits, listMisses, listShips;
-private String stringOpponent, stringPlayer, stringWinner;
-    private Battleship battleship;
-    private boolean booleanGame, booleanStart, booleanSummary, booleanTablet;
+
+    private final Battleship battleship = Battleship.getBattleship();
+    private boolean booleanGame, booleanGetCells, booleanSetSelection, booleanStart, booleanStatus, booleanSummary, booleanTablet, booleanTurn;
     private FragmentGame fragmentGame;
     private FragmentManager fragmentManager;
     private FragmentMenu fragmentMenu;
     private FragmentStart fragmentStart;
     private FragmentSummary fragmentSummary;
     private FrameLayout frameLayoutMenu, frameLayoutGame;
-    private int intColumnsCount, intMargin, intPadding, intRowsCount;
+    private final Gson gson = new Gson();
+    private final Handler handler = new Handler();
+    private final int intColumnsCount = battleship.getColumnsCount();
+    private int intGameSet, intMargin, intPadding;
+    private final int intPlayers = battleship.getPlayers().size();
+    private final int intRowsCount = battleship.getRowsCount();
+    private List<Game> listGames;
+    private List<Integer> listPlayers = battleship.getPlayers();
+    private List<Set<Integer>> listHits, listMisses, listShips;
     private ListFragmentMenu listFragmentMenu;
+    private Map<String, Player> mapPlayers;
+    private Map<String, Summary> mapSummaries;
+    private Map<String, Turn> mapTurns;
+    private Runnable runnableGetGames = new Runnable()
+    {
+        @Override
+        public void run()
+        {
+            new AsyncTaskGetGames().execute();
+            handler.postDelayed(runnableGetGames, 5000);
+        }
+    };
+    private Runnable runnableGetSummaries = new Runnable()
+    {
+        @Override
+        public void run()
+        {
+            synchronized (mapSummaries)
+            {
+                for (String s : mapSummaries.keySet())
+                {
+                    new AsyncTaskGetSummary().execute(s);
+                }
+
+                handler.postDelayed(runnableGetSummaries, 500);
+            }
+        }
+    };
+    private Runnable runnableGetTurns = new Runnable()
+    {
+        @Override
+        public void run()
+        {
+            synchronized (mapTurns)
+            {
+                for (String s : mapTurns.keySet())
+                {
+                    if (mapPlayers.containsKey(s))
+                    {
+                        new AsyncTaskGetTurn().execute(s, mapPlayers.get(s).getPlayerID());
+                    }
+                }
+
+                handler.postDelayed(runnableGetTurns, 500);
+            }
+        }
+    };
     private final String stringFragmentGame = "fragmentGame";
     private final String stringFragmentMenu = "fragmentMenu";
     private final String stringFragmentStart = "fragmentStart";
     private final String stringFragmentSummary = "fragmentSummary";
+    private String stringGameID, stringGameName, stringOpponent, stringPlayer, stringPlayerName, stringWinner;
     private final String stringListFragmentMenu = "listFragmentMenu";
-    private final String stringPlayerIDs = "PlayerIDs";
+    private final String stringPost = "POST";
+    private final String stringPut = "PUT";
+    private final String stringPlayers = "Players";
+    private final String stringSummaries = "Summaries";
     private final String stringTurns = "Turns";
+    private final String stringURL = "http://battleship.pixio.com/api/v2/";
+    private final Type typeCells = new TypeToken<List<Set<Integer>>>(){}.getType();
+    private final Type typeGames = new TypeToken<List<Game>>(){}.getType();
 
     // methods
-
-    private void loadGame()
-    {
-        booleanGame = true;
-
-        setFragments();
-        setGame();
-//        fragmentPlayer.setText(battleship.getStatus(intGame), battleship.getOpponent(intGame), battleship.getPlayer(intGame));
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -130,16 +172,39 @@ private String stringOpponent, stringPlayer, stringWinner;
         if (savedInstanceState != null)
         {
             booleanGame = savedInstanceState.getBoolean("booleanGame");
+            booleanGetCells = savedInstanceState.getBoolean("booleanGetCells");
+            booleanSetSelection = savedInstanceState.getBoolean("booleanSetSelection");
             booleanStart = savedInstanceState.getBoolean("booleanStart");
-            booleanSummary = savedInstanceState.getBoolean("booleanPlayer");
+            booleanStatus = savedInstanceState.getBoolean("booleanStatus");
+            booleanSummary = savedInstanceState.getBoolean("booleanSummary");
+            booleanTurn = savedInstanceState.getBoolean("booleanTurn");
             intGameSet = savedInstanceState.getInt("intGameSet");
+            listGames = gson.fromJson(savedInstanceState.getString("listGames"), typeGames);
+            listHits = gson.fromJson(savedInstanceState.getString("listHits"), typeCells);
+            listMisses = gson.fromJson(savedInstanceState.getString("listMisses"), typeCells);
+            listShips = gson.fromJson(savedInstanceState.getString("listShips"), typeCells);
             stringGameID = savedInstanceState.getString("stringGameID");
             stringGameName = savedInstanceState.getString("stringGameName");
-            stringPlayerName = savedInstanceState.getString("stringGameName");
+            stringOpponent = savedInstanceState.getString("stringOpponent");
+            stringPlayer = savedInstanceState.getString("stringPlayer");
+            stringPlayerName = savedInstanceState.getString("stringPlayerName");
+            stringWinner = savedInstanceState.getString("stringWinner");
         }
         else
         {
-            stringGameID = stringGameName = stringPlayerName = "";
+            listGames = new ArrayList<>();
+            listHits = new ArrayList<>();
+            listMisses = new ArrayList<>();
+            listShips = new ArrayList<>();
+
+            for (int i : listPlayers)
+            {
+                listHits.add(new HashSet<Integer>());
+                listMisses.add(new HashSet<Integer>());
+                listShips.add(new HashSet<Integer>());
+            }
+
+            stringGameID = stringGameName = stringOpponent = stringPlayer = stringPlayerName = stringWinner = "";
         }
 
         DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
@@ -153,12 +218,8 @@ private String stringOpponent, stringPlayer, stringWinner;
             booleanTablet = false;
         }
 
-        battleship = Battleship.getBattleship();
-        intColumnsCount = battleship.getColumnsCount();
         intMargin = (displayMetrics.heightPixels < displayMetrics.widthPixels ? displayMetrics.heightPixels : displayMetrics.widthPixels) / 10;
         intPadding = intMargin / 5;
-        intRowsCount = battleship.getRowsCount();
-
         LinearLayout linearLayout = new LinearLayout(this);
 
         if (booleanTablet)
@@ -183,6 +244,7 @@ private String stringOpponent, stringPlayer, stringWinner;
         fragmentGame = fragmentManager.findFragmentByTag(stringFragmentGame) == null ? new FragmentGame() : (FragmentGame)fragmentManager.findFragmentByTag(stringFragmentGame);
         fragmentGame.setColumnsCount(battleship.getColumnsCount());
         fragmentGame.setPadding(intPadding);
+        fragmentGame.setPlayers(new ArrayList<>(battleship.getPlayers()));
         fragmentGame.setRowsCount(intRowsCount);
 
         fragmentMenu = fragmentManager.findFragmentByTag(stringFragmentMenu) == null ? new FragmentMenu() : (FragmentMenu)fragmentManager.findFragmentByTag(stringFragmentMenu);
@@ -191,19 +253,23 @@ private String stringOpponent, stringPlayer, stringWinner;
         fragmentStart = fragmentManager.findFragmentByTag(stringFragmentStart) == null ? new FragmentStart() : (FragmentStart)fragmentManager.findFragmentByTag(stringFragmentStart);
         fragmentStart.setMargin(intMargin);
 
+        // fix?
         fragmentSummary = fragmentManager.findFragmentByTag(stringFragmentSummary) == null ? new FragmentSummary() : (FragmentSummary)fragmentManager.findFragmentByTag(stringFragmentSummary);
         fragmentSummary.setColumnsCount(intColumnsCount);
         fragmentSummary.setMargin(intMargin);
 
         listFragmentMenu = fragmentManager.findFragmentByTag(stringListFragmentMenu) == null ? new ListFragmentMenu() : (ListFragmentMenu)fragmentManager.findFragmentByTag(stringListFragmentMenu);
+        listFragmentMenu.setGame(stringGameID);
+        listFragmentMenu.setGames(listGames);
         listFragmentMenu.setPadding(intPadding);
+        listFragmentMenu.setSelection(intGameSet);
 
         if (savedInstanceState == null)
         {
             FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
             fragmentTransaction.add(frameLayoutGame.getId(), fragmentGame, stringFragmentGame);
-            fragmentTransaction.add(frameLayoutGame.getId(), fragmentSummary, stringFragmentSummary);
             fragmentTransaction.add(frameLayoutGame.getId(), fragmentStart, stringFragmentStart);
+            fragmentTransaction.add(frameLayoutGame.getId(), fragmentSummary, stringFragmentSummary);
 
             if (booleanTablet)
             {
@@ -220,45 +286,12 @@ private String stringOpponent, stringPlayer, stringWinner;
             fragmentManager.executePendingTransactions();
         }
 
-        if (listGames == null)
-        {
-            listGames = new ArrayList<>();
-        }
-
-        type = new TypeToken<List<Game>>(){}.getType();
-        handler = new Handler();
-        runnableGetGames = new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                new AsyncTaskGetGames().execute();
-                handler.postDelayed(runnableGetGames, 5000);
-            }
-        };
-        runnableGetTurns = new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                synchronized (mapTurns)
-                {
-                    for (String s : mapTurns.keySet())
-                    {
-                        new AsyncTaskGetTurns().execute(s, mapPlayerIDs.get(s));
-                    }
-
-                    handler.postDelayed(runnableGetTurns, 500);
-                }
-            }
-        };
-
         handler.post(runnableGetGames);
+        handler.post(runnableGetSummaries);
         handler.post(runnableGetTurns);
 
         setContentView(linearLayout);
         setFragments();
-//        listFragmentMenu.setSelection(intGameSet);
         setGame();
         setLayoutParams();
     }
@@ -266,15 +299,15 @@ private String stringOpponent, stringPlayer, stringWinner;
     @Override
     public void onGameClick(final Game game)
     {
-        if (mapPlayerIDs.containsKey(game.getID()))
+        if (mapPlayers.containsKey(game.getID()))
         {
-            if (!game.getID().equalsIgnoreCase(stringGameID) && game.getStatus() == battleship.IN_PROGRESS || game.getStatus() == battleship.OVER)
+            if (!game.getID().equalsIgnoreCase(stringGameID) && game.getStatus() == battleship.IN_PROGRESS || game.getStatus() == battleship.GAME_OVER)
             {
                 booleanGame = true;
                 stringGameID = game.getID();
 
-                new AsyncTaskGetGrids().execute(stringGameID, mapPlayerIDs.get(stringGameID));
-                new AsyncTaskGetTurns().execute(stringGameID, mapPlayerIDs.get(stringGameID));
+                new AsyncTaskGetCells().execute(stringGameID, mapPlayers.get(stringGameID).getPlayerID());
+                new AsyncTaskGetTurn().execute(stringGameID, mapPlayers.get(stringGameID).getPlayerID());
                 listFragmentMenu.setGame(stringGameID);
                 setFragments();
             }
@@ -320,70 +353,70 @@ private String stringOpponent, stringPlayer, stringWinner;
         {
             stringGameID = game.getID();
 
-            new AsyncTaskGetGameSummary().execute(game.getID());
+            new AsyncTaskGetSummary().execute(game.getID());
         }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 
     private void setGame()
     {
-        if (booleanGame && stringGameID != null)
+        if (booleanGame)
         {
-            new AsyncTaskGetGrids().execute(stringGameID, mapPlayerIDs.get(stringGameID));
+            fragmentGame.setGame(stringOpponent, stringPlayer, stringWinner, booleanStatus, booleanTurn, listHits, listMisses, listShips);
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     @Override
     public void onShoot(int cell)
     {
-        new AsyncTaskShoot().execute(stringGameID, mapPlayerIDs.get(stringGameID), Integer.toString(cell % intColumnsCount), Integer.toString(cell / intColumnsCount));
+        new AsyncTaskShoot().execute(stringGameID, mapPlayers.get(stringGameID).getPlayerID(), Integer.toString(cell));
     }
 
 
@@ -415,6 +448,7 @@ private String stringOpponent, stringPlayer, stringWinner;
             finish();
         }
 
+        listFragmentMenu.clearGame();
         listFragmentMenu.invalidateViews();
 
         setFragments();
@@ -494,26 +528,45 @@ private String stringOpponent, stringPlayer, stringWinner;
     protected void onSaveInstanceState(Bundle outState)
     {
         outState.putBoolean("booleanGame", booleanGame);
+        outState.putBoolean("booleanGetCells", booleanGetCells);
+        outState.putBoolean("booleanSetSelection", booleanSetSelection);
         outState.putBoolean("booleanStart", booleanStart);
+        outState.putBoolean("booleanStatus", booleanStatus);
         outState.putBoolean("booleanSummary", booleanSummary);
+        outState.putBoolean("booleanTurn", booleanTurn);
         outState.putInt("intGameSet", intGameSet);
+        outState.putString("listGames", gson.toJson(listGames, typeGames));
+        outState.putString("listHits", gson.toJson(listHits, typeCells));
+        outState.putString("listMisses", gson.toJson(listMisses, typeCells));
+        outState.putString("listShips", gson.toJson(listShips, typeCells));
         outState.putString("stringGameID", stringGameID);
         outState.putString("stringGameName", stringGameName);
+        outState.putString("stringOpponent", stringOpponent);
+        outState.putString("stringPlayer", stringPlayer);
         outState.putString("stringPlayerName", stringPlayerName);
+        outState.putString("stringWinner", stringWinner);
 
         super.onSaveInstanceState(outState);
     }
 
-
     private void serialize()
     {
-        try (FileOutputStream fileOutputStream = new FileOutputStream(new File(getFilesDir(), stringPlayerIDs)); ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream))
+        try (FileOutputStream fileOutputStream = new FileOutputStream(new File(getFilesDir(), stringPlayers)); ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream))
         {
-            objectOutputStream.writeObject(mapPlayerIDs);
+            objectOutputStream.writeObject(mapPlayers);
         }
         catch(Exception e)
         {
-            Log.e("serialize", "Error: Unable to write the player IDs. " + e.getMessage());
+            Log.e("serialize", "Error: Unable to write the players. " + e.getMessage());
+        }
+
+        try (FileOutputStream fileOutputStream = new FileOutputStream(new File(getFilesDir(), stringSummaries)); ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream))
+        {
+            objectOutputStream.writeObject(mapSummaries);
+        }
+        catch(Exception e)
+        {
+            Log.e("serialize", "Error: Unable to write the summaries. " + e.getMessage());
         }
 
         try (FileOutputStream fileOutputStream = new FileOutputStream(new File(getFilesDir(), stringTurns)); ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream))
@@ -534,13 +587,13 @@ private String stringOpponent, stringPlayer, stringWinner;
         {
             for (Game g : listGames)
             {
-                if (mapPlayerIDs.containsKey(g.getID()))
+                if (mapPlayers.containsKey(g.getID()))
                 {
                     games.add((g));
                 }
             }
         }
-        else if (intGameSet == battleship.WAITING || intGameSet == battleship.IN_PROGRESS || intGameSet == battleship.OVER)
+        else if (intGameSet == battleship.WAITING || intGameSet == battleship.IN_PROGRESS || intGameSet == battleship.GAME_OVER)
         {
             for (Game g : listGames)
             {
@@ -585,15 +638,26 @@ private String stringOpponent, stringPlayer, stringWinner;
 
     private void deserialize()
     {
-        try (FileInputStream fileInputStream = getApplicationContext().openFileInput(stringPlayerIDs); ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream))
+        try (FileInputStream fileInputStream = getApplicationContext().openFileInput(stringPlayers); ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream))
         {
-            mapPlayerIDs = (Map<String, String>)objectInputStream.readObject();
+            mapPlayers = (Map<String, Player>)objectInputStream.readObject();
         }
         catch (Exception e)
         {
-            mapPlayerIDs = new HashMap<>();
+            mapPlayers = new HashMap<>();
 
-            Log.e("deserialize", "Error: Unable to read the player IDs. " + e.getMessage());
+            Log.e("deserialize", "Error: Unable to read the players. " + e.getMessage());
+        }
+
+        try (FileInputStream fileInputStream = getApplicationContext().openFileInput(stringSummaries); ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream))
+        {
+            mapSummaries = (Map<String, Summary>)objectInputStream.readObject();
+        }
+        catch (Exception e)
+        {
+            mapSummaries = new HashMap<>();
+
+            Log.e("deserialize", "Error: Unable to read the summaries. " + e.getMessage());
         }
 
         try (FileInputStream fileInputStream = getApplicationContext().openFileInput(stringTurns); ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream))
@@ -604,7 +668,7 @@ private String stringOpponent, stringPlayer, stringWinner;
         {
             mapTurns = new HashMap<>();
 
-            Log.e("deserialize", "Error: Unable to read the turns. " + e.getMessage());
+            Log.e("deserialize", "Error: Unable to read the player names. " + e.getMessage());
         }
     }
 
@@ -674,90 +738,43 @@ private String stringOpponent, stringPlayer, stringWinner;
 
     // classes
 
-    private class AsyncTaskGetGameSummary extends AsyncTask<String, Void, String>
+    private class AsyncTaskGetGames extends AsyncTask<String, Void, Void>
     {
-        // fields
-
-        private boolean booleanPostExecute;
-
         // methods
 
         @Override
-        protected String doInBackground(String... params)
+        protected Void doInBackground(String... params)
         {
-            if (isConnected())
+            runOnUiThread(new Runnable()
             {
-                HttpURLConnection httpURLConnection = null;
-                StringBuilder stringBuilder = new StringBuilder();
-
-                try
+                @Override
+                public void run()
                 {
-                    URL url = new URL("http://battleship.pixio.com/api/v2/lobby/" + params[0]);
-                    httpURLConnection = (HttpURLConnection)url.openConnection();
-
-                    if (httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_OK)
+                    new AsyncTaskRequest()
                     {
-                        try (InputStream inputStream = httpURLConnection.getInputStream(); InputStreamReader inputStreamReader = new InputStreamReader(inputStream); BufferedReader bufferedReader = new BufferedReader(inputStreamReader))
+                        @Override
+                        protected void onPostExecute(String s)
                         {
-                            String s;
-
-                            while ((s = bufferedReader.readLine()) != null)
-                            {
-                                stringBuilder.append(s);
-                            }
-
-                            booleanPostExecute = true;
+                            processResponse(s);
                         }
-                    }
-                    else
-                    {
-                        Log.i("responseCode", "Error " + httpURLConnection.getResponseCode() + ": Unable to connect to the server. " + httpURLConnection.getResponseMessage());
-                    }
+                    }.execute(stringURL + "lobby", null, null);
                 }
-                catch (Exception e)
-                {
-                    Log.i("openConnection", "Error: Unable to connect to the server. " + e.getMessage());
-                }
-                finally
-                {
-                    if (httpURLConnection != null)
-                    {
-                        httpURLConnection.disconnect();
-                    }
-                }
+            });
 
-                return stringBuilder.toString();
-            }
-            else
-            {
-                return null;
-            }
+            return null;
         }
 
-        @Override
-        protected void onPostExecute(String s)
+        private void processResponse(String s)
         {
-            if (booleanPostExecute)
-            {
-                Log.i("s", s);
-                booleanGame = false;
-                booleanSummary = true;
-                GameSummary gameSummary = gson.fromJson(s, GameSummary.class);
-                listFragmentMenu.setGame(stringGameID);
-                setFragments();
-            }
+            listGames = gson.fromJson(s, typeGames);
+
+            // fix make list games linked hash map so you can query without going through all items
+            // list menu keep list, set it with values() for array list
+            // remove games in map but not in linked hash map for house keeping
+
+            setGames();
         }
-    }
-
-    private class AsyncTaskGetGames extends AsyncTask<String, Void, String>
-    {
-        // fields
-
-        private boolean booleanPostExecute;
-
-        // methods
-
-        @Override
+/*        @Override
         protected String doInBackground(String... params)
         {
             if (isConnected())
@@ -786,6 +803,7 @@ private String stringOpponent, stringPlayer, stringWinner;
                     }
                     else
                     {
+                        Log.i("M", "GetGames");
                         Log.e("responseCode", "Error " + httpURLConnection.getResponseCode() + ": Unable to connect to the server. " + httpURLConnection.getResponseMessage());
                     }
                 }
@@ -814,21 +832,46 @@ private String stringOpponent, stringPlayer, stringWinner;
         {
             if (booleanPostExecute)
             {
-                listGames = gson.fromJson(s, type);
+                listGames = gson.fromJson(s, typeGames);
 
                 setGames();
             }
-        }
+        }*/
     }
 
-    private class AsyncTaskGetGrids extends AsyncTask<String, Void, String>
+    private class AsyncTaskGetCells extends AsyncTask<String, Void, Void>
     {
         // fields
 
-        private boolean booleanPostExecute, booleanSetStatus;
+        private String stringGameID, stringPlayerID;
 
         // methods
 
+        @Override
+        protected Void doInBackground(String... params)
+        {
+            stringGameID = params[0];
+            stringPlayerID = params[1];
+
+            runOnUiThread(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    new AsyncTaskRequest()
+                    {
+                        @Override
+                        protected void onPostExecute(String s)
+                        {
+                            processResponse(s);
+                        }
+                    }.execute(stringURL + "games/" + stringGameID + "/boards?playerId=" + stringPlayerID, null, null);
+                }
+            });
+
+            return null;
+        }
+/*
         @Override
         protected String doInBackground(String... params)
         {
@@ -858,6 +901,7 @@ private String stringOpponent, stringPlayer, stringWinner;
                     }
                     else
                     {
+                        Log.i("M", "GetCells");
                         Log.e("responseCode", "Error " + httpURLConnection.getResponseCode() + ": Unable to connect to the server. " + httpURLConnection.getResponseMessage());
                     }
                 }
@@ -880,150 +924,105 @@ private String stringOpponent, stringPlayer, stringWinner;
                 return null;
             }
         }
-
-        @Override
-        protected void onPostExecute(String s)
+*/
+        private void processResponse(String s)
         {
-            if (booleanPostExecute)
+            Cells cells = gson.fromJson(s, Cells.class);
+
+            for (int i : battleship.getPlayers())
             {
-                Cells cells = gson.fromJson(s, Cells.class);
+                listHits.get(i).clear();
+                listMisses.get(i).clear();
+                listShips.get(i).clear();
 
-                for (int i : battleship.getPlayers())
+                for (Cells.Cell c : cells.getCells(i))
                 {
-                    listHits.get(i).clear();
-                    listMisses.get(i).clear();
-                    listShips.get(i).clear();
-
-                    for (Cells.Cell c : cells.getCells(i))
+                    if (c.getCellSet() == battleship.HIT)
                     {
-                        if (c.getCellSet() == battleship.HIT)
-                        {
-                            listHits.get(i).add(c.getCell());
-                        }
-                        else if (c.getCellSet() == battleship.MISS)
-                        {
-                            listMisses.get(i).add(c.getCell());
-                        }
-                        else if (c.getCellSet() == battleship.SHIP)
-                        {
-                            listShips.get(i).add(c.getCell());
-                        }
+                        Log.i("C", "" + c.getCell() + " HIT");
+                        listHits.get(i).add(c.getCell());
+                    }
+                    else if (c.getCellSet() == battleship.MISS)
+                    {
+                        Log.i("C", "" + c.getCell() + " MISS");
+                        listMisses.get(i).add(c.getCell());
+                    }
+                    else if (c.getCellSet() == battleship.SHIP)
+                    {
+                        Log.i("C", "" + c.getCell() + " SHIP");
+                        listShips.get(i).add(c.getCell());
                     }
                 }
-
-                fragmentGame.setGame(listHits, listMisses, listShips);
             }
+
+            fragmentGame.setGame(stringOpponent, stringPlayer, stringWinner, booleanStatus, booleanTurn, listHits, listMisses, listShips);
         }
     }
 
-    private class AsyncTaskGetTurns extends AsyncTask<String, Void, String>
+    private class AsyncTaskJoinGame extends AsyncTask<String, Void, Void>
     {
         // fields
 
-        private boolean booleanPostExecute, booleanSetStatus;
+        private GameIDPlayerName gameIDPlayerName;
         private String stringGameID;
 
         // methods
 
         @Override
-        protected String doInBackground(String... params)
+        protected Void doInBackground(String... params)
         {
-            if (isConnected())
+            stringGameID = params[0];
+            gameIDPlayerName = new GameIDPlayerName(stringGameID, params[1]);
+
+            runOnUiThread(new Runnable()
             {
-                HttpURLConnection httpURLConnection = null;
-                stringGameID = params[0];
-                StringBuilder stringBuilder = new StringBuilder();
-
-                try
+                @Override
+                public void run()
                 {
-                    URL url = new URL("http://battleship.pixio.com/api/v2/games/" + stringGameID + "?playerId=" + params[1]);
-                    httpURLConnection = (HttpURLConnection)url.openConnection();
-
-                    if (httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_OK)
+                    new AsyncTaskRequest()
                     {
-                        try (InputStream inputStream = httpURLConnection.getInputStream(); InputStreamReader inputStreamReader = new InputStreamReader(inputStream); BufferedReader bufferedReader = new BufferedReader(inputStreamReader))
+                        @Override
+                        protected void onPostExecute(String s)
                         {
-                            String s;
-
-                            while ((s = bufferedReader.readLine()) != null)
-                            {
-                                stringBuilder.append(s);
-                            }
-
-                            booleanPostExecute = true;
+                            processResponse(s);
                         }
-                    }
-                    else
-                    {
-                        Log.e("responseCode", "Error " + httpURLConnection.getResponseCode() + ": Unable to connect to the server. " + httpURLConnection.getResponseMessage());
-                    }
+                    }.execute(stringURL + "lobby/" + stringGameID, stringPut, gameIDPlayerName);
                 }
-                catch (Exception e)
-                {
-                    Log.e("openConnection", "Error: Unable to connect to the server. " + e.getMessage());
-                }
-                finally
-                {
-                    if (httpURLConnection != null)
-                    {
-                        httpURLConnection.disconnect();
-                    }
-                }
+            });
 
-                return stringBuilder.toString();
-            }
-            else
+            return null;
+        }
+
+        private void processResponse(String s)
+        {
+            handler.removeCallbacks(runnableGetGames);
+
+            booleanSetSelection = true;
+            PlayerID playerID = gson.fromJson(s, PlayerID.class);
+
+            if (intGameSet == battleship.WAITING || intGameSet == battleship.GAME_OVER)
             {
-                return null;
+                intGameSet = battleship.IN_PROGRESS;
+            }
+
+            ActivityMain.this.stringGameID = stringGameID;
+
+            new AsyncTaskGetSummary().execute(stringGameID);
+            handler.post(runnableGetGames);
+            listFragmentMenu.setGame(stringGameID);
+
+            synchronized (mapPlayers)
+            {
+                mapPlayers.put(stringGameID, new Player(1, playerID.getPlayerID()));
+            }
+
+            synchronized (mapSummaries)
+            {
+                mapSummaries.put(stringGameID, null);
             }
         }
 
-        @Override
-        protected void onPostExecute(String s)
-        {
-            if (booleanPostExecute)
-            {
-                Turn turn = gson.fromJson(s, Turn.class);
-
-                if (turn.getWinner().equalsIgnoreCase("In Progress"))
-                {
-                    if (stringGameID.equalsIgnoreCase(ActivityMain.this.stringGameID))
-                    {
-                        fragmentGame.setStatus(turn.getTurn());
-
-                        if (turn.getTurn())
-                        {
-                            if (!mapTurns.get(stringGameID).getTurn())
-                                new AsyncTaskGetGrids().execute(stringGameID, mapPlayerIDs.get(stringGameID));
-                        }
-
-                    }
-
-                    synchronized (mapTurns)
-                    {
-                        mapTurns.put(stringGameID, turn);
-                    }
-                }
-                else
-                {
-                    handler.removeCallbacks(runnableGetGames);
-                    handler.post(runnableGetGames);
-
-                    synchronized (mapTurns)
-                    {
-                        if (mapTurns.containsKey(stringGameID))
-                        {
-                            mapTurns.remove(stringGameID);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private class AsyncTaskJoinGame extends AsyncTask<String, Void, String>
-    {
-        // fields
+/*        // fields
 
         private boolean booleanPostExecute;
         private GameIDPlayerName gameIDPlayerName;
@@ -1054,6 +1053,8 @@ private String stringOpponent, stringPlayer, stringWinner;
                         bufferedWriter.flush();
                     }
 
+
+
                     if (httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_OK)
                     {
                         try (InputStream inputStream = httpURLConnection.getInputStream(); InputStreamReader inputStreamReader = new InputStreamReader(inputStream); BufferedReader bufferedReader = new BufferedReader(inputStreamReader))
@@ -1070,6 +1071,7 @@ private String stringOpponent, stringPlayer, stringWinner;
                     }
                     else
                     {
+                        Log.i("M", "JoinGame");
                         Log.e("responseCode", "Error " + httpURLConnection.getResponseCode() + ": Unable to connect to the server. " + httpURLConnection.getResponseMessage());
                     }
                 }
@@ -1103,31 +1105,84 @@ private String stringOpponent, stringPlayer, stringWinner;
                 booleanSetSelection = true;
                 PlayerID playerID = gson.fromJson(s, PlayerID.class);
 
-                if (intGameSet == battleship.WAITING || intGameSet == battleship.OVER)
+                if (intGameSet == battleship.WAITING || intGameSet == battleship.GAME_OVER)
                 {
                     intGameSet = battleship.IN_PROGRESS;
                 }
 
                 stringGameID = gameIDPlayerName.getGameID();
 
-                new AsyncTaskGetGrids().execute(gameIDPlayerName.getGameID(), playerID.getPlayerID());
+                new AsyncTaskGetCells().execute(gameIDPlayerName.getGameID(), playerID.getPlayerID());
                 handler.post(runnableGetGames);
                 listFragmentMenu.setGame(gameIDPlayerName.getGameID());
-                mapPlayerIDs.put(gameIDPlayerName.getGameID(), playerID.getPlayerID());
+                mapPlayers.put(gameIDPlayerName.getGameID(), new Player(1, playerID.getPlayerID()));
                 mapTurns.put(gameIDPlayerName.getGameID(), null);
             }
         }
+*/
     }
 
-    private class AsyncTaskNewGame extends AsyncTask<String, Void, String>
+    private class AsyncTaskNewGame extends AsyncTask<String, Void, Void>
     {
         // fields
 
-        private boolean booleanPostExecute;
+        private GameNamePlayerName gameNamePlayerName;
+        private String stringGameID;
 
         // methods
 
         @Override
+        protected Void doInBackground(String... params)
+        {
+            gameNamePlayerName = new GameNamePlayerName(params[0], params[1]);
+
+            runOnUiThread(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    new AsyncTaskRequest()
+                    {
+                        @Override
+                        protected void onPostExecute(String s)
+                        {
+                            processResponse(s);
+                        }
+                    }.execute(stringURL + "lobby/", stringPost, gameNamePlayerName);
+                }
+            });
+
+            return null;
+        }
+
+        private void processResponse(String s)
+        {
+            handler.removeCallbacks(runnableGetGames);
+
+            booleanSetSelection = true;
+            GameIDPlayerID gameIDPlayerID = gson.fromJson(s, GameIDPlayerID.class);
+
+            if (intGameSet == battleship.IN_PROGRESS || intGameSet == battleship.GAME_OVER)
+            {
+                intGameSet = battleship.WAITING;
+            }
+
+            ActivityMain.this.stringGameID = stringGameID = gameIDPlayerID.getGameID();
+
+            handler.post(runnableGetGames);
+            listFragmentMenu.setGame(stringGameID);
+
+            synchronized (mapPlayers)
+            {
+                mapPlayers.put(stringGameID, new Player(0, gameIDPlayerID.getPlayerID()));
+            }
+
+            synchronized (mapSummaries)
+            {
+                mapSummaries.put(stringGameID, null);
+            }
+        }
+/*        @Override
         protected String doInBackground(String... params)
         {
             if (isConnected())
@@ -1166,6 +1221,7 @@ private String stringOpponent, stringPlayer, stringWinner;
                     }
                     else
                     {
+                        Log.i("M", "NewGame");
                         Log.e("responseCode", "Error " + httpURLConnection.getResponseCode() + ": Unable to connect to the server. " + httpURLConnection.getResponseMessage());
                     }
                 }
@@ -1187,57 +1243,61 @@ private String stringOpponent, stringPlayer, stringWinner;
             {
                 return null;
             }
-        }
-
-        @Override
-        protected void onPostExecute(String s)
-        {
-            if (booleanPostExecute)
-            {
-                handler.removeCallbacks(runnableGetGames);
-
-                booleanSetSelection = true;
-                GameIDPlayerID gameIDPlayerID = gson.fromJson(s, GameIDPlayerID.class);
-
-                if (intGameSet == battleship.IN_PROGRESS || intGameSet == battleship.OVER)
-                {
-                    intGameSet = battleship.WAITING;
-                }
-
-                stringGameID = gameIDPlayerID.getGameID();
-
-                handler.post(runnableGetGames);
-                listFragmentMenu.setGame(gameIDPlayerID.getGameID());
-                mapPlayerIDs.put(gameIDPlayerID.getGameID(), gameIDPlayerID.getPlayerID());
-                mapTurns.put(gameIDPlayerID.getGameID(), null);
-            }
-        }
+        }*/
     }
 
-    private class AsyncTaskShoot extends AsyncTask<String, Void, String>
+    private class AsyncTaskShoot extends AsyncTask<String, Void, Void>
     {
         // fields
 
-        private boolean booleanPostExecute;
         private PlayerIDCell playerIDCell;
+        private String stringGameID;
 
         // methods
 
         @Override
-        protected String doInBackground(String... params)
+        protected Void doInBackground(String... params)
         {
+            playerIDCell = new PlayerIDCell(params[1], Integer.parseInt(params[2]));
+            stringGameID = params[0];
+
+            runOnUiThread(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    new AsyncTaskRequest()
+                    {
+                        @Override
+                        protected void onPostExecute(String s)
+                        {
+                            processResponse(s);
+                        }
+                    }.execute(stringURL + "games/" + stringGameID, stringPost, playerIDCell);
+                }
+            });
+
+            return null;
+        }
+
+        private void processResponse(String s)
+        {
+            booleanTurn = false;
+            Shot shot = gson.fromJson(s, Shot.class);
+
+            fragmentGame.addShot(shot.getHit(), playerIDCell.getCell());
+        }
+
+            /*
             if (isConnected())
             {
-                int i = Integer.parseInt(params[2]);
-                int j = Integer.parseInt(params[3]);
-                Log.i("Heh", "" + params[0] + " " + params[1] + " " + i + " " + j);
-                playerIDCell = new PlayerIDCell(params[1], i, j);
+                playerIDCell = new PlayerIDCell(params[1], Integer.parseInt(params[2]), Integer.parseInt(params[3]));
                 HttpURLConnection httpURLConnection = null;
                 StringBuilder stringBuilder = new StringBuilder();
 
                 try
                 {
-                    URL url = new URL("http://battleship.pixio.com/api/v2/games/" + params[0]);
+                    URL url = new URL("games/" + params[0]);
 
                     httpURLConnection = (HttpURLConnection)url.openConnection();
                     httpURLConnection.setDoOutput(true);
@@ -1287,17 +1347,268 @@ private String stringOpponent, stringPlayer, stringWinner;
             {
                 return null;
             }
-        }
+            */
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    private class AsyncTaskGetSummary extends AsyncTask<String, Void, Void>
+    {
+        // fields
+
+        private String stringGameID;
+
+        // methods
 
         @Override
-        protected void onPostExecute(String s)
+        protected Void doInBackground(String... params)
         {
-            if (booleanPostExecute)
-            {
-                Shot shot = gson.fromJson(s, Shot.class);
+            stringGameID = params[0];
 
-                fragmentGame.addShot(shot.getHit(), playerIDCell.getColumn() + playerIDCell.getRow() * intColumnsCount);
+            runOnUiThread(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    new AsyncTaskRequest()
+                    {
+                        @Override
+                        protected void onPostExecute(String s)
+                        {
+                            processResponse(s);
+                        }
+                    }.execute(stringURL + "lobby/" + stringGameID, null, null);
+                }
+            });
+
+            return null;
+        }
+
+        private void processResponse(String s)
+        {
+            Summary summary = gson.fromJson(s, Summary.class);
+
+            if (mapPlayers.containsKey(stringGameID))
+            {
+                if (summary.getStatus() != battleship.WAITING)
+                {
+                    synchronized (mapSummaries)
+                    {
+                        if (mapSummaries.containsKey(stringGameID))
+                        {
+                            mapSummaries.remove(stringGameID);
+                        }
+                    }
+
+                    synchronized (mapPlayers)
+                    {
+                        mapPlayers.get(stringGameID).setPlayerNames(Arrays.asList(summary.getPlayer1(), summary.getPlayer2()));
+                    }
+
+                    if (stringGameID.equalsIgnoreCase(ActivityMain.this.stringGameID))
+                    {
+                        booleanStatus = booleanTurn = false;
+                        stringOpponent = mapPlayers.get(stringGameID).getPlayerNames().get((mapPlayers.get(stringGameID).getPlayerIndex() + 1) % intPlayers);
+                        stringPlayer = mapPlayers.get(stringGameID).getPlayerNames().get(mapPlayers.get(stringGameID).getPlayerIndex());
+
+                        new AsyncTaskGetTurn().execute(stringGameID, mapPlayers.get(stringGameID).getPlayerID());
+                    }
+
+                    synchronized (mapTurns)
+                    {
+                        mapTurns.put(stringGameID, null);
+                    }
+                }
             }
+            else
+            {
+// load summary
+            }
+/*            booleanGame = false;
+            booleanSummary = true;
+            listFragmentMenu.setGame(stringGameID);
+            setFragments();*/
+        }
+    }
+
+    private class AsyncTaskGetTurn extends AsyncTask<String, Void, Void>
+    {
+        // fields
+
+        private String stringGameID, stringPlayerID;
+
+        // methods
+
+        @Override
+        protected Void doInBackground(String... params)
+        {
+            stringGameID = params[0];
+            stringPlayerID = params[1];
+
+            runOnUiThread(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    new AsyncTaskRequest()
+                    {
+                        @Override
+                        protected void onPostExecute(String s)
+                        {
+                            processResponse(s);
+                        }
+                    }.execute(stringURL + "games/" + stringGameID + "?playerId=" + stringPlayerID, null, null);
+                }
+            });
+
+            return null;
+        }
+
+        private void processResponse(String s)
+        {
+            Turn turn = gson.fromJson(s, Turn.class);
+            boolean status = turn.getWinner().equalsIgnoreCase("In Progress");
+
+            if (status)
+            {
+                synchronized (mapTurns)
+                {
+                    mapTurns.put(stringGameID, turn);
+                }
+            }
+            else
+            {
+                synchronized (mapTurns)
+                {
+                    if (mapTurns.containsKey(stringGameID))
+                    {
+                        mapTurns.remove(stringGameID);
+                    }
+                }
+
+                synchronized (listGames)
+                {
+                    for (Game g : listGames)
+                    {
+                        if (g.getID().equalsIgnoreCase(stringGameID) && g.getStatus() != battleship.GAME_OVER)
+                        {
+                            g.setStatus(false);
+                            setGames();
+                        }
+                    }
+                }
+            }
+
+            if (stringGameID.equalsIgnoreCase(ActivityMain.this.stringGameID))
+            {
+                if (!status || (!booleanTurn && turn.getTurn()))
+                {
+                    booleanGetCells = true;
+                }
+
+                booleanStatus = status;
+                booleanTurn = turn.getTurn();
+                stringWinner = turn.getWinner();
+            }
+
+            if(booleanGetCells)
+            {
+                booleanGetCells = false;
+
+                new AsyncTaskGetCells().execute(stringGameID, stringPlayerID);
+            }
+        }
+    }
+
+    private class AsyncTaskRequest extends AsyncTask<Object, Void, String>
+    {
+        // methods
+
+        @Override
+        protected String doInBackground(Object... params)
+        {
+            if (isConnected())
+            {
+                HttpURLConnection httpURLConnection = null;
+                StringBuilder stringBuilder = new StringBuilder();
+
+                try
+                {
+                    URL url = new URL(params[0].toString());
+                    httpURLConnection = (HttpURLConnection)url.openConnection();
+
+                    if (params[1] != null && params[2] != null)
+                    {
+                        httpURLConnection.setDoOutput(true);
+                        httpURLConnection.setRequestMethod(params[1].toString());
+                        httpURLConnection.setRequestProperty("Content-Type", "application/json");
+
+                        try (OutputStream outputStream = httpURLConnection.getOutputStream(); OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream); BufferedWriter bufferedWriter = new BufferedWriter(outputStreamWriter);)
+                        {
+                            bufferedWriter.write(gson.toJson(params[2]));
+                            bufferedWriter.flush();
+                        }
+                    }
+
+                    if (httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_OK)
+                    {
+                        try (InputStream inputStream = httpURLConnection.getInputStream(); InputStreamReader inputStreamReader = new InputStreamReader(inputStream); BufferedReader bufferedReader = new BufferedReader(inputStreamReader))
+                        {
+                            String s;
+
+                            while ((s = bufferedReader.readLine()) != null)
+                            {
+                                stringBuilder.append(s);
+                            }
+
+                            return stringBuilder.toString();
+                        }
+                    }
+                    else
+                    {
+                        Log.e("responseCode", "Error " + httpURLConnection.getResponseCode() + ": Unable to connect to the server. " + httpURLConnection.getResponseMessage());
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.e("openConnection", "Error: Unable to connect to the server. " + e.getMessage());
+                }
+                finally
+                {
+                    if (httpURLConnection != null)
+                    {
+                        httpURLConnection.disconnect();
+                    }
+                }
+            }
+
+            return null;
         }
     }
 }

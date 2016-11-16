@@ -31,7 +31,6 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.List;
 
 import edu.utah.cs.cs4530.project4.model.Battleship;
@@ -49,17 +48,17 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
 {
     // fields
 
-    private Battleship battleship;
-    private Gson gson;
+    private Battleship battleship = Battleship.getBattleship();
+    private Gson gson = new Gson();
     private int intGameSet, intPadding;
     private List<Game> listGames;
-    private List<String> listGameSets;
+    private List<String> listGameSets = battleship.getGameSets();
     private OnGameClickListener onGameClickListener;
     private OnGameSetSelectListener onGameSetSelectListener;
     private OnNewGameClickListener onNewGameClickListener;
     private Spinner spinner;
     private String stringGameID;
-    private Type type;
+    private Type type = new TypeToken<List<Game>>(){}.getType();
 
     // interfaces
 
@@ -115,6 +114,11 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
         return linearLayout;
     }
 
+    public void clearGame()
+    {
+        stringGameID = "";
+    }
+
     public void invalidateViews()
     {
         if (isAdded())
@@ -146,21 +150,12 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
     {
         super.onCreate(savedInstanceState);
 
-        battleship = Battleship.getBattleship();
-        gson = new Gson();
-        listGameSets = battleship.getGameSets();
-        type = new TypeToken<List<Game>>(){}.getType();
-
         if (savedInstanceState != null)
         {
             intGameSet = savedInstanceState.getInt("intGameSet");
             intPadding = savedInstanceState.getInt("intPadding");
             listGames = gson.fromJson(savedInstanceState.getString("listGames"), type);
             stringGameID = savedInstanceState.getString("stringGameID");
-        }
-        else
-        {
-            listGames = new ArrayList<>();
         }
     }
 
@@ -215,22 +210,25 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
         invalidateViews();
     }
 
-    public void setSelection(int gameSet)
-    {
-        spinner.setSelection(gameSet);
-
-        for (Game g : listGames)
-        {
-            if (g.getID().equalsIgnoreCase(stringGameID))
-            {
-                getListView().setSelection(listGames.indexOf(g));
-            }
-        }
-    }
-
     public void setPadding(int padding)
     {
         intPadding = padding;
+    }
+
+    public void setSelection(int gameSet)
+    {
+        if (isAdded())
+        {
+            spinner.setSelection(gameSet);
+
+            for (Game g : listGames)
+            {
+                if (g.getID().equalsIgnoreCase(stringGameID))
+                {
+                    getListView().setSelection(listGames.indexOf(g));
+                }
+            }
+        }
     }
 
     // classes

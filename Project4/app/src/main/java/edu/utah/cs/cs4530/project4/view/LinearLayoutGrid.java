@@ -33,6 +33,7 @@ import static android.graphics.Paint.ANTI_ALIAS_FLAG;
 import static android.view.MotionEvent.ACTION_DOWN;
 import static android.view.MotionEvent.ACTION_MOVE;
 import static android.view.MotionEvent.ACTION_UP;
+import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static android.view.ViewTreeObserver.*;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -44,16 +45,15 @@ public class LinearLayoutGrid extends LinearLayout implements OnGlobalLayoutList
     private boolean booleanStatus, booleanTurn;
     private Grid gridOpponent, gridPlayer;
     private final int intColumnsCount, intPadding, intRowsCount;
-    private final LinearLayout linearLayoutOpponent, linearLayoutOpponentPlayer, linearLayoutPlayer, linearLayoutStatusWinner;
+    private final LinearLayout linearLayoutOpponent, linearLayoutOpponentPlayer, linearLayoutPlayer, linearLayoutStatusTurn;
     private List<Set<Integer>> listHits, listMisses, listShips;
     private final OnShootListener onShootListener;
-    private final String stringGameOver, stringInProgress;
     private String stringOpponent, stringPlayer;
     private final TextView textViewOpponent, textViewPlayer, textViewStatus, textViewTurn;
 
     // constructors
 
-    public LinearLayoutGrid(Context context, int rowsCount, int columnsCount, int padding, List<Integer> players, OnShootListener listener, String gameOver, String inProgress)
+    public LinearLayoutGrid(Context context, int rowsCount, int columnsCount, int padding, List<Integer> players, OnShootListener listener)
     {
         super(context);
 
@@ -74,8 +74,6 @@ public class LinearLayoutGrid extends LinearLayout implements OnGlobalLayoutList
         }
 
         onShootListener = listener;
-        stringGameOver = gameOver;
-        stringInProgress = inProgress;
 
         textViewOpponent = new TextView(context);
         textViewOpponent.setTextColor(BLACK);
@@ -107,12 +105,12 @@ public class LinearLayoutGrid extends LinearLayout implements OnGlobalLayoutList
         linearLayoutOpponentPlayer.addView(linearLayoutOpponent);
         linearLayoutOpponentPlayer.addView(linearLayoutPlayer);
 
-        linearLayoutStatusWinner = new LinearLayout(context);
-        linearLayoutStatusWinner.addView(textViewStatus);
-        linearLayoutStatusWinner.addView(textViewTurn);
+        linearLayoutStatusTurn = new LinearLayout(context);
+        linearLayoutStatusTurn.addView(textViewStatus);
+        linearLayoutStatusTurn.addView(textViewTurn);
 
         addView(linearLayoutOpponentPlayer);
-        addView(linearLayoutStatusWinner);
+        addView(linearLayoutStatusTurn);
         getViewTreeObserver().addOnGlobalLayoutListener(this);
         setOrientation(VERTICAL);
     }
@@ -144,36 +142,97 @@ public class LinearLayoutGrid extends LinearLayout implements OnGlobalLayoutList
     @Override
     public void onGlobalLayout()
     {
-        // fix
-        int height, length, maxHeight, width;
+        int height, length, max, width;
         LayoutParams layoutParams;
+
+        height = getHeight();
+        width = getWidth();
 
         textViewOpponent.measure(0, 0);
         textViewPlayer.measure(0, 0);
         textViewStatus.measure(0, 0);
         textViewTurn.measure(0, 0);
 
-        height = getHeight();
-        maxHeight = max(textViewOpponent.getMeasuredHeight(), textViewPlayer.getMeasuredHeight());
-        width = getWidth();
-
         if (height < width)
         {
+            max = max(textViewOpponent.getMeasuredHeight(), textViewPlayer.getMeasuredHeight());
+            height -= max + intPadding;
             width = (width - intPadding) / 2;
-            layoutParams = new LayoutParams(width + intPadding, height);
+            layoutParams = new LayoutParams(width, max);
 
-            linearLayoutOpponent.setPadding(0, 0, intPadding, 0);
-            setOrientation(HORIZONTAL);
+            textViewOpponent.setLayoutParams(layoutParams);
+            textViewOpponent.setPadding(0, 0, 0, intPadding);
+
+            textViewPlayer.setLayoutParams(layoutParams);
+            textViewPlayer.setPadding(0, 0, 0, intPadding);
+
+            max = max(textViewStatus.getMeasuredHeight(), textViewTurn.getMeasuredHeight());
+            height -= max + intPadding;
+            layoutParams = new LayoutParams(width, max);
+
+            textViewStatus.setLayoutParams(layoutParams);
+            textViewTurn.setLayoutParams(layoutParams);
+
+            linearLayoutOpponentPlayer.setOrientation(HORIZONTAL);
+            linearLayoutStatusTurn.setOrientation(HORIZONTAL);
+
+            linearLayoutPlayer.setPadding(intPadding, 0, 0, 0);
+            linearLayoutStatusTurn.setPadding(0, intPadding, 0, 0);
+            textViewTurn.setPadding(intPadding, 0, 0, 0);
+
+            length = min(height, width);
+
+            layoutParams = new LayoutParams(length, length);
+            layoutParams.setMargins(0, 0, height - length, width - length);
+
+            gridOpponent.setLayoutParams(layoutParams);
+            gridOpponent.requestLayout();
+
+            gridPlayer.setLayoutParams(layoutParams);
+            gridPlayer.requestLayout();
         }
         else
         {
+            textViewOpponent.setLayoutParams(new LayoutParams(MATCH_PARENT, textViewOpponent.getMeasuredHeight()));
+            textViewPlayer.setLayoutParams(new LayoutParams(MATCH_PARENT, textViewPlayer.getMeasuredHeight()));
+            textViewStatus.setLayoutParams(new LayoutParams(MATCH_PARENT, textViewStatus.getMeasuredHeight()));
+            textViewTurn.setLayoutParams(new LayoutParams(MATCH_PARENT, textViewTurn.getMeasuredHeight()));
+
+
+
+
             height = (height - intPadding) / 2;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             layoutParams = new LayoutParams(width, height + intPadding);
 
             linearLayoutOpponent.setPadding(0, 0, 0, intPadding);
-            setOrientation(VERTICAL);
-        }
 
+            linearLayoutOpponentPlayer.setOrientation(VERTICAL);
+            linearLayoutStatusTurn.setOrientation(VERTICAL);
+        }
+/*
         linearLayoutOpponent.setLayoutParams(layoutParams);
 
         layoutParams = new LayoutParams(width, height);
@@ -181,7 +240,7 @@ public class LinearLayoutGrid extends LinearLayout implements OnGlobalLayoutList
         linearLayoutPlayer.setLayoutParams(layoutParams);
 
         height -= maxHeight;
-        length = min(height, width);
+        int length = min(height, width);
 
         layoutParams = new LayoutParams(length, length);
         layoutParams.setMargins(0, 0, height - length, width - length);
@@ -199,9 +258,10 @@ public class LinearLayoutGrid extends LinearLayout implements OnGlobalLayoutList
 
         textViewPlayer.setLayoutParams(layoutParams);
         textViewPlayer.setPadding(0, 0, 0, intPadding);
+        */
     }
 
-    public void setCells(List<Set<Integer>> hits, List<Set<Integer>> misses, List<Set<Integer>> ships)
+    private void setCells(List<Set<Integer>> hits, List<Set<Integer>> misses, List<Set<Integer>> ships)
     {
         listHits = hits;
         listMisses = misses;
@@ -223,21 +283,21 @@ public class LinearLayoutGrid extends LinearLayout implements OnGlobalLayoutList
         textViewPlayer.setText(player);
     }
 
-    public void setStatus(boolean status)
+    private void setStatus(boolean status)
     {
         booleanStatus = status;
 
         if (booleanStatus)
         {
-            textViewStatus.setText("Status: " + stringInProgress);
+            textViewStatus.setText("Status: In Progress");
         }
         else
         {
-            textViewStatus.setText("Status: " + stringGameOver);
+            textViewStatus.setText("Status: Game Over");
         }
     }
 
-    public void setTurn(boolean turn, String winner)
+    private void setTurn(boolean turn, String winner)
     {
         booleanTurn = turn;
 

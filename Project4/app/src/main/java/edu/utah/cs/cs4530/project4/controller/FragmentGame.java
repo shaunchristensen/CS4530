@@ -58,7 +58,7 @@ public class FragmentGame extends Fragment
 
         if (linearLayoutGrid == null)
         {
-//            linearLayoutGrid = new LinearLayoutGrid(getActivity(), intRowsCount, intColumnsCount, intPadding, (OnShootListener)getActivity());
+            linearLayoutGrid = new LinearLayoutGrid(getActivity(), intRowsCount, intColumnsCount, intPadding, listPlayers, (OnShootListener)getActivity());
         }
     }
 
@@ -78,19 +78,14 @@ public class FragmentGame extends Fragment
         intColumnsCount = columnsCount;
     }
 
-    public void setGame(List<Set<Integer>> cells, List<Set<Integer>> hits, List<Set<Integer>> misses, List<Set<Integer>> ships)
+    public void setGame(String opponent, String player, String winner, boolean status, boolean turn, List<Set<Integer>> hits, List<Set<Integer>> misses, List<Set<Integer>> ships)
     {
-//        linearLayoutGrid.setGame(cells, hits, misses, ships);
+        linearLayoutGrid.setGame(opponent, player, winner, status, turn, hits, misses, ships);
     }
 
     public void setPadding(int padding)
     {
         intPadding = padding;
-    }
-
-    public void setPlayers(int opponent, int player)
-    {
-//        linearLayoutGrid.setPlayers(opponent, player);
     }
 
     public void setPlayers(List<Integer> players)
@@ -101,10 +96,5 @@ public class FragmentGame extends Fragment
     public void setRowsCount(int rowsCount)
     {
         intRowsCount = rowsCount;
-    }
-
-    public void setStatus(boolean status)
-    {
-        linearLayoutGrid.setStatus(status);
     }
 }

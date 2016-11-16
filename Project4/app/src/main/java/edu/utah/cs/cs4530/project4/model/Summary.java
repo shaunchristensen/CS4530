@@ -7,7 +7,7 @@
 
 package edu.utah.cs.cs4530.project4.model;
 
-public class GameSummary
+public class Summary
 {
     // fields
 
@@ -16,7 +16,7 @@ public class GameSummary
 
     // constructors
 
-    public GameSummary()
+    public Summary()
     {
     }
 
@@ -27,9 +27,9 @@ public class GameSummary
         return missilesLaunched;
     }
 
-    public String getID()
+    public int getStatus()
     {
-        return id;
+        return Battleship.getBattleship().getGameSet(status);
     }
 
     public String getName()
@@ -47,13 +47,13 @@ public class GameSummary
         return player2;
     }
 
-    public String getStatus()
-    {
-        return Battleship.getBattleship().getGameSet(Battleship.getBattleship().getGameSet(status));
-    }
-
     public String getWinner()
     {
         return winner;
+    }
+
+    public String toString()
+    {
+        return "Game Name: " + getName() + "\nPlayer 1: " + getPlayer1() + "\nPlayer 2: " + getPlayer2() + "\nShots Fired: " + getMissilesLaunched() + "\nStatus: " + Battleship.getBattleship().getGameSet(getStatus()) + (getStatus() == Battleship.getBattleship().GAME_OVER ? "\nWinner: " + getWinner() : "");
     }
 }
