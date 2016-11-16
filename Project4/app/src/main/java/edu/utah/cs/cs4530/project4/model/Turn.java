@@ -7,9 +7,7 @@
 
 package edu.utah.cs.cs4530.project4.model;
 
-import java.io.Serializable;
-
-public class Status implements Serializable
+public class Turn
 {
     // fields
 
@@ -18,13 +16,13 @@ public class Status implements Serializable
 
     // constructors
 
-    public Status()
+    public Turn()
     {
     }
 
     // methods
 
-    public boolean getIsYourTurn()
+    public boolean getTurn()
     {
         return isYourTurn;
     }

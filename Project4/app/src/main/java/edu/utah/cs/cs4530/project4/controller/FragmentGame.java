@@ -58,7 +58,7 @@ public class FragmentGame extends Fragment
 
         if (linearLayoutGrid == null)
         {
-            linearLayoutGrid = new LinearLayoutGrid(getActivity(), intRowsCount, intColumnsCount, intPadding, (OnShootListener)getActivity());
+//            linearLayoutGrid = new LinearLayoutGrid(getActivity(), intRowsCount, intColumnsCount, intPadding, (OnShootListener)getActivity());
         }
     }
 
@@ -80,7 +80,7 @@ public class FragmentGame extends Fragment
 
     public void setGame(List<Set<Integer>> cells, List<Set<Integer>> hits, List<Set<Integer>> misses, List<Set<Integer>> ships)
     {
-        linearLayoutGrid.setGame(cells, hits, misses, ships);
+//        linearLayoutGrid.setGame(cells, hits, misses, ships);
     }
 
     public void setPadding(int padding)

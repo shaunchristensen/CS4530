@@ -20,6 +20,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
@@ -40,40 +41,57 @@ public class LinearLayoutGrid extends LinearLayout implements OnGlobalLayoutList
 {
     // fields
 
-    private boolean booleanStatus;
-    private final Grid gridOpponent, gridPlayer;
+    private boolean booleanStatus, booleanTurn;
+    private Grid gridOpponent, gridPlayer;
     private final int intColumnsCount, intPadding, intRowsCount;
-    private final LinearLayout linearLayoutOpponent, linearLayoutPlayer;
-    private List<Set<Integer>> listCells, listHits, listMisses, listShips;
+    private final LinearLayout linearLayoutOpponent, linearLayoutOpponentPlayer, linearLayoutPlayer, linearLayoutStatusWinner;
+    private List<Set<Integer>> listHits, listMisses, listShips;
     private final OnShootListener onShootListener;
+    private final String stringGameOver, stringInProgress;
     private String stringOpponent, stringPlayer;
-    private final TextView textViewOpponent, textViewPlayer;
+    private final TextView textViewOpponent, textViewPlayer, textViewStatus, textViewTurn;
 
     // constructors
 
-    public LinearLayoutGrid(Context context, int rowsCount, int columnsCount, int padding, OnShootListener listener)
+    public LinearLayoutGrid(Context context, int rowsCount, int columnsCount, int padding, List<Integer> players, OnShootListener listener, String gameOver, String inProgress)
     {
         super(context);
 
+        gridOpponent = new Grid(context, false, 0);
+        gridPlayer = new Grid(context, true, 1);
         intColumnsCount = columnsCount;
         intPadding = padding;
         intRowsCount = rowsCount;
         listHits = new ArrayList<>();
         listMisses = new ArrayList<>();
         listShips = new ArrayList<>();
-        gridOpponent = new Grid(context, false);
-        gridPlayer = new Grid(context, true);
+
+        for (int i : players)
+        {
+            listHits.add(new HashSet<Integer>());
+            listMisses.add(new HashSet<Integer>());
+            listShips.add(new HashSet<Integer>());
+        }
+
         onShootListener = listener;
+        stringGameOver = gameOver;
+        stringInProgress = inProgress;
 
         textViewOpponent = new TextView(context);
-        textViewOpponent.setText(stringOpponent);
         textViewOpponent.setTextColor(BLACK);
         textViewOpponent.setTextSize(TypedValue.COMPLEX_UNIT_SP, 25);
 
         textViewPlayer = new TextView(context);
-        textViewPlayer.setText(stringPlayer);
         textViewPlayer.setTextColor(BLACK);
         textViewPlayer.setTextSize(TypedValue.COMPLEX_UNIT_SP, 25);
+
+        textViewStatus = new TextView(context);
+        textViewStatus.setTextColor(BLACK);
+        textViewStatus.setTextSize(TypedValue.COMPLEX_UNIT_SP, 25);
+
+        textViewTurn = new TextView(context);
+        textViewTurn.setTextColor(BLACK);
+        textViewTurn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 25);
 
         linearLayoutOpponent = new LinearLayout(context);
         linearLayoutOpponent.addView(textViewOpponent);
@@ -85,9 +103,18 @@ public class LinearLayoutGrid extends LinearLayout implements OnGlobalLayoutList
         linearLayoutPlayer.addView(gridPlayer);
         linearLayoutPlayer.setOrientation(VERTICAL);
 
-        addView(linearLayoutOpponent);
-        addView(linearLayoutPlayer);
+        linearLayoutOpponentPlayer = new LinearLayout(context);
+        linearLayoutOpponentPlayer.addView(linearLayoutOpponent);
+        linearLayoutOpponentPlayer.addView(linearLayoutPlayer);
+
+        linearLayoutStatusWinner = new LinearLayout(context);
+        linearLayoutStatusWinner.addView(textViewStatus);
+        linearLayoutStatusWinner.addView(textViewTurn);
+
+        addView(linearLayoutOpponentPlayer);
+        addView(linearLayoutStatusWinner);
         getViewTreeObserver().addOnGlobalLayoutListener(this);
+        setOrientation(VERTICAL);
     }
 
     // interfaces
@@ -104,21 +131,27 @@ public class LinearLayoutGrid extends LinearLayout implements OnGlobalLayoutList
         if (hit)
         {
             listHits.get(0).add(cell);
+            listShips.get(0).remove(cell);
         }
         else
         {
             listMisses.get(0).add(cell);
         }
+
+        gridOpponent.invalidate();
     }
 
     @Override
     public void onGlobalLayout()
     {
+        // fix
         int height, length, maxHeight, width;
         LayoutParams layoutParams;
 
         textViewOpponent.measure(0, 0);
         textViewPlayer.measure(0, 0);
+        textViewStatus.measure(0, 0);
+        textViewTurn.measure(0, 0);
 
         height = getHeight();
         maxHeight = max(textViewOpponent.getMeasuredHeight(), textViewPlayer.getMeasuredHeight());
@@ -168,55 +201,89 @@ public class LinearLayoutGrid extends LinearLayout implements OnGlobalLayoutList
         textViewPlayer.setPadding(0, 0, 0, intPadding);
     }
 
-    public void setGame(List<Set<Integer>> cells, List<Set<Integer>> hits, List<Set<Integer>> misses, List<Set<Integer>> ships)
+    public void setCells(List<Set<Integer>> hits, List<Set<Integer>> misses, List<Set<Integer>> ships)
     {
-        listCells = cells;
         listHits = hits;
         listMisses = misses;
         listShips = ships;
 
-        setStatus(false);
-        setPlayers();
-    }
-
-    public void setPlayers()
-    {
         gridOpponent.invalidate();
         gridPlayer.invalidate();
+    }
 
-        stringOpponent = "Opponent";
-        stringPlayer = "Player";
+    public void setGame(String opponent, String player, String winner, boolean status, boolean turn, List<Set<Integer>> hits, List<Set<Integer>> misses, List<Set<Integer>> ships)
+    {
+        stringOpponent = opponent;
+        stringPlayer = player;
 
-        textViewOpponent.setText(stringOpponent);
-        textViewPlayer.setText(stringPlayer);
+        setCells(hits, misses, ships);
+        setStatus(status);
+        setTurn(turn, winner);
+        textViewOpponent.setText(opponent);
+        textViewPlayer.setText(player);
     }
 
     public void setStatus(boolean status)
     {
         booleanStatus = status;
+
+        if (booleanStatus)
+        {
+            textViewStatus.setText("Status: " + stringInProgress);
+        }
+        else
+        {
+            textViewStatus.setText("Status: " + stringGameOver);
+        }
+    }
+
+    public void setTurn(boolean turn, String winner)
+    {
+        booleanTurn = turn;
+
+        if (booleanStatus)
+        {
+            if (booleanTurn)
+            {
+                textViewTurn.setText("Turn: " + stringPlayer);
+            }
+            else
+            {
+                textViewTurn.setText("Status: " + stringOpponent);
+            }
+        }
+        else
+        {
+            textViewTurn.setText("Winner: " + winner);
+        }
     }
 
     // classes
 
-    private class Grid extends GridLayout implements OnGlobalLayoutListener, View.OnTouchListener
+    private class Grid extends GridLayout implements OnGlobalLayoutListener, OnTouchListener
     {
         // fields
 
         private final boolean booleanPlayer;
         private boolean booleanShoot;
         private float floatLength, floatMargin;
-        private int intCell;
+        private int intCell, intCellsIndex;
         private final ViewGrid viewGrid;
 
         // constructors
 
-        public Grid(Context context, boolean player)
+        public Grid(Context context, boolean player, int cellsIndex)
         {
             super(context);
 
             booleanPlayer = player;
+            intCellsIndex = cellsIndex;
             viewGrid = new ViewGrid(context);
-            viewGrid.setOnTouchListener(this);
+
+            if (!booleanPlayer)
+            {
+                viewGrid.setOnTouchListener(this);
+            }
 
             for (int i = 0; i < intRowsCount + intColumnsCount + 1; i++)
             {
@@ -248,7 +315,7 @@ public class LinearLayoutGrid extends LinearLayout implements OnGlobalLayoutList
         @Override
         public boolean onTouch(View v, MotionEvent event)
         {
-            if (booleanStatus)
+            if (booleanStatus && booleanTurn)
             {
                 if (event.getActionMasked() == ACTION_DOWN)
                 {
@@ -259,8 +326,10 @@ public class LinearLayoutGrid extends LinearLayout implements OnGlobalLayoutList
                 {
                     booleanShoot = false;
                 }
-                else if (event.getActionMasked() == ACTION_UP && booleanShoot && (listCells.get(0).contains(intCell) || listShips.get(0).contains(intCell)))
+                else if (event.getActionMasked() == ACTION_UP && booleanShoot && !listHits.get(intCellsIndex).contains(intCell) && !listMisses.get(intCellsIndex).contains(intCell))
                 {
+                    booleanTurn = false;
+
                     onShootListener.onShoot(intCell);
                 }
 
@@ -347,17 +416,11 @@ public class LinearLayoutGrid extends LinearLayout implements OnGlobalLayoutList
 
         private class ViewGrid extends View
         {
-            // fields
-
-            private final int intCellsIndex;
-
             // constructors
 
             public ViewGrid(Context context)
             {
                 super(context);
-
-                intCellsIndex = booleanPlayer ? 1 : 0;
 
                 setBackgroundColor(BLACK);
             }
@@ -375,15 +438,15 @@ public class LinearLayoutGrid extends LinearLayout implements OnGlobalLayoutList
 
                 for (int i = 0; i < intColumnsCount * intRowsCount; i++)
                 {
-                    if (listHits.size() > 0 && listHits.get(intCellsIndex).contains(i))
+                    if (listHits.get(intCellsIndex).contains(i))
                     {
                         paint.setColor(RED);
                     }
-                    else if (listMisses.size() > 0 && listMisses.get(intCellsIndex).contains(i))
+                    else if (listMisses.get(intCellsIndex).contains(i))
                     {
                         paint.setColor(WHITE);
                     }
-                    else if ((booleanPlayer || !booleanStatus) && listShips.size() > 0 && listShips.get(intCellsIndex).contains(i))
+                    else if ((booleanPlayer || !booleanStatus) && listShips.get(intCellsIndex).contains(i))
                     {
                         paint.setColor(rgb(132, 132, 130));
                     }

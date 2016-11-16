@@ -20,11 +20,11 @@ public class Battleship
 
     private static Battleship battleship;
     private final int intColumnsCount, intRowsCount;
-    public final int ALL, IN_PROGRESS, MY_GAMES, OVER, WAITING;
+    public final int ALL, HIT, IN_PROGRESS, MISS, MY_GAMES, GAME_OVER, SHIP, WAITING;
     private final List<Integer> listPlayers;
     private final List<String> listGameSets;
-    private final Map<String, Integer> mapGameSets;
-    private final String stringAll, stringInProgress, stringMyGames, stringOver, stringWaiting;
+    private final Map<String, Integer> mapCellSets, mapGameSets;
+    private final String stringAll, stringHit, stringInProgress, stringMiss, stringMyGames, stringGameOver, stringShip, stringWaiting;
 
     // constructors
 
@@ -33,24 +33,35 @@ public class Battleship
         intColumnsCount = intRowsCount = 10;
 
         stringAll = "All";
+        stringHit = "Hit";
         stringInProgress = "In Progress";
+        stringMiss = "Miss";
         stringMyGames = "My Games";
-        stringOver = "Over";
+        stringGameOver = "Game Over";
+        stringShip = "Ship";
         stringWaiting = "Waiting";
 
-        listGameSets  = Collections.unmodifiableList(Arrays.asList(stringAll, stringMyGames, stringWaiting, stringInProgress, stringOver));
+        listGameSets  = Collections.unmodifiableList(Arrays.asList(stringAll, stringMyGames, stringWaiting, stringInProgress, stringGameOver));
         listPlayers = Collections.unmodifiableList(Arrays.asList(0, 1));
 
         ALL = listGameSets.indexOf(stringAll);
+        HIT = 0;
         IN_PROGRESS = listGameSets.indexOf(stringInProgress);
+        MISS = 1;
         MY_GAMES = listGameSets.indexOf(stringMyGames);
-        OVER = listGameSets.indexOf(stringOver);
+        GAME_OVER = listGameSets.indexOf(stringGameOver);
+        SHIP = 2;
         WAITING = listGameSets.indexOf(stringWaiting);
+
+        mapCellSets = new HashMap<>();
+        mapCellSets.put("HIT", HIT);
+        mapCellSets.put("MISS", MISS);
+        mapCellSets.put("SHIP", SHIP);
 
         mapGameSets = new HashMap<>();
         mapGameSets.put("WAITING", WAITING);
         mapGameSets.put("PLAYING", IN_PROGRESS);
-        mapGameSets.put("DONE", OVER);
+        mapGameSets.put("DONE", GAME_OVER);
     }
 
     // methods
@@ -68,6 +79,11 @@ public class Battleship
     public int getColumnsCount()
     {
         return intColumnsCount;
+    }
+
+    public int getCellSet(String cellSet)
+    {
+        return mapCellSets.get(cellSet);
     }
 
     public int getGameSet(String gameSet)

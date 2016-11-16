@@ -56,19 +56,20 @@ import edu.utah.cs.cs4530.project4.controller.ListFragmentMenu.OnGameClickListen
 import edu.utah.cs.cs4530.project4.controller.ListFragmentMenu.OnGameSetSelectListener;
 import edu.utah.cs.cs4530.project4.controller.ListFragmentMenu.OnNewGameClickListener;
 import edu.utah.cs.cs4530.project4.model.Battleship;
+import edu.utah.cs.cs4530.project4.model.Cells;
 import edu.utah.cs.cs4530.project4.model.Game;
 import edu.utah.cs.cs4530.project4.model.GameIDPlayerID;
 import edu.utah.cs.cs4530.project4.model.GameIDPlayerName;
 import edu.utah.cs.cs4530.project4.model.GameNamePlayerName;
 import edu.utah.cs.cs4530.project4.model.GameSummary;
-import edu.utah.cs.cs4530.project4.model.Grids;
 import edu.utah.cs.cs4530.project4.model.PlayerID;
 import edu.utah.cs.cs4530.project4.model.PlayerIDCell;
 import edu.utah.cs.cs4530.project4.model.Shot;
-import edu.utah.cs.cs4530.project4.model.Status;
+import edu.utah.cs.cs4530.project4.model.Turn;
 
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
+import static edu.utah.cs.cs4530.project4.model.Cells.*;
 import static edu.utah.cs.cs4530.project4.view.LinearLayoutGrid.*;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
@@ -79,14 +80,17 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
 private String stringGameID;
 private List<Game> listGames;
 private Handler handler;
-private Runnable runnableGetGames, runnableGetStatuses;
+private Runnable runnableGetGames, runnableGetTurns;
 private Gson gson = new Gson();
 private int intGameSet;
 private Type type;
 private boolean booleanSetSelection;
 private String stringGameName, stringPlayerName;
 private Map<String, String> mapPlayerIDs;
-private Map<String, edu.utah.cs.cs4530.project4.model.Status> mapStatuses;
+private Map<String, Turn> mapTurns;
+private boolean booleanStatus, booleanTurn;
+private List<Set<Integer>> listHits, listMisses, listShips;
+private String stringOpponent, stringPlayer, stringWinner;
     private Battleship battleship;
     private boolean booleanGame, booleanStart, booleanSummary, booleanTablet;
     private FragmentGame fragmentGame;
@@ -103,7 +107,7 @@ private Map<String, edu.utah.cs.cs4530.project4.model.Status> mapStatuses;
     private final String stringFragmentSummary = "fragmentSummary";
     private final String stringListFragmentMenu = "listFragmentMenu";
     private final String stringPlayerIDs = "PlayerIDs";
-    private final String stringStatuses = "Statuses";
+    private final String stringTurns = "Turns";
 
     // methods
 
@@ -232,25 +236,25 @@ private Map<String, edu.utah.cs.cs4530.project4.model.Status> mapStatuses;
                 handler.postDelayed(runnableGetGames, 5000);
             }
         };
-        runnableGetStatuses = new Runnable()
+        runnableGetTurns = new Runnable()
         {
             @Override
             public void run()
             {
-                synchronized (mapStatuses)
+                synchronized (mapTurns)
                 {
-                    for (String s : mapStatuses.keySet())
+                    for (String s : mapTurns.keySet())
                     {
-                        new AsyncTaskGetStatuses().execute(s, mapPlayerIDs.get(s));
+                        new AsyncTaskGetTurns().execute(s, mapPlayerIDs.get(s));
                     }
 
-                    handler.postDelayed(runnableGetStatuses, 500);
+                    handler.postDelayed(runnableGetTurns, 500);
                 }
             }
         };
 
         handler.post(runnableGetGames);
-        handler.post(runnableGetStatuses);
+        handler.post(runnableGetTurns);
 
         setContentView(linearLayout);
         setFragments();
@@ -270,7 +274,7 @@ private Map<String, edu.utah.cs.cs4530.project4.model.Status> mapStatuses;
                 stringGameID = game.getID();
 
                 new AsyncTaskGetGrids().execute(stringGameID, mapPlayerIDs.get(stringGameID));
-                new AsyncTaskGetStatuses().execute(stringGameID, mapPlayerIDs.get(stringGameID));
+                new AsyncTaskGetTurns().execute(stringGameID, mapPlayerIDs.get(stringGameID));
                 listFragmentMenu.setGame(stringGameID);
                 setFragments();
             }
@@ -512,13 +516,13 @@ private Map<String, edu.utah.cs.cs4530.project4.model.Status> mapStatuses;
             Log.e("serialize", "Error: Unable to write the player IDs. " + e.getMessage());
         }
 
-        try (FileOutputStream fileOutputStream = new FileOutputStream(new File(getFilesDir(), stringStatuses)); ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream))
+        try (FileOutputStream fileOutputStream = new FileOutputStream(new File(getFilesDir(), stringTurns)); ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream))
         {
-            objectOutputStream.writeObject(mapStatuses);
+            objectOutputStream.writeObject(mapTurns);
         }
         catch(Exception e)
         {
-            Log.e("serialize", "Error: Unable to write the statuses. " + e.getMessage());
+            Log.e("serialize", "Error: Unable to write the turns. " + e.getMessage());
         }
     }
 
@@ -592,15 +596,15 @@ private Map<String, edu.utah.cs.cs4530.project4.model.Status> mapStatuses;
             Log.e("deserialize", "Error: Unable to read the player IDs. " + e.getMessage());
         }
 
-        try (FileInputStream fileInputStream = getApplicationContext().openFileInput(stringStatuses); ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream))
+        try (FileInputStream fileInputStream = getApplicationContext().openFileInput(stringTurns); ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream))
         {
-            mapStatuses = (Map<String, Status>)objectInputStream.readObject();
+            mapTurns = (Map<String, Turn>)objectInputStream.readObject();
         }
         catch (Exception e)
         {
-            mapStatuses = new HashMap<>();
+            mapTurns = new HashMap<>();
 
-            Log.e("deserialize", "Error: Unable to read the statuses. " + e.getMessage());
+            Log.e("deserialize", "Error: Unable to read the turns. " + e.getMessage());
         }
     }
 
@@ -882,70 +886,37 @@ private Map<String, edu.utah.cs.cs4530.project4.model.Status> mapStatuses;
         {
             if (booleanPostExecute)
             {
-                Grids grids = gson.fromJson(s, Grids.class);
+                Cells cells = gson.fromJson(s, Cells.class);
 
-                List<Set<Integer>> cells = new ArrayList<>();
-                cells.add(new HashSet<Integer>());
-                cells.add(new HashSet<Integer>());
-
-                List<Set<Integer>> hits = new ArrayList<>();
-                hits.add(new HashSet<Integer>());
-                hits.add(new HashSet<Integer>());
-
-                List<Set<Integer>> misses = new ArrayList<>();
-                misses.add(new HashSet<Integer>());
-                misses.add(new HashSet<Integer>());
-
-                List<Set<Integer>> ships = new ArrayList<>();
-                ships.add(new HashSet<Integer>());
-                ships.add(new HashSet<Integer>());
-
-                for (Grids.Cell c : grids.getOpponentBoard())
+                for (int i : battleship.getPlayers())
                 {
-                    if (c.getStatus().equalsIgnoreCase("Hit"))
+                    listHits.get(i).clear();
+                    listMisses.get(i).clear();
+                    listShips.get(i).clear();
+
+                    for (Cells.Cell c : cells.getCells(i))
                     {
-                        hits.get(0).add(c.getXPos() + c.getYPos() * intColumnsCount);
-                    }
-                    else if (c.getStatus().equalsIgnoreCase("Miss"))
-                    {
-                        misses.get(0).add(c.getXPos() + c.getYPos() * intColumnsCount);
-                    }
-                    else if (c.getStatus().equalsIgnoreCase("Ship"))
-                    {
-                        ships.get(0).add(c.getXPos() + c.getYPos() * intColumnsCount);
-                    }
-                    else
-                    {
-                        cells.get(0).add(c.getXPos() + c.getYPos() * intColumnsCount);
+                        if (c.getCellSet() == battleship.HIT)
+                        {
+                            listHits.get(i).add(c.getCell());
+                        }
+                        else if (c.getCellSet() == battleship.MISS)
+                        {
+                            listMisses.get(i).add(c.getCell());
+                        }
+                        else if (c.getCellSet() == battleship.SHIP)
+                        {
+                            listShips.get(i).add(c.getCell());
+                        }
                     }
                 }
 
-                for (Grids.Cell c : grids.getPlayerBoard())
-                {
-                    if (c.getStatus().equalsIgnoreCase("Hit"))
-                    {
-                        hits.get(1).add(c.getXPos() + c.getYPos() * intColumnsCount);
-                    }
-                    else if (c.getStatus().equalsIgnoreCase("Miss"))
-                    {
-                        misses.get(1).add(c.getXPos() + c.getYPos() * intColumnsCount);
-                    }
-                    else if (c.getStatus().equalsIgnoreCase("Ship"))
-                    {
-                        ships.get(1).add(c.getXPos() + c.getYPos() * intColumnsCount);
-                    }
-                    else
-                    {
-                        cells.get(1).add(c.getXPos() + c.getYPos() * intColumnsCount);
-                    }
-                }
-
-                fragmentGame.setGame(cells, hits, misses, ships);
+                fragmentGame.setGame(listHits, listMisses, listShips);
             }
         }
     }
 
-    private class AsyncTaskGetStatuses extends AsyncTask<String, Void, String>
+    private class AsyncTaskGetTurns extends AsyncTask<String, Void, String>
     {
         // fields
 
@@ -1012,25 +983,25 @@ private Map<String, edu.utah.cs.cs4530.project4.model.Status> mapStatuses;
         {
             if (booleanPostExecute)
             {
-                edu.utah.cs.cs4530.project4.model.Status status = gson.fromJson(s, edu.utah.cs.cs4530.project4.model.Status.class);
+                Turn turn = gson.fromJson(s, Turn.class);
 
-                if (status.getWinner().equalsIgnoreCase("In Progress"))
+                if (turn.getWinner().equalsIgnoreCase("In Progress"))
                 {
                     if (stringGameID.equalsIgnoreCase(ActivityMain.this.stringGameID))
                     {
-                        fragmentGame.setStatus(status.getIsYourTurn());
+                        fragmentGame.setStatus(turn.getTurn());
 
-                        if (status.getIsYourTurn())
+                        if (turn.getTurn())
                         {
-                            if (!mapStatuses.get(stringGameID).getIsYourTurn())
+                            if (!mapTurns.get(stringGameID).getTurn())
                                 new AsyncTaskGetGrids().execute(stringGameID, mapPlayerIDs.get(stringGameID));
                         }
 
                     }
 
-                    synchronized (mapStatuses)
+                    synchronized (mapTurns)
                     {
-                        mapStatuses.put(stringGameID, status);
+                        mapTurns.put(stringGameID, turn);
                     }
                 }
                 else
@@ -1038,11 +1009,11 @@ private Map<String, edu.utah.cs.cs4530.project4.model.Status> mapStatuses;
                     handler.removeCallbacks(runnableGetGames);
                     handler.post(runnableGetGames);
 
-                    synchronized (mapStatuses)
+                    synchronized (mapTurns)
                     {
-                        if (mapStatuses.containsKey(stringGameID))
+                        if (mapTurns.containsKey(stringGameID))
                         {
-                            mapStatuses.remove(stringGameID);
+                            mapTurns.remove(stringGameID);
                         }
                     }
                 }
@@ -1143,7 +1114,7 @@ private Map<String, edu.utah.cs.cs4530.project4.model.Status> mapStatuses;
                 handler.post(runnableGetGames);
                 listFragmentMenu.setGame(gameIDPlayerName.getGameID());
                 mapPlayerIDs.put(gameIDPlayerName.getGameID(), playerID.getPlayerID());
-                mapStatuses.put(gameIDPlayerName.getGameID(), null);
+                mapTurns.put(gameIDPlayerName.getGameID(), null);
             }
         }
     }
@@ -1238,7 +1209,7 @@ private Map<String, edu.utah.cs.cs4530.project4.model.Status> mapStatuses;
                 handler.post(runnableGetGames);
                 listFragmentMenu.setGame(gameIDPlayerID.getGameID());
                 mapPlayerIDs.put(gameIDPlayerID.getGameID(), gameIDPlayerID.getPlayerID());
-                mapStatuses.put(gameIDPlayerID.getGameID(), null);
+                mapTurns.put(gameIDPlayerID.getGameID(), null);
             }
         }
     }

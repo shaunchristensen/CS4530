@@ -7,7 +7,7 @@
 
 package edu.utah.cs.cs4530.project4.model;
 
-public class Grids
+public class Cells
 {
     // fields
 
@@ -15,20 +15,15 @@ public class Grids
 
     // constructors
 
-    public Grids()
+    public Cells()
     {
     }
 
     // methods
 
-    public Cell[] getOpponentBoard()
+    public Cell[] getCells(int index)
     {
-        return opponentBoard;
-    }
-
-    public Cell[] getPlayerBoard()
-    {
-        return playerBoard;
+        return index == 0 ? opponentBoard : playerBoard;
     }
 
     // classes
@@ -48,19 +43,14 @@ public class Grids
 
         // methods
 
-        public int getXPos()
+        public int getCell()
         {
-            return xPos;
+            return xPos + yPos * Battleship.getBattleship().getColumnsCount();
         }
 
-        public int getYPos()
+        public int getCellSet()
         {
-            return yPos;
-        }
-
-        public String getStatus()
-        {
-            return status;
+            return Battleship.getBattleship().getCellSet(status);
         }
     }
 }
