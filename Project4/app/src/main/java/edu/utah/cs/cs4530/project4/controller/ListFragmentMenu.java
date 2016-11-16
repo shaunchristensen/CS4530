@@ -31,6 +31,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 
 import edu.utah.cs.cs4530.project4.model.Battleship;
@@ -97,6 +98,7 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
         spinner = new Spinner(getActivity());
         spinner.setAdapter(new SpinnerAdapterMenu());
         spinner.setOnItemSelectedListener(this);
+        spinner.setSelection(intGameSet);
 
         LinearLayout linearLayoutSpinner = new LinearLayout(getActivity());
         linearLayoutSpinner.addView(spinner, new LayoutParams(MATCH_PARENT, MATCH_PARENT));
@@ -114,14 +116,9 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
         return linearLayout;
     }
 
-    public void clearGame()
-    {
-        stringGameID = "";
-    }
-
     public void invalidateViews()
     {
-        if (isAdded())
+        if (isVisible())
         {
             getListView().invalidateViews();
         }
@@ -157,12 +154,17 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
             listGames = gson.fromJson(savedInstanceState.getString("listGames"), type);
             stringGameID = savedInstanceState.getString("stringGameID");
         }
+        else
+        {
+            listGames = new ArrayList<>();
+            stringGameID = "";
+        }
     }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int i, long id)
     {
-        if (!listGames.get(i).getID().equalsIgnoreCase(stringGameID))
+        if (!listGames.get(i).getGameID().equalsIgnoreCase(stringGameID))
         {
             onGameClickListener.onGameClick(listGames.get(i));
             invalidateViews();
@@ -217,13 +219,13 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
 
     public void setSelection(int gameSet)
     {
-        if (isAdded())
+        if (isVisible())
         {
             spinner.setSelection(gameSet);
 
             for (Game g : listGames)
             {
-                if (g.getID().equalsIgnoreCase(stringGameID))
+                if (g.getGameID().equalsIgnoreCase(stringGameID))
                 {
                     getListView().setSelection(listGames.indexOf(g));
                 }
@@ -293,9 +295,9 @@ public class ListFragmentMenu extends ListFragment implements OnClickListener, O
         public View getView(int i, View view, ViewGroup viewGroup)
         {
             TextView textView = new TextView(getActivity());
-            textView.setBackgroundColor(listGames.get(i).getID().equalsIgnoreCase(stringGameID) ? rgb(64, 164, 223) : WHITE);
+            textView.setBackgroundColor(listGames.get(i).getGameID().equalsIgnoreCase(stringGameID) ? rgb(64, 164, 223) : WHITE);
             textView.setPadding(intPadding, intPadding, intPadding, intPadding);
-            textView.setText(intGameSet == battleship.ALL || intGameSet == battleship.MY_GAMES ? listGames.get(i).toString() : listGames.get(i).getName());
+            textView.setText(intGameSet == battleship.ALL || intGameSet == battleship.MY_GAMES ? listGames.get(i).toString() : listGames.get(i).getGameName());
             textView.setTextColor(BLACK);
             textView.setTextSize(COMPLEX_UNIT_SP, 12.5f);
 

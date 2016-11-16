@@ -72,7 +72,6 @@ import edu.utah.cs.cs4530.project4.model.Turn;
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 import static edu.utah.cs.cs4530.project4.view.LinearLayoutGrid.*;
-import static java.lang.Math.log;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 
@@ -92,7 +91,6 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
     private final Handler handler = new Handler();
     private final int intColumnsCount = battleship.getColumnsCount();
     private int intGameSet, intMargin, intPadding;
-    private final int intPlayers = battleship.getPlayers().size();
     private final int intRowsCount = battleship.getRowsCount();
     private List<Game> listGames;
     private List<Integer> listPlayers = battleship.getPlayers();
@@ -161,6 +159,115 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
     private final Type typeGames = new TypeToken<List<Game>>(){}.getType();
 
     // methods
+
+    private void deserialize()
+    {
+        try (FileInputStream fileInputStream = getApplicationContext().openFileInput(stringPlayers); ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream))
+        {
+            mapPlayers = (Map<String, Player>)objectInputStream.readObject();
+        }
+        catch (Exception e)
+        {
+            mapPlayers = new HashMap<>();
+
+            Log.e("deserialize", "Error: Unable to read the players. " + e.getMessage());
+        }
+
+        try (FileInputStream fileInputStream = getApplicationContext().openFileInput(stringSummaries); ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream))
+        {
+            mapSummaries = (Map<String, Summary>)objectInputStream.readObject();
+        }
+        catch (Exception e)
+        {
+            mapSummaries = new HashMap<>();
+
+            Log.e("deserialize", "Error: Unable to read the summaries. " + e.getMessage());
+        }
+
+        try (FileInputStream fileInputStream = getApplicationContext().openFileInput(stringTurns); ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream))
+        {
+            mapTurns = (Map<String, Turn>)objectInputStream.readObject();
+        }
+        catch (Exception e)
+        {
+            mapTurns = new HashMap<>();
+
+            Log.e("deserialize", "Error: Unable to read the player names. " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void onNewGameClick()
+    {
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
+        alertDialog.setMessage("Enter game and player information and press Start.");
+        alertDialog.setTitle("New Game");
+
+        final EditText editTextGameName = new EditText(this);
+        editTextGameName.setHint("Game Name");
+        editTextGameName.setText(stringGameName);
+
+        final EditText editTextPlayerName = new EditText(this);
+        editTextPlayerName.setHint("Player Name");
+        editTextPlayerName.setText(stringPlayerName);
+
+        LinearLayout linearLayout = new LinearLayout(this);
+        linearLayout.addView(editTextGameName, new LayoutParams(MATCH_PARENT, WRAP_CONTENT));
+        linearLayout.addView(editTextPlayerName, new LayoutParams(MATCH_PARENT, WRAP_CONTENT));
+        linearLayout.setOrientation(VERTICAL);
+        linearLayout.setPadding(intPadding, intPadding, intPadding, intPadding);
+
+        alertDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener()
+        {
+            @Override
+            public void onClick(DialogInterface dialog, int which)
+            {
+                dialog.cancel();
+            }
+        });
+        alertDialog.setPositiveButton("Start", new DialogInterface.OnClickListener()
+        {
+            @Override
+            public void onClick(DialogInterface dialog, int which)
+            {
+                stringGameName = editTextGameName.getText().toString();
+                stringPlayerName = editTextPlayerName.getText().toString();
+
+                new AsyncTaskNewGame().execute(stringGameName, stringPlayerName);
+                dialog.dismiss();
+            }
+        });
+        alertDialog.setView(linearLayout);
+        alertDialog.show();
+    }
+
+    @Override
+    public void onBackPressed()
+    {
+        if (booleanGame || booleanSummary)
+        {
+            super.onBackPressed();
+
+            booleanGame = booleanSummary = false;
+        }
+        else if (booleanStart)
+        {
+            super.onBackPressed();
+
+            booleanStart = false;
+
+            setLayoutParams();
+        }
+        else
+        {
+            finish();
+        }
+
+        listFragmentMenu.setGame("");
+        listFragmentMenu.invalidateViews();
+
+        setFragments();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -253,16 +360,12 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
         fragmentStart = fragmentManager.findFragmentByTag(stringFragmentStart) == null ? new FragmentStart() : (FragmentStart)fragmentManager.findFragmentByTag(stringFragmentStart);
         fragmentStart.setMargin(intMargin);
 
-        // fix?
         fragmentSummary = fragmentManager.findFragmentByTag(stringFragmentSummary) == null ? new FragmentSummary() : (FragmentSummary)fragmentManager.findFragmentByTag(stringFragmentSummary);
-        fragmentSummary.setColumnsCount(intColumnsCount);
         fragmentSummary.setMargin(intMargin);
 
         listFragmentMenu = fragmentManager.findFragmentByTag(stringListFragmentMenu) == null ? new ListFragmentMenu() : (ListFragmentMenu)fragmentManager.findFragmentByTag(stringListFragmentMenu);
-        listFragmentMenu.setGame(stringGameID);
         listFragmentMenu.setGames(listGames);
         listFragmentMenu.setPadding(intPadding);
-        listFragmentMenu.setSelection(intGameSet);
 
         if (savedInstanceState == null)
         {
@@ -289,7 +392,6 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
         handler.post(runnableGetGames);
         handler.post(runnableGetSummaries);
         handler.post(runnableGetTurns);
-
         setContentView(linearLayout);
         setFragments();
         setGame();
@@ -297,231 +399,12 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
     }
 
     @Override
-    public void onGameClick(final Game game)
+    public void onGameSetSelect(int gameSet)
     {
-        if (mapPlayers.containsKey(game.getID()))
-        {
-            if (!game.getID().equalsIgnoreCase(stringGameID) && game.getStatus() == battleship.IN_PROGRESS || game.getStatus() == battleship.GAME_OVER)
-            {
-                booleanGame = true;
-                stringGameID = game.getID();
+        booleanSetSelection = true;
+        intGameSet = gameSet;
 
-                new AsyncTaskGetCells().execute(stringGameID, mapPlayers.get(stringGameID).getPlayerID());
-                new AsyncTaskGetTurn().execute(stringGameID, mapPlayers.get(stringGameID).getPlayerID());
-                listFragmentMenu.setGame(stringGameID);
-                setFragments();
-            }
-        }
-        else  if (game.getStatus() == battleship.WAITING)
-        {
-            AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
-            alertDialog.setMessage("Enter player information and press Start.");
-            alertDialog.setTitle("Join Game");
-
-            final EditText editTextPlayerName = new EditText(this);
-            editTextPlayerName.setHint("Player Name");
-            editTextPlayerName.setText(stringPlayerName);
-
-            LinearLayout linearLayout = new LinearLayout(this);
-            linearLayout.addView(editTextPlayerName, new LayoutParams(MATCH_PARENT, WRAP_CONTENT));
-            linearLayout.setOrientation(VERTICAL);
-            linearLayout.setPadding(intPadding, intPadding, intPadding, intPadding);
-
-            alertDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener()
-            {
-                @Override
-                public void onClick(DialogInterface dialog, int which)
-                {
-                    dialog.cancel();
-                }
-            });
-            alertDialog.setPositiveButton("Start", new DialogInterface.OnClickListener()
-            {
-                @Override
-                public void onClick(DialogInterface dialog, int which)
-                {
-                    stringPlayerName = editTextPlayerName.getText().toString();
-
-                    new AsyncTaskJoinGame().execute(game.getID(), stringPlayerName);
-                    dialog.dismiss();
-                }
-            });
-            alertDialog.setView(linearLayout);
-            alertDialog.show();
-        }
-        else
-        {
-            stringGameID = game.getID();
-
-            new AsyncTaskGetSummary().execute(game.getID());
-        }
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    private void setGame()
-    {
-        if (booleanGame)
-        {
-            fragmentGame.setGame(stringOpponent, stringPlayer, stringWinner, booleanStatus, booleanTurn, listHits, listMisses, listShips);
-        }
-    }
-
-    @Override
-    public void onShoot(int cell)
-    {
-        new AsyncTaskShoot().execute(stringGameID, mapPlayers.get(stringGameID).getPlayerID(), Integer.toString(cell));
-    }
-
-
-    @Override
-    public void onBackPressed()
-    {
-        if (booleanGame)
-        {
-            super.onBackPressed();
-
-            booleanGame = false;
-        }
-        if (booleanSummary)
-        {
-            super.onBackPressed();
-
-            booleanSummary = false;
-        }
-        else if (booleanStart)
-        {
-            super.onBackPressed();
-
-            booleanStart = false;
-
-            setLayoutParams();
-        }
-        else
-        {
-            finish();
-        }
-
-        listFragmentMenu.clearGame();
-        listFragmentMenu.invalidateViews();
-
-        setFragments();
-    }
-
-    private void setLayoutParams()
-    {
-        if (booleanStart && booleanTablet)
-        {
-            frameLayoutGame.setLayoutParams(new LayoutParams(0, MATCH_PARENT, 3));
-
-            frameLayoutMenu.setLayoutParams(new LayoutParams(0, MATCH_PARENT, 1));
-            frameLayoutMenu.setPadding(intPadding, intPadding, 0, intPadding);
-        }
-        else
-        {
-            if (booleanTablet)
-            {
-                frameLayoutMenu.setLayoutParams(new LayoutParams(0, 0));
-            }
-
-            frameLayoutGame.setLayoutParams(new LayoutParams(MATCH_PARENT, MATCH_PARENT));
-        }
-
-        frameLayoutGame.setPadding(intPadding, intPadding, intPadding, intPadding);
-    }
-
-    private void setFragments()
-    {
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.detach(fragmentGame);
-        fragmentTransaction.detach(fragmentStart);
-        fragmentTransaction.detach(fragmentSummary);
-
-        if (booleanTablet)
-        {
-            fragmentTransaction.detach(fragmentMenu);
-        }
-        else
-        {
-            fragmentTransaction.detach(listFragmentMenu);
-        }
-
-        if (booleanStart)
-        {
-            if (booleanGame)
-            {
-                fragmentTransaction.attach(fragmentGame);
-                fragmentTransaction.addToBackStack(stringFragmentGame);
-            }
-            else if (booleanSummary)
-            {
-                fragmentTransaction.attach(fragmentSummary);
-                fragmentTransaction.addToBackStack(stringFragmentSummary);
-            }
-            else
-            {
-                if (booleanTablet)
-                {
-                    fragmentTransaction.attach(fragmentMenu);
-                }
-
-                fragmentTransaction.attach(listFragmentMenu);
-                fragmentTransaction.addToBackStack(stringListFragmentMenu);
-            }
-        }
-        else
-        {
-            fragmentTransaction.attach(fragmentStart);
-        }
-
-        fragmentTransaction.commit();
-        fragmentManager.executePendingTransactions();
+        setGames();
     }
 
     @Override
@@ -579,6 +462,62 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
         }
     }
 
+    private void setFragments()
+    {
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.detach(fragmentGame);
+        fragmentTransaction.detach(fragmentStart);
+        fragmentTransaction.detach(fragmentSummary);
+
+        if (booleanTablet)
+        {
+            fragmentTransaction.detach(fragmentMenu);
+        }
+        else
+        {
+            fragmentTransaction.detach(listFragmentMenu);
+        }
+
+        if (booleanStart)
+        {
+            if (booleanGame)
+            {
+                fragmentTransaction.attach(fragmentGame);
+                fragmentTransaction.addToBackStack(stringFragmentGame);
+            }
+            else if (booleanSummary)
+            {
+                fragmentTransaction.attach(fragmentSummary);
+                fragmentTransaction.addToBackStack(stringFragmentSummary);
+            }
+            else
+            {
+                if (booleanTablet)
+                {
+                    fragmentTransaction.attach(fragmentMenu);
+                }
+
+                fragmentTransaction.attach(listFragmentMenu);
+                fragmentTransaction.addToBackStack(stringListFragmentMenu);
+            }
+        }
+        else
+        {
+            fragmentTransaction.attach(fragmentStart);
+        }
+
+        fragmentTransaction.commit();
+        fragmentManager.executePendingTransactions();
+    }
+
+    private void setGame()
+    {
+        if (booleanGame)
+        {
+            fragmentGame.setGame(stringOpponent, stringPlayer, stringWinner, booleanStatus, booleanTurn, listHits, listMisses, listShips);
+        }
+    }
+
     private void setGames()
     {
         List<Game> games = new ArrayList<>();
@@ -587,7 +526,7 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
         {
             for (Game g : listGames)
             {
-                if (mapPlayers.containsKey(g.getID()))
+                if (mapPlayers.containsKey(g.getGameID()))
                 {
                     games.add((g));
                 }
@@ -618,59 +557,215 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
         }
     }
 
+    private void setLayoutParams()
+    {
+        if (booleanStart && booleanTablet)
+        {
+            frameLayoutGame.setLayoutParams(new LayoutParams(0, MATCH_PARENT, 3));
+
+            frameLayoutMenu.setLayoutParams(new LayoutParams(0, MATCH_PARENT, 1));
+            frameLayoutMenu.setPadding(intPadding, intPadding, 0, intPadding);
+        }
+        else
+        {
+            if (booleanTablet)
+            {
+                frameLayoutMenu.setLayoutParams(new LayoutParams(0, 0));
+            }
+
+            frameLayoutGame.setLayoutParams(new LayoutParams(MATCH_PARENT, MATCH_PARENT));
+        }
+
+        frameLayoutGame.setPadding(intPadding, intPadding, intPadding, intPadding);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     @Override
-    public void onGameSetSelect(int gameSet)
+    public void onGameClick(final Game game)
     {
-        booleanSetSelection = true;
-        intGameSet = gameSet;
+        if (mapPlayers.containsKey(game.getGameID()))
+        {
+            if (!game.getGameID().equalsIgnoreCase(stringGameID) && game.getStatus() == battleship.IN_PROGRESS || game.getStatus() == battleship.GAME_OVER)
+            {
+                booleanGame = true;
+                stringGameID = game.getGameID();
 
-        setGames();
+                new AsyncTaskGetCells().execute(stringGameID, mapPlayers.get(stringGameID).getPlayerID());
+                new AsyncTaskGetTurn().execute(stringGameID, mapPlayers.get(stringGameID).getPlayerID());
+                listFragmentMenu.setGame(stringGameID);
+                setFragments();
+            }
+        }
+        else  if (game.getStatus() == battleship.WAITING)
+        {
+            AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
+            alertDialog.setMessage("Enter player information and press Start.");
+            alertDialog.setTitle("Join Game");
+
+            final EditText editTextPlayerName = new EditText(this);
+            editTextPlayerName.setHint("Player Name");
+            editTextPlayerName.setText(stringPlayerName);
+
+            LinearLayout linearLayout = new LinearLayout(this);
+            linearLayout.addView(editTextPlayerName, new LayoutParams(MATCH_PARENT, WRAP_CONTENT));
+            linearLayout.setOrientation(VERTICAL);
+            linearLayout.setPadding(intPadding, intPadding, intPadding, intPadding);
+
+            alertDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener()
+            {
+                @Override
+                public void onClick(DialogInterface dialog, int which)
+                {
+                    dialog.cancel();
+                }
+            });
+            alertDialog.setPositiveButton("Start", new DialogInterface.OnClickListener()
+            {
+                @Override
+                public void onClick(DialogInterface dialog, int which)
+                {
+                    stringPlayerName = editTextPlayerName.getText().toString();
+
+                    new AsyncTaskJoinGame().execute(game.getGameID(), stringPlayerName);
+                    dialog.dismiss();
+                }
+            });
+            alertDialog.setView(linearLayout);
+            alertDialog.show();
+        }
+        else
+        {
+            booleanGame = false;
+            booleanSummary = true;
+
+
+
+            stringGameID = game.getGameID();
+
+            new AsyncTaskGetSummary().execute(game.getGameID());
+            listFragmentMenu.setGame(stringGameID);
+            setFragments();
+        }
     }
 
 
 
-    private boolean isConnected()
+/*    private String getRowColumnString(int cell)
     {
-        NetworkInfo networkInfo = ((ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
+        int row = cell / intColumnsCount + 1;
 
-        return networkInfo != null && networkInfo.isConnected();
+        Stack<Integer> stack = new Stack<>();
+        StringBuilder stringBuilder = new StringBuilder();
+
+        while (row > 0)
+        {
+            stack.push(row % 26);
+
+            row /= 26;
+        }
+
+        while (stack.size() > 0)
+        {
+            stringBuilder.append((char)(stack.pop() + 64));
+        }
+
+        stringBuilder.append(cell % intColumnsCount + 1);
+
+        return stringBuilder.toString();
+    }*/
+
+
+
+
+
+
+    @Override
+    public void onShoot(final int cell)
+    {
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
+        alertDialog.setMessage("Shots Fired");
+        alertDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
+        {
+            @Override
+            public void onClick(DialogInterface dialog, int which)
+            {
+                new AsyncTaskShoot().execute(stringGameID, mapPlayers.get(stringGameID).getPlayerID(), Integer.toString(cell));
+                dialog.dismiss();
+            }
+        });
+        alertDialog.setTitle("Shot");
+        alertDialog.show();
     }
 
-    private void deserialize()
-    {
-        try (FileInputStream fileInputStream = getApplicationContext().openFileInput(stringPlayers); ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream))
-        {
-            mapPlayers = (Map<String, Player>)objectInputStream.readObject();
-        }
-        catch (Exception e)
-        {
-            mapPlayers = new HashMap<>();
 
-            Log.e("deserialize", "Error: Unable to read the players. " + e.getMessage());
-        }
 
-        try (FileInputStream fileInputStream = getApplicationContext().openFileInput(stringSummaries); ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream))
-        {
-            mapSummaries = (Map<String, Summary>)objectInputStream.readObject();
-        }
-        catch (Exception e)
-        {
-            mapSummaries = new HashMap<>();
-
-            Log.e("deserialize", "Error: Unable to read the summaries. " + e.getMessage());
-        }
-
-        try (FileInputStream fileInputStream = getApplicationContext().openFileInput(stringTurns); ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream))
-        {
-            mapTurns = (Map<String, Turn>)objectInputStream.readObject();
-        }
-        catch (Exception e)
-        {
-            mapTurns = new HashMap<>();
-
-            Log.e("deserialize", "Error: Unable to read the player names. " + e.getMessage());
-        }
-    }
 
 
 
@@ -691,273 +786,42 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
         serialize();
     }
 
-    @Override
-    public void onNewGameClick()
-    {
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
-        alertDialog.setMessage("Enter game and player information and press Start.");
-        alertDialog.setTitle("New Game");
 
-        final EditText editTextGameName = new EditText(this);
-        editTextGameName.setHint("Game Name");
-        editTextGameName.setText(stringGameName);
 
-        final EditText editTextPlayerName = new EditText(this);
-        editTextPlayerName.setHint("Player Name");
-        editTextPlayerName.setText(stringPlayerName);
 
-        LinearLayout linearLayout = new LinearLayout(this);
-        linearLayout.addView(editTextGameName, new LayoutParams(MATCH_PARENT, WRAP_CONTENT));
-        linearLayout.addView(editTextPlayerName, new LayoutParams(MATCH_PARENT, WRAP_CONTENT));
-        linearLayout.setOrientation(VERTICAL);
-        linearLayout.setPadding(intPadding, intPadding, intPadding, intPadding);
 
-        alertDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener()
-        {
-            @Override
-            public void onClick(DialogInterface dialog, int which)
-            {
-                dialog.cancel();
-            }
-        });
-        alertDialog.setPositiveButton("Start", new DialogInterface.OnClickListener()
-        {
-            @Override
-            public void onClick(DialogInterface dialog, int which)
-            {
-                stringGameName = editTextGameName.getText().toString();
-                stringPlayerName = editTextPlayerName.getText().toString();
 
-                new AsyncTaskNewGame().execute(stringGameName, stringPlayerName);
-                dialog.dismiss();
-            }
-        });
-        alertDialog.setView(linearLayout);
-        alertDialog.show();
-    }
 
-    // classes
 
-    private class AsyncTaskGetGames extends AsyncTask<String, Void, Void>
-    {
-        // methods
 
-        @Override
-        protected Void doInBackground(String... params)
-        {
-            runOnUiThread(new Runnable()
-            {
-                @Override
-                public void run()
-                {
-                    new AsyncTaskRequest()
-                    {
-                        @Override
-                        protected void onPostExecute(String s)
-                        {
-                            processResponse(s);
-                        }
-                    }.execute(stringURL + "lobby", null, null);
-                }
-            });
 
-            return null;
-        }
 
-        private void processResponse(String s)
-        {
-            listGames = gson.fromJson(s, typeGames);
 
-            // fix make list games linked hash map so you can query without going through all items
-            // list menu keep list, set it with values() for array list
-            // remove games in map but not in linked hash map for house keeping
 
-            setGames();
-        }
-/*        @Override
-        protected String doInBackground(String... params)
-        {
-            if (isConnected())
-            {
-                HttpURLConnection httpURLConnection = null;
-                StringBuilder stringBuilder = new StringBuilder();
 
-                try
-                {
-                    URL url = new URL("http://battleship.pixio.com/api/v2/lobby");
-                    httpURLConnection = (HttpURLConnection)url.openConnection();
 
-                    if (httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_OK)
-                    {
-                        try (InputStream inputStream = httpURLConnection.getInputStream(); InputStreamReader inputStreamReader = new InputStreamReader(inputStream); BufferedReader bufferedReader = new BufferedReader(inputStreamReader))
-                        {
-                            String s;
 
-                            while ((s = bufferedReader.readLine()) != null)
-                            {
-                                stringBuilder.append(s);
-                            }
 
-                            booleanPostExecute = true;
-                        }
-                    }
-                    else
-                    {
-                        Log.i("M", "GetGames");
-                        Log.e("responseCode", "Error " + httpURLConnection.getResponseCode() + ": Unable to connect to the server. " + httpURLConnection.getResponseMessage());
-                    }
-                }
-                catch (Exception e)
-                {
-                    Log.e("openConnection", "Error: Unable to connect to the server. " + e.getMessage());
-                }
-                finally
-                {
-                    if (httpURLConnection != null)
-                    {
-                        httpURLConnection.disconnect();
-                    }
-                }
 
-                return stringBuilder.toString();
-            }
-            else
-            {
-                return null;
-            }
-        }
 
-        @Override
-        protected void onPostExecute(String s)
-        {
-            if (booleanPostExecute)
-            {
-                listGames = gson.fromJson(s, typeGames);
 
-                setGames();
-            }
-        }*/
-    }
 
-    private class AsyncTaskGetCells extends AsyncTask<String, Void, Void>
-    {
-        // fields
 
-        private String stringGameID, stringPlayerID;
 
-        // methods
 
-        @Override
-        protected Void doInBackground(String... params)
-        {
-            stringGameID = params[0];
-            stringPlayerID = params[1];
 
-            runOnUiThread(new Runnable()
-            {
-                @Override
-                public void run()
-                {
-                    new AsyncTaskRequest()
-                    {
-                        @Override
-                        protected void onPostExecute(String s)
-                        {
-                            processResponse(s);
-                        }
-                    }.execute(stringURL + "games/" + stringGameID + "/boards?playerId=" + stringPlayerID, null, null);
-                }
-            });
 
-            return null;
-        }
-/*
-        @Override
-        protected String doInBackground(String... params)
-        {
-            if (isConnected())
-            {
-                HttpURLConnection httpURLConnection = null;
-                StringBuilder stringBuilder = new StringBuilder();
 
-                try
-                {
-                    URL url = new URL("http://battleship.pixio.com/api/v2/games/" + params[0] + "/boards?playerId=" + params[1]);
-                    httpURLConnection = (HttpURLConnection)url.openConnection();
 
-                    if (httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_OK)
-                    {
-                        try (InputStream inputStream = httpURLConnection.getInputStream(); InputStreamReader inputStreamReader = new InputStreamReader(inputStream); BufferedReader bufferedReader = new BufferedReader(inputStreamReader))
-                        {
-                            String s;
 
-                            while ((s = bufferedReader.readLine()) != null)
-                            {
-                                stringBuilder.append(s);
-                            }
 
-                            booleanPostExecute = true;
-                        }
-                    }
-                    else
-                    {
-                        Log.i("M", "GetCells");
-                        Log.e("responseCode", "Error " + httpURLConnection.getResponseCode() + ": Unable to connect to the server. " + httpURLConnection.getResponseMessage());
-                    }
-                }
-                catch (Exception e)
-                {
-                    Log.e("openConnection", "Error: Unable to connect to the server. " + e.getMessage());
-                }
-                finally
-                {
-                    if (httpURLConnection != null)
-                    {
-                        httpURLConnection.disconnect();
-                    }
-                }
 
-                return stringBuilder.toString();
-            }
-            else
-            {
-                return null;
-            }
-        }
-*/
-        private void processResponse(String s)
-        {
-            Cells cells = gson.fromJson(s, Cells.class);
 
-            for (int i : battleship.getPlayers())
-            {
-                listHits.get(i).clear();
-                listMisses.get(i).clear();
-                listShips.get(i).clear();
 
-                for (Cells.Cell c : cells.getCells(i))
-                {
-                    if (c.getCellSet() == battleship.HIT)
-                    {
-                        Log.i("C", "" + c.getCell() + " HIT");
-                        listHits.get(i).add(c.getCell());
-                    }
-                    else if (c.getCellSet() == battleship.MISS)
-                    {
-                        Log.i("C", "" + c.getCell() + " MISS");
-                        listMisses.get(i).add(c.getCell());
-                    }
-                    else if (c.getCellSet() == battleship.SHIP)
-                    {
-                        Log.i("C", "" + c.getCell() + " SHIP");
-                        listShips.get(i).add(c.getCell());
-                    }
-                }
-            }
 
-            fragmentGame.setGame(stringOpponent, stringPlayer, stringWinner, booleanStatus, booleanTurn, listHits, listMisses, listShips);
-        }
-    }
+
+
+
 
     private class AsyncTaskJoinGame extends AsyncTask<String, Void, Void>
     {
@@ -1021,229 +885,6 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
                 mapSummaries.put(stringGameID, null);
             }
         }
-
-/*        // fields
-
-        private boolean booleanPostExecute;
-        private GameIDPlayerName gameIDPlayerName;
-
-        // methods
-
-        @Override
-        protected String doInBackground(String... params)
-        {
-            if (isConnected())
-            {
-                gameIDPlayerName = new GameIDPlayerName(params[0], params[1]);
-                HttpURLConnection httpURLConnection = null;
-                StringBuilder stringBuilder = new StringBuilder();
-
-                try
-                {
-                    URL url = new URL("http://battleship.pixio.com/api/v2/lobby/" + params[0]);
-
-                    httpURLConnection = (HttpURLConnection)url.openConnection();
-                    httpURLConnection.setDoOutput(true);
-                    httpURLConnection.setRequestMethod("PUT");
-                    httpURLConnection.setRequestProperty("Content-Type", "application/json");
-
-                    try (OutputStream outputStream = httpURLConnection.getOutputStream(); OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream); BufferedWriter bufferedWriter = new BufferedWriter(outputStreamWriter);)
-                    {
-                        bufferedWriter.write(gson.toJson(gameIDPlayerName));
-                        bufferedWriter.flush();
-                    }
-
-
-
-                    if (httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_OK)
-                    {
-                        try (InputStream inputStream = httpURLConnection.getInputStream(); InputStreamReader inputStreamReader = new InputStreamReader(inputStream); BufferedReader bufferedReader = new BufferedReader(inputStreamReader))
-                        {
-                            String s;
-
-                            while ((s = bufferedReader.readLine()) != null)
-                            {
-                                stringBuilder.append(s);
-                            }
-
-                            booleanPostExecute = true;
-                        }
-                    }
-                    else
-                    {
-                        Log.i("M", "JoinGame");
-                        Log.e("responseCode", "Error " + httpURLConnection.getResponseCode() + ": Unable to connect to the server. " + httpURLConnection.getResponseMessage());
-                    }
-                }
-                catch (Exception e)
-                {
-                    Log.e("openConnection", "Error: Unable to connect to the server. " + e.getMessage());
-                }
-                finally
-                {
-                    if (httpURLConnection != null)
-                    {
-                        httpURLConnection.disconnect();
-                    }
-                }
-
-                return stringBuilder.toString();
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        @Override
-        protected void onPostExecute(String s)
-        {
-            if (booleanPostExecute)
-            {
-                handler.removeCallbacks(runnableGetGames);
-
-                booleanSetSelection = true;
-                PlayerID playerID = gson.fromJson(s, PlayerID.class);
-
-                if (intGameSet == battleship.WAITING || intGameSet == battleship.GAME_OVER)
-                {
-                    intGameSet = battleship.IN_PROGRESS;
-                }
-
-                stringGameID = gameIDPlayerName.getGameID();
-
-                new AsyncTaskGetCells().execute(gameIDPlayerName.getGameID(), playerID.getPlayerID());
-                handler.post(runnableGetGames);
-                listFragmentMenu.setGame(gameIDPlayerName.getGameID());
-                mapPlayers.put(gameIDPlayerName.getGameID(), new Player(1, playerID.getPlayerID()));
-                mapTurns.put(gameIDPlayerName.getGameID(), null);
-            }
-        }
-*/
-    }
-
-    private class AsyncTaskNewGame extends AsyncTask<String, Void, Void>
-    {
-        // fields
-
-        private GameNamePlayerName gameNamePlayerName;
-        private String stringGameID;
-
-        // methods
-
-        @Override
-        protected Void doInBackground(String... params)
-        {
-            gameNamePlayerName = new GameNamePlayerName(params[0], params[1]);
-
-            runOnUiThread(new Runnable()
-            {
-                @Override
-                public void run()
-                {
-                    new AsyncTaskRequest()
-                    {
-                        @Override
-                        protected void onPostExecute(String s)
-                        {
-                            processResponse(s);
-                        }
-                    }.execute(stringURL + "lobby/", stringPost, gameNamePlayerName);
-                }
-            });
-
-            return null;
-        }
-
-        private void processResponse(String s)
-        {
-            handler.removeCallbacks(runnableGetGames);
-
-            booleanSetSelection = true;
-            GameIDPlayerID gameIDPlayerID = gson.fromJson(s, GameIDPlayerID.class);
-
-            if (intGameSet == battleship.IN_PROGRESS || intGameSet == battleship.GAME_OVER)
-            {
-                intGameSet = battleship.WAITING;
-            }
-
-            ActivityMain.this.stringGameID = stringGameID = gameIDPlayerID.getGameID();
-
-            handler.post(runnableGetGames);
-            listFragmentMenu.setGame(stringGameID);
-
-            synchronized (mapPlayers)
-            {
-                mapPlayers.put(stringGameID, new Player(0, gameIDPlayerID.getPlayerID()));
-            }
-
-            synchronized (mapSummaries)
-            {
-                mapSummaries.put(stringGameID, null);
-            }
-        }
-/*        @Override
-        protected String doInBackground(String... params)
-        {
-            if (isConnected())
-            {
-                HttpURLConnection httpURLConnection = null;
-                StringBuilder stringBuilder = new StringBuilder();
-
-                try
-                {
-                    URL url = new URL("http://battleship.pixio.com/api/v2/lobby");
-
-                    httpURLConnection = (HttpURLConnection)url.openConnection();
-                    httpURLConnection.setDoOutput(true);
-                    httpURLConnection.setRequestMethod("POST");
-                    httpURLConnection.setRequestProperty("Content-Type", "application/json");
-
-                    try (OutputStream outputStream = httpURLConnection.getOutputStream(); OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream); BufferedWriter bufferedWriter = new BufferedWriter(outputStreamWriter);)
-                    {
-                        bufferedWriter.write(gson.toJson(new GameNamePlayerName(params[0], params[1])));
-                        bufferedWriter.flush();
-                    }
-
-                    if (httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_OK)
-                    {
-                        try (InputStream inputStream = httpURLConnection.getInputStream(); InputStreamReader inputStreamReader = new InputStreamReader(inputStream); BufferedReader bufferedReader = new BufferedReader(inputStreamReader))
-                        {
-                            String s;
-
-                            while ((s = bufferedReader.readLine()) != null)
-                            {
-                                stringBuilder.append(s);
-                            }
-
-                            booleanPostExecute = true;
-                        }
-                    }
-                    else
-                    {
-                        Log.i("M", "NewGame");
-                        Log.e("responseCode", "Error " + httpURLConnection.getResponseCode() + ": Unable to connect to the server. " + httpURLConnection.getResponseMessage());
-                    }
-                }
-                catch (Exception e)
-                {
-                    Log.e("openConnection", "Error: Unable to connect to the server. " + e.getMessage());
-                }
-                finally
-                {
-                    if (httpURLConnection != null)
-                    {
-                        httpURLConnection.disconnect();
-                    }
-                }
-
-                return stringBuilder.toString();
-            }
-            else
-            {
-                return null;
-            }
-        }*/
     }
 
     private class AsyncTaskShoot extends AsyncTask<String, Void, Void>
@@ -1380,17 +1021,11 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
 
     private class AsyncTaskGetSummary extends AsyncTask<String, Void, Void>
     {
-        // fields
-
-        private String stringGameID;
-
         // methods
 
         @Override
-        protected Void doInBackground(String... params)
+        protected Void doInBackground(final String... params)
         {
-            stringGameID = params[0];
-
             runOnUiThread(new Runnable()
             {
                 @Override
@@ -1403,7 +1038,7 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
                         {
                             processResponse(s);
                         }
-                    }.execute(stringURL + "lobby/" + stringGameID, null, null);
+                    }.execute(stringURL + "lobby/" + params[0], null, null);
                 }
             });
 
@@ -1412,48 +1047,47 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
 
         private void processResponse(String s)
         {
-            Summary summary = gson.fromJson(s, Summary.class);
+            // handle when new game and waiting for player
 
-            if (mapPlayers.containsKey(stringGameID))
+            Summary summary = gson.fromJson(s, Summary.class);
+            String gameID = summary.getGameID();
+
+            if (mapPlayers.containsKey(gameID))
             {
                 if (summary.getStatus() != battleship.WAITING)
                 {
                     synchronized (mapSummaries)
                     {
-                        if (mapSummaries.containsKey(stringGameID))
+                        if (mapSummaries.containsKey(gameID))
                         {
-                            mapSummaries.remove(stringGameID);
+                            mapSummaries.remove(gameID);
                         }
                     }
 
                     synchronized (mapPlayers)
                     {
-                        mapPlayers.get(stringGameID).setPlayerNames(Arrays.asList(summary.getPlayer1(), summary.getPlayer2()));
+                        mapPlayers.get(gameID).setPlayerNames(Arrays.asList(summary.getPlayer1ID(), summary.getPlayer2ID()));
                     }
 
-                    if (stringGameID.equalsIgnoreCase(ActivityMain.this.stringGameID))
+                    if (gameID.equalsIgnoreCase(stringGameID))
                     {
                         booleanStatus = booleanTurn = false;
-                        stringOpponent = mapPlayers.get(stringGameID).getPlayerNames().get((mapPlayers.get(stringGameID).getPlayerIndex() + 1) % intPlayers);
-                        stringPlayer = mapPlayers.get(stringGameID).getPlayerNames().get(mapPlayers.get(stringGameID).getPlayerIndex());
+                        stringOpponent = mapPlayers.get(gameID).getOpponentName();
+                        stringPlayer = mapPlayers.get(gameID).getPlayerName();
 
-                        new AsyncTaskGetTurn().execute(stringGameID, mapPlayers.get(stringGameID).getPlayerID());
+                        new AsyncTaskGetTurn().execute(gameID, mapPlayers.get(gameID).getPlayerID());
                     }
 
                     synchronized (mapTurns)
                     {
-                        mapTurns.put(stringGameID, null);
+                        mapTurns.put(gameID, null);
                     }
                 }
             }
             else
             {
-// load summary
+                fragmentSummary.setText(summary.getGameName(), summary.getPlayer1ID(), summary.getPlayer2ID(), summary.getShots(), summary.getStatus(summary.getStatus()), summary.getWinner());
             }
-/*            booleanGame = false;
-            booleanSummary = true;
-            listFragmentMenu.setGame(stringGameID);
-            setFragments();*/
         }
     }
 
@@ -1516,7 +1150,7 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
                 {
                     for (Game g : listGames)
                     {
-                        if (g.getID().equalsIgnoreCase(stringGameID) && g.getStatus() != battleship.GAME_OVER)
+                        if (g.getGameID().equalsIgnoreCase(stringGameID) && g.getStatus() != battleship.GAME_OVER)
                         {
                             g.setStatus(false);
                             setGames();
@@ -1546,6 +1180,196 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
         }
     }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // classes
+
+    private class AsyncTaskGetCells extends AsyncTask<String, Void, Void>
+    {
+        // methods
+
+        @Override
+        protected Void doInBackground(final String... params)
+        {
+            runOnUiThread(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    new AsyncTaskRequest()
+                    {
+                        @Override
+                        protected void onPostExecute(String s)
+                        {
+                            processResponse(s);
+                        }
+                    }.execute(stringURL + "games/" + params[0] + "/boards?playerId=" + params[1], null, null);
+                }
+            });
+
+            return null;
+        }
+
+        private void processResponse(String s)
+        {
+            Cells cells = gson.fromJson(s, Cells.class);
+
+            for (int i : battleship.getPlayers())
+            {
+                listHits.get(i).clear();
+                listMisses.get(i).clear();
+                listShips.get(i).clear();
+
+                for (Cells.Cell c : cells.getCells(i))
+                {
+                    if (c.getCellSet() == battleship.HIT)
+                    {
+                        listHits.get(i).add(c.getCell());
+                    }
+                    else if (c.getCellSet() == battleship.MISS)
+                    {
+                        listMisses.get(i).add(c.getCell());
+                    }
+                    else if (c.getCellSet() == battleship.SHIP)
+                    {
+                        listShips.get(i).add(c.getCell());
+                    }
+                }
+            }
+
+            fragmentGame.setGame(stringOpponent, stringPlayer, stringWinner, booleanStatus, booleanTurn, listHits, listMisses, listShips);
+        }
+    }
+
+    private class AsyncTaskGetGames extends AsyncTask<String, Void, Void>
+    {
+        // methods
+
+        @Override
+        protected Void doInBackground(String... params)
+        {
+            runOnUiThread(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    new AsyncTaskRequest()
+                    {
+                        @Override
+                        protected void onPostExecute(String s)
+                        {
+                            processResponse(s);
+                        }
+                    }.execute(stringURL + "lobby", null, null);
+                }
+            });
+
+            return null;
+        }
+
+        private void processResponse(String s)
+        {
+            listGames = gson.fromJson(s, typeGames);
+
+            setGames();
+        }
+    }
+
+    private class AsyncTaskNewGame extends AsyncTask<String, Void, Void>
+    {
+        // fields
+
+        private GameNamePlayerName gameNamePlayerName;
+
+        // methods
+
+        @Override
+        protected Void doInBackground(String... params)
+        {
+            gameNamePlayerName = new GameNamePlayerName(params[0], params[1]);
+
+            runOnUiThread(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    new AsyncTaskRequest()
+                    {
+                        @Override
+                        protected void onPostExecute(String s)
+                        {
+                            processResponse(s);
+                        }
+                    }.execute(stringURL + "lobby/", stringPost, gameNamePlayerName);
+                }
+            });
+
+            return null;
+        }
+
+        private void processResponse(String s)
+        {
+            handler.removeCallbacks(runnableGetGames);
+            handler.removeCallbacks(runnableGetSummaries);
+
+            booleanGame = booleanSetSelection = true;
+            booleanSummary = false;
+            GameIDPlayerID gameIDPlayerID = gson.fromJson(s, GameIDPlayerID.class);
+
+            if (intGameSet == battleship.IN_PROGRESS || intGameSet == battleship.GAME_OVER)
+            {
+                intGameSet = battleship.WAITING;
+            }
+
+            stringGameID = gameIDPlayerID.getGameID();
+
+            synchronized (mapPlayers)
+            {
+                mapPlayers.put(gameIDPlayerID.getGameID(), new Player(0, gameIDPlayerID.getPlayerID()));
+            }
+
+            synchronized (mapSummaries)
+            {
+                mapSummaries.put(gameIDPlayerID.getGameID(), null);
+            }
+
+            listFragmentMenu.setGame(gameIDPlayerID.getGameID());
+            handler.post(runnableGetGames);
+            handler.post(runnableGetSummaries);
+        }
+    }
+
     private class AsyncTaskRequest extends AsyncTask<Object, Void, String>
     {
         // methods
@@ -1553,7 +1377,9 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
         @Override
         protected String doInBackground(Object... params)
         {
-            if (isConnected())
+            NetworkInfo networkInfo = ((ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
+
+            if (networkInfo != null && networkInfo.isConnected())
             {
                 HttpURLConnection httpURLConnection = null;
                 StringBuilder stringBuilder = new StringBuilder();

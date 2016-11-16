@@ -26,12 +26,12 @@ public class Game
         return Battleship.getBattleship().getGameSet(status);
     }
 
-    public String getID()
+    public String getGameID()
     {
         return id;
     }
 
-    public String getName()
+    public String getGameName()
     {
         return name;
     }
@@ -39,7 +39,7 @@ public class Game
     @Override
     public String toString()
     {
-        return getName() + " - " + Battleship.getBattleship().getGameSet(getStatus());
+        return getGameName() + " - " + Battleship.getBattleship().getGameSet(getStatus());
     }
 
     public void setStatus(boolean status)

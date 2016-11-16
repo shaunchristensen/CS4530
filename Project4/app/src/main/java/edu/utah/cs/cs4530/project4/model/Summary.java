@@ -22,7 +22,7 @@ public class Summary
 
     // methods
 
-    public int getMissilesLaunched()
+    public int getShots()
     {
         return missilesLaunched;
     }
@@ -32,28 +32,33 @@ public class Summary
         return Battleship.getBattleship().getGameSet(status);
     }
 
-    public String getName()
+    public String getGameID()
+    {
+        return id;
+    }
+
+    public String getGameName()
     {
         return name;
     }
 
-    public String getPlayer1()
+    public String getPlayer1ID()
     {
         return player1;
     }
 
-    public String getPlayer2()
+    public String getPlayer2ID()
     {
         return player2;
     }
 
-    public String getWinner()
+    public String getStatus(int status)
     {
-        return winner;
+        return Battleship.getBattleship().getGameSet(status);
     }
 
-    public String toString()
+    public String getWinner()
     {
-        return "Game Name: " + getName() + "\nPlayer 1: " + getPlayer1() + "\nPlayer 2: " + getPlayer2() + "\nShots Fired: " + getMissilesLaunched() + "\nStatus: " + Battleship.getBattleship().getGameSet(getStatus()) + (getStatus() == Battleship.getBattleship().GAME_OVER ? "\nWinner: " + getWinner() : "");
+        return getStatus() == Battleship.getBattleship().GAME_OVER ? winner : null;
     }
 }

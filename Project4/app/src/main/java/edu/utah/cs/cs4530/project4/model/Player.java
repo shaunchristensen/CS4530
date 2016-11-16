@@ -7,10 +7,11 @@
 
 package edu.utah.cs.cs4530.project4.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Player
+public class Player implements Serializable
 {
     // fields
 
@@ -28,19 +29,19 @@ public class Player
 
     // methods
 
-    public int getPlayerIndex()
+    public String getOpponentName()
     {
-        return intPlayerIndex;
-    }
-
-    public List<String> getPlayerNames()
-    {
-        return new ArrayList<>(listPlayerNames);
+        return listPlayerNames.get((intPlayerIndex + 1) % Battleship.getBattleship().getPlayers().size());
     }
 
     public String getPlayerID()
     {
         return stringPlayerID;
+    }
+
+    public String getPlayerName()
+    {
+        return listPlayerNames.get(intPlayerIndex);
     }
 
     public void setPlayerNames(List<String> playerNames)

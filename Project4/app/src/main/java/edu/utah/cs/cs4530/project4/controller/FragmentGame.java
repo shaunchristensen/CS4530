@@ -55,6 +55,10 @@ public class FragmentGame extends Fragment
             intRowsCount = savedInstanceState.getInt("intRowsCount");
             listPlayers = new ArrayList<>(savedInstanceState.getIntegerArrayList("listPlayers"));
         }
+        else
+        {
+            listPlayers = new ArrayList<>();
+        }
 
         if (linearLayoutGrid == null)
         {

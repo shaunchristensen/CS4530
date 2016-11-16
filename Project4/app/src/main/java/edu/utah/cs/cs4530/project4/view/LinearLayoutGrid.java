@@ -11,6 +11,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -156,7 +157,7 @@ public class LinearLayoutGrid extends LinearLayout implements OnGlobalLayoutList
         if (height < width)
         {
             max = max(textViewOpponent.getMeasuredHeight(), textViewPlayer.getMeasuredHeight());
-            height -= max + intPadding;
+            height -= max;
             width = (width - intPadding) / 2;
             layoutParams = new LayoutParams(width, max);
 
@@ -167,71 +168,52 @@ public class LinearLayoutGrid extends LinearLayout implements OnGlobalLayoutList
             textViewPlayer.setPadding(0, 0, 0, intPadding);
 
             max = max(textViewStatus.getMeasuredHeight(), textViewTurn.getMeasuredHeight());
-            height -= max + intPadding;
+            height -= max + intPadding * 2;
             layoutParams = new LayoutParams(width, max);
 
             textViewStatus.setLayoutParams(layoutParams);
+            textViewStatus.setPadding(0, intPadding, 0, 0);
+
             textViewTurn.setLayoutParams(layoutParams);
+            textViewTurn.setPadding(intPadding, intPadding, 0, 0);
 
             linearLayoutOpponentPlayer.setOrientation(HORIZONTAL);
             linearLayoutStatusTurn.setOrientation(HORIZONTAL);
 
             linearLayoutPlayer.setPadding(intPadding, 0, 0, 0);
-            linearLayoutStatusTurn.setPadding(0, intPadding, 0, 0);
-            textViewTurn.setPadding(intPadding, 0, 0, 0);
-
-            length = min(height, width);
-
-            layoutParams = new LayoutParams(length, length);
-            layoutParams.setMargins(0, 0, height - length, width - length);
-
-            gridOpponent.setLayoutParams(layoutParams);
-            gridOpponent.requestLayout();
-
-            gridPlayer.setLayoutParams(layoutParams);
-            gridPlayer.requestLayout();
         }
         else
         {
             textViewOpponent.setLayoutParams(new LayoutParams(MATCH_PARENT, textViewOpponent.getMeasuredHeight()));
+            textViewOpponent.setPadding(0, 0, 0, intPadding);
+
             textViewPlayer.setLayoutParams(new LayoutParams(MATCH_PARENT, textViewPlayer.getMeasuredHeight()));
+            textViewPlayer.setPadding(0, intPadding, 0, intPadding);
+
             textViewStatus.setLayoutParams(new LayoutParams(MATCH_PARENT, textViewStatus.getMeasuredHeight()));
+            textViewStatus.setPadding(0, intPadding, 0, intPadding);
+
             textViewTurn.setLayoutParams(new LayoutParams(MATCH_PARENT, textViewTurn.getMeasuredHeight()));
+            textViewTurn.setPadding(0, 0, 0, 0);
 
-
-
-
-            height = (height - intPadding) / 2;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            layoutParams = new LayoutParams(width, height + intPadding);
-
-            linearLayoutOpponent.setPadding(0, 0, 0, intPadding);
+            height -= textViewOpponent.getHeight() + textViewPlayer.getHeight() + textViewStatus.getHeight() + textViewTurn.getHeight() + intPadding * 5;
 
             linearLayoutOpponentPlayer.setOrientation(VERTICAL);
             linearLayoutStatusTurn.setOrientation(VERTICAL);
+
+            linearLayoutPlayer.setPadding(0, 0, 0, 0);
         }
+
+        length = min(height, width);
+
+        layoutParams = new LayoutParams(length, length);
+        layoutParams.setMargins(0, 0, height - length, width - length);
+
+        gridOpponent.setLayoutParams(layoutParams);
+        gridOpponent.requestLayout();
+
+        gridPlayer.setLayoutParams(layoutParams);
+        gridPlayer.requestLayout();
 /*
         linearLayoutOpponent.setLayoutParams(layoutParams);
 
