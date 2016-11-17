@@ -60,7 +60,7 @@ public class FragmentSummary extends Fragment
         textViewBattleship.setTypeface(createFromAsset(getActivity().getAssets(), "fonts/ITC Machine Bold.ttf"));
 
         textViewSummary = new TextView(getActivity());
-        textViewSummary.setText(Html.fromHtml(stringSummary));
+        textViewSummary.setText(Html.fromHtml(stringSummary == null ? "" : stringSummary));
         textViewSummary.setTextColor(BLACK);
         textViewSummary.setTextSize(COMPLEX_UNIT_SP, 25);
 
@@ -97,6 +97,6 @@ public class FragmentSummary extends Fragment
     {
         stringSummary = "<b>Game:</b> " + game + "<br /><b>Player 1:</b> " + player1 + "<br /><b>Player 2:</b> " + player2 + "<br /><b>Shots:</b> " + shots + "<br /><b>Status:</b> " + status + (winner == null ? "" : "<br /><b>Winner:</b> " + winner);
 
-        textViewSummary.setText(Html.fromHtml(stringSummary));
+        textViewSummary.setText(Html.fromHtml(stringSummary == null ? "" : stringSummary));
     }
 }

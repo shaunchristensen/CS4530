@@ -11,7 +11,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
-import android.util.Log;
+import android.text.Html;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -58,8 +58,6 @@ public class LinearLayoutGrid extends LinearLayout implements OnGlobalLayoutList
     {
         super(context);
 
-        gridOpponent = new Grid(context, false, 0);
-        gridPlayer = new Grid(context, true, 1);
         intColumnsCount = columnsCount;
         intPadding = padding;
         intRowsCount = rowsCount;
@@ -75,6 +73,9 @@ public class LinearLayoutGrid extends LinearLayout implements OnGlobalLayoutList
         }
 
         onShootListener = listener;
+
+        gridOpponent = new Grid(context, false, 0);
+        gridPlayer = new Grid(context, true, 1);
 
         textViewOpponent = new TextView(context);
         textViewOpponent.setTextColor(BLACK);
@@ -196,7 +197,7 @@ public class LinearLayoutGrid extends LinearLayout implements OnGlobalLayoutList
             textViewTurn.setLayoutParams(new LayoutParams(MATCH_PARENT, textViewTurn.getMeasuredHeight()));
             textViewTurn.setPadding(0, 0, 0, 0);
 
-            height -= textViewOpponent.getHeight() + textViewPlayer.getHeight() + textViewStatus.getHeight() + textViewTurn.getHeight() + intPadding * 5;
+            height = (height - textViewOpponent.getHeight() - textViewPlayer.getHeight() - textViewStatus.getHeight() - textViewTurn.getHeight() - intPadding * 5) / 2;
 
             linearLayoutOpponentPlayer.setOrientation(VERTICAL);
             linearLayoutStatusTurn.setOrientation(VERTICAL);
@@ -207,40 +208,13 @@ public class LinearLayoutGrid extends LinearLayout implements OnGlobalLayoutList
         length = min(height, width);
 
         layoutParams = new LayoutParams(length, length);
-        layoutParams.setMargins(0, 0, height - length, width - length);
+        layoutParams.setMargins(0, 0, width - length, height - length);
 
         gridOpponent.setLayoutParams(layoutParams);
         gridOpponent.requestLayout();
 
         gridPlayer.setLayoutParams(layoutParams);
         gridPlayer.requestLayout();
-/*
-        linearLayoutOpponent.setLayoutParams(layoutParams);
-
-        layoutParams = new LayoutParams(width, height);
-
-        linearLayoutPlayer.setLayoutParams(layoutParams);
-
-        height -= maxHeight;
-        int length = min(height, width);
-
-        layoutParams = new LayoutParams(length, length);
-        layoutParams.setMargins(0, 0, height - length, width - length);
-
-        gridOpponent.setLayoutParams(layoutParams);
-        gridOpponent.requestLayout();
-
-        gridPlayer.setLayoutParams(layoutParams);
-        gridPlayer.requestLayout();
-
-        layoutParams = new LayoutParams(width, maxHeight);
-
-        textViewOpponent.setLayoutParams(layoutParams);
-        textViewOpponent.setPadding(0, 0, 0, intPadding);
-
-        textViewPlayer.setLayoutParams(layoutParams);
-        textViewPlayer.setPadding(0, 0, 0, intPadding);
-        */
     }
 
     private void setCells(List<Set<Integer>> hits, List<Set<Integer>> misses, List<Set<Integer>> ships)
@@ -271,11 +245,13 @@ public class LinearLayoutGrid extends LinearLayout implements OnGlobalLayoutList
 
         if (booleanStatus)
         {
-            textViewStatus.setText("Status: In Progress");
+            textViewStatus.setText(Html.fromHtml("<b>Status</b>: In Progress"));
         }
         else
         {
-            textViewStatus.setText("Status: Game Over");
+            gridOpponent.invalidate();
+            gridPlayer.invalidate();
+            textViewStatus.setText(Html.fromHtml("<b>Status</b>: Game Over"));
         }
     }
 
@@ -287,16 +263,16 @@ public class LinearLayoutGrid extends LinearLayout implements OnGlobalLayoutList
         {
             if (booleanTurn)
             {
-                textViewTurn.setText("Turn: " + stringPlayer);
+                textViewTurn.setText(Html.fromHtml("<b>Turn</b>: " + stringPlayer));
             }
             else
             {
-                textViewTurn.setText("Status: " + stringOpponent);
+                textViewTurn.setText(Html.fromHtml("<b>Turn</b>: " + stringOpponent));
             }
         }
         else
         {
-            textViewTurn.setText("Winner: " + winner);
+            textViewTurn.setText(Html.fromHtml("<b>Winner</b>: " + winner));
         }
     }
 
@@ -475,7 +451,6 @@ public class LinearLayoutGrid extends LinearLayout implements OnGlobalLayoutList
                 super.onDraw(canvas);
 
                 Paint paint = new Paint(ANTI_ALIAS_FLAG);
-                paint.setStrokeWidth(floatLength / 25);
                 paint.setStyle(Style.FILL);
 
                 for (int i = 0; i < intColumnsCount * intRowsCount; i++)

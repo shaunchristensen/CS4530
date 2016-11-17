@@ -42,14 +42,14 @@ public class Summary
         return name;
     }
 
-    public String getPlayer1ID()
+    public String getPlayer1Name()
     {
         return player1;
     }
 
-    public String getPlayer2ID()
+    public String getPlayer2Name()
     {
-        return player2;
+        return player2.equals("") ? "Pending" : player2;
     }
 
     public String getStatus(int status)

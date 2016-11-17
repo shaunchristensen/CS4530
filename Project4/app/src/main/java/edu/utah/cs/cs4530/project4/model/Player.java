@@ -8,7 +8,9 @@
 package edu.utah.cs.cs4530.project4.model;
 
 import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Player implements Serializable
@@ -28,6 +30,18 @@ public class Player implements Serializable
     }
 
     // methods
+
+    public List<String> getPlayerNames()
+    {
+        if (listPlayerNames == null)
+        {
+            return null;
+        }
+        else
+        {
+            return new ArrayList<>(listPlayerNames);
+        }
+    }
 
     public String getOpponentName()
     {

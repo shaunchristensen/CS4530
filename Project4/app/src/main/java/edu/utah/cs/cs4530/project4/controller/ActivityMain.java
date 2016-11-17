@@ -80,7 +80,7 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
     // fields
 
     private final Battleship battleship = Battleship.getBattleship();
-    private boolean booleanGame, booleanGetCells, booleanSetSelection, booleanStart, booleanStatus, booleanSummary, booleanTablet, booleanTurn;
+    private boolean booleanGame, booleanSetSelection, booleanStart, booleanStatus, booleanSummary, booleanTablet, booleanTurn;
     private FragmentGame fragmentGame;
     private FragmentManager fragmentManager;
     private FragmentMenu fragmentMenu;
@@ -89,12 +89,11 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
     private FrameLayout frameLayoutMenu, frameLayoutGame;
     private final Gson gson = new Gson();
     private final Handler handler = new Handler();
-    private final int intColumnsCount = battleship.getColumnsCount();
     private int intGameSet, intMargin, intPadding;
-    private final int intRowsCount = battleship.getRowsCount();
     private List<Game> listGames;
     private List<Integer> listPlayers = battleship.getPlayers();
     private List<Set<Integer>> listHits, listMisses, listShips;
+    private List<String> listGameIDs;
     private ListFragmentMenu listFragmentMenu;
     private Map<String, Player> mapPlayers;
     private Map<String, Summary> mapSummaries;
@@ -143,6 +142,7 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
             }
         }
     };
+    private Set<String> setGameIDs;
     private final String stringFragmentGame = "fragmentGame";
     private final String stringFragmentMenu = "fragmentMenu";
     private final String stringFragmentStart = "fragmentStart";
@@ -156,6 +156,7 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
     private final String stringTurns = "Turns";
     private final String stringURL = "http://battleship.pixio.com/api/v2/";
     private final Type typeCells = new TypeToken<List<Set<Integer>>>(){}.getType();
+    private final Type typeGameIDs = new TypeToken<Set<String>>(){}.getType();
     private final Type typeGames = new TypeToken<List<Game>>(){}.getType();
 
     // methods
@@ -194,6 +195,265 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
 
             Log.e("deserialize", "Error: Unable to read the player names. " + e.getMessage());
         }
+    }
+
+    @Override
+    public void onBackPressed()
+    {
+        if (booleanGame || booleanSummary)
+        {
+            super.onBackPressed();
+
+            booleanGame = booleanSummary = false;
+        }
+        else if (booleanStart)
+        {
+            super.onBackPressed();
+
+            booleanStart = false;
+
+            setLayoutParams();
+        }
+        else
+        {
+            finish();
+        }
+
+        listFragmentMenu.setGame("");
+        listFragmentMenu.invalidateViews();
+
+        setFragments();
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState)
+    {
+        super.onCreate(savedInstanceState);
+
+        deserialize();
+
+        if (savedInstanceState != null)
+        {
+            booleanGame = savedInstanceState.getBoolean("booleanGame");
+            booleanSetSelection = savedInstanceState.getBoolean("booleanSetSelection");
+            booleanStart = savedInstanceState.getBoolean("booleanStart");
+            booleanStatus = savedInstanceState.getBoolean("booleanStatus");
+            booleanSummary = savedInstanceState.getBoolean("booleanSummary");
+            booleanTurn = savedInstanceState.getBoolean("booleanTurn");
+            intGameSet = savedInstanceState.getInt("intGameSet");
+            listGames = gson.fromJson(savedInstanceState.getString("listGames"), typeGames);
+            listHits = gson.fromJson(savedInstanceState.getString("listHits"), typeCells);
+            listMisses = gson.fromJson(savedInstanceState.getString("listMisses"), typeCells);
+            listShips = gson.fromJson(savedInstanceState.getString("listShips"), typeCells);
+            setGameIDs = gson.fromJson(savedInstanceState.getString("setGameIDs"), typeGameIDs);
+            stringGameID = savedInstanceState.getString("stringGameID");
+            stringGameName = savedInstanceState.getString("stringGameName");
+            stringOpponent = savedInstanceState.getString("stringOpponent");
+            stringPlayer = savedInstanceState.getString("stringPlayer");
+            stringPlayerName = savedInstanceState.getString("stringPlayerName");
+            stringWinner = savedInstanceState.getString("stringWinner");
+        }
+        else
+        {
+            listGames = new ArrayList<>();
+            listHits = new ArrayList<>();
+            listMisses = new ArrayList<>();
+            listShips = new ArrayList<>();
+
+            for (int i : listPlayers)
+            {
+                listHits.add(new HashSet<Integer>());
+                listMisses.add(new HashSet<Integer>());
+                listShips.add(new HashSet<Integer>());
+            }
+
+            setGameIDs = new HashSet<>();
+            stringGameID = stringGameName = stringOpponent = stringPlayer = stringPlayerName = stringWinner = "";
+        }
+
+        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+
+        if (sqrt(pow(displayMetrics.widthPixels/ displayMetrics.xdpi, 2) + pow(displayMetrics.heightPixels / displayMetrics.ydpi, 2)) >= 6)
+        {
+            booleanTablet = true;
+        }
+        else
+        {
+            booleanTablet = false;
+        }
+
+        intMargin = (displayMetrics.heightPixels < displayMetrics.widthPixels ? displayMetrics.heightPixels : displayMetrics.widthPixels) / 10;
+        intPadding = intMargin / 5;
+        LinearLayout linearLayout = new LinearLayout(this);
+
+        if (booleanTablet)
+        {
+            frameLayoutMenu = new FrameLayout(this);
+            frameLayoutMenu.setId(R.id.frameLayoutMenu);
+
+            linearLayout.addView(frameLayoutMenu);
+        }
+        else
+        {
+            frameLayoutMenu = null;
+        }
+
+        frameLayoutGame = new FrameLayout(this);
+        frameLayoutGame.setId(R.id.frameLayoutGame);
+
+        linearLayout.addView(frameLayoutGame);
+
+        fragmentManager = getSupportFragmentManager();
+
+        fragmentGame = fragmentManager.findFragmentByTag(stringFragmentGame) == null ? new FragmentGame() : (FragmentGame)fragmentManager.findFragmentByTag(stringFragmentGame);
+        fragmentGame.setColumnsCount(battleship.getColumnsCount());
+        fragmentGame.setPadding(intPadding);
+        fragmentGame.setPlayers(new ArrayList<>(listPlayers));
+        fragmentGame.setRowsCount(battleship.getRowsCount());
+
+        fragmentMenu = fragmentManager.findFragmentByTag(stringFragmentMenu) == null ? new FragmentMenu() : (FragmentMenu)fragmentManager.findFragmentByTag(stringFragmentMenu);
+        fragmentMenu.setMargin(intMargin);
+
+        fragmentStart = fragmentManager.findFragmentByTag(stringFragmentStart) == null ? new FragmentStart() : (FragmentStart)fragmentManager.findFragmentByTag(stringFragmentStart);
+        fragmentStart.setMargin(intMargin);
+
+        fragmentSummary = fragmentManager.findFragmentByTag(stringFragmentSummary) == null ? new FragmentSummary() : (FragmentSummary)fragmentManager.findFragmentByTag(stringFragmentSummary);
+        fragmentSummary.setMargin(intMargin);
+
+        listFragmentMenu = fragmentManager.findFragmentByTag(stringListFragmentMenu) == null ? new ListFragmentMenu() : (ListFragmentMenu)fragmentManager.findFragmentByTag(stringListFragmentMenu);
+        listFragmentMenu.setGames(listGames);
+        listFragmentMenu.setPadding(intPadding);
+
+        if (savedInstanceState == null)
+        {
+            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentTransaction.add(frameLayoutGame.getId(), fragmentGame, stringFragmentGame);
+            fragmentTransaction.add(frameLayoutGame.getId(), fragmentStart, stringFragmentStart);
+            fragmentTransaction.add(frameLayoutGame.getId(), fragmentSummary, stringFragmentSummary);
+
+            if (booleanTablet)
+            {
+                fragmentTransaction.add(frameLayoutGame.getId(), fragmentMenu, stringFragmentMenu);
+                fragmentTransaction.add(frameLayoutMenu.getId(), listFragmentMenu, stringListFragmentMenu);
+            }
+            else
+            {
+                fragmentTransaction.add(frameLayoutGame.getId(), listFragmentMenu, stringListFragmentMenu);
+            }
+
+            fragmentTransaction.commit();
+
+            fragmentManager.executePendingTransactions();
+        }
+
+        handler.post(runnableGetGames);
+        handler.post(runnableGetSummaries);
+        handler.post(runnableGetTurns);
+
+        setContentView(linearLayout);
+        setFragments();
+        setGame();
+        setLayoutParams();
+    }
+
+    @Override
+    public void onGameClick(final Game game)
+    {
+        if (mapPlayers.containsKey(game.getGameID()) && game.getStatus() != battleship.WAITING)
+        {
+            booleanGame = false;
+            stringGameID = game.getGameID();
+
+            listFragmentMenu.setGame(stringGameID);
+
+            if (mapPlayers.get(stringGameID).getPlayerNames() == null)
+            {
+                handler.removeCallbacks(runnableGetSummaries);
+
+                synchronized (mapSummaries)
+                {
+                    mapSummaries.put(stringGameID, null);
+                }
+
+                handler.post(runnableGetSummaries);
+            }
+            else
+            {
+                handler.removeCallbacks(runnableGetTurns);
+
+                stringOpponent = mapPlayers.get(stringGameID).getOpponentName();
+                stringPlayer = mapPlayers.get(stringGameID).getPlayerName();
+
+                synchronized (mapTurns)
+                {
+                    mapTurns.put(stringGameID, null);
+                }
+
+                handler.post(runnableGetTurns);
+            }
+        }
+        else if (!mapPlayers.containsKey(game.getGameID()) && game.getStatus() == battleship.WAITING)
+        {
+            AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
+            alertDialog.setMessage("Enter player information and press Start.");
+            alertDialog.setTitle("Join Game");
+
+            final EditText editTextPlayerName = new EditText(this);
+            editTextPlayerName.setHint("Player Name");
+            editTextPlayerName.setText(stringPlayerName);
+
+            LinearLayout linearLayout = new LinearLayout(this);
+            linearLayout.addView(editTextPlayerName, new LayoutParams(MATCH_PARENT, WRAP_CONTENT));
+            linearLayout.setOrientation(VERTICAL);
+            linearLayout.setPadding(intPadding, intPadding, intPadding, intPadding);
+
+            alertDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener()
+            {
+                @Override
+                public void onClick(DialogInterface dialog, int which)
+                {
+                    dialog.cancel();
+                }
+            });
+            alertDialog.setPositiveButton("Start", new DialogInterface.OnClickListener()
+            {
+                @Override
+                public void onClick(DialogInterface dialog, int which)
+                {
+                    stringPlayerName = editTextPlayerName.getText().toString();
+
+                    new AsyncTaskJoinGame().execute(game.getGameID(), stringPlayerName);
+                    dialog.dismiss();
+                }
+            });
+            alertDialog.setView(linearLayout);
+            alertDialog.show();
+        }
+        else
+        {
+            handler.removeCallbacks(runnableGetSummaries);
+
+            booleanSummary = false;
+            stringGameID = game.getGameID();
+
+            listFragmentMenu.setGame(stringGameID);
+
+            synchronized (mapSummaries)
+            {
+                mapSummaries.put(stringGameID, null);
+            }
+
+            handler.post(runnableGetSummaries);
+        }
+    }
+
+    @Override
+    public void onGameSetSelect(int gameSet)
+    {
+        booleanSetSelection = true;
+        intGameSet = gameSet;
+
+        setGames();
     }
 
     @Override
@@ -242,176 +502,9 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
     }
 
     @Override
-    public void onBackPressed()
-    {
-        if (booleanGame || booleanSummary)
-        {
-            super.onBackPressed();
-
-            booleanGame = booleanSummary = false;
-        }
-        else if (booleanStart)
-        {
-            super.onBackPressed();
-
-            booleanStart = false;
-
-            setLayoutParams();
-        }
-        else
-        {
-            finish();
-        }
-
-        listFragmentMenu.setGame("");
-        listFragmentMenu.invalidateViews();
-
-        setFragments();
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
-        super.onCreate(savedInstanceState);
-
-        deserialize();
-
-        if (savedInstanceState != null)
-        {
-            booleanGame = savedInstanceState.getBoolean("booleanGame");
-            booleanGetCells = savedInstanceState.getBoolean("booleanGetCells");
-            booleanSetSelection = savedInstanceState.getBoolean("booleanSetSelection");
-            booleanStart = savedInstanceState.getBoolean("booleanStart");
-            booleanStatus = savedInstanceState.getBoolean("booleanStatus");
-            booleanSummary = savedInstanceState.getBoolean("booleanSummary");
-            booleanTurn = savedInstanceState.getBoolean("booleanTurn");
-            intGameSet = savedInstanceState.getInt("intGameSet");
-            listGames = gson.fromJson(savedInstanceState.getString("listGames"), typeGames);
-            listHits = gson.fromJson(savedInstanceState.getString("listHits"), typeCells);
-            listMisses = gson.fromJson(savedInstanceState.getString("listMisses"), typeCells);
-            listShips = gson.fromJson(savedInstanceState.getString("listShips"), typeCells);
-            stringGameID = savedInstanceState.getString("stringGameID");
-            stringGameName = savedInstanceState.getString("stringGameName");
-            stringOpponent = savedInstanceState.getString("stringOpponent");
-            stringPlayer = savedInstanceState.getString("stringPlayer");
-            stringPlayerName = savedInstanceState.getString("stringPlayerName");
-            stringWinner = savedInstanceState.getString("stringWinner");
-        }
-        else
-        {
-            listGames = new ArrayList<>();
-            listHits = new ArrayList<>();
-            listMisses = new ArrayList<>();
-            listShips = new ArrayList<>();
-
-            for (int i : listPlayers)
-            {
-                listHits.add(new HashSet<Integer>());
-                listMisses.add(new HashSet<Integer>());
-                listShips.add(new HashSet<Integer>());
-            }
-
-            stringGameID = stringGameName = stringOpponent = stringPlayer = stringPlayerName = stringWinner = "";
-        }
-
-        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
-
-        if (sqrt(pow(displayMetrics.widthPixels/ displayMetrics.xdpi, 2) + pow(displayMetrics.heightPixels / displayMetrics.ydpi, 2)) >= 6)
-        {
-            booleanTablet = true;
-        }
-        else
-        {
-            booleanTablet = false;
-        }
-
-        intMargin = (displayMetrics.heightPixels < displayMetrics.widthPixels ? displayMetrics.heightPixels : displayMetrics.widthPixels) / 10;
-        intPadding = intMargin / 5;
-        LinearLayout linearLayout = new LinearLayout(this);
-
-        if (booleanTablet)
-        {
-            frameLayoutMenu = new FrameLayout(this);
-            frameLayoutMenu.setId(R.id.frameLayoutMenu);
-
-            linearLayout.addView(frameLayoutMenu);
-        }
-        else
-        {
-            frameLayoutMenu = null;
-        }
-
-        frameLayoutGame = new FrameLayout(this);
-        frameLayoutGame.setId(R.id.frameLayoutGame);
-
-        linearLayout.addView(frameLayoutGame);
-
-        fragmentManager = getSupportFragmentManager();
-
-        fragmentGame = fragmentManager.findFragmentByTag(stringFragmentGame) == null ? new FragmentGame() : (FragmentGame)fragmentManager.findFragmentByTag(stringFragmentGame);
-        fragmentGame.setColumnsCount(battleship.getColumnsCount());
-        fragmentGame.setPadding(intPadding);
-        fragmentGame.setPlayers(new ArrayList<>(battleship.getPlayers()));
-        fragmentGame.setRowsCount(intRowsCount);
-
-        fragmentMenu = fragmentManager.findFragmentByTag(stringFragmentMenu) == null ? new FragmentMenu() : (FragmentMenu)fragmentManager.findFragmentByTag(stringFragmentMenu);
-        fragmentMenu.setMargin(intMargin);
-
-        fragmentStart = fragmentManager.findFragmentByTag(stringFragmentStart) == null ? new FragmentStart() : (FragmentStart)fragmentManager.findFragmentByTag(stringFragmentStart);
-        fragmentStart.setMargin(intMargin);
-
-        fragmentSummary = fragmentManager.findFragmentByTag(stringFragmentSummary) == null ? new FragmentSummary() : (FragmentSummary)fragmentManager.findFragmentByTag(stringFragmentSummary);
-        fragmentSummary.setMargin(intMargin);
-
-        listFragmentMenu = fragmentManager.findFragmentByTag(stringListFragmentMenu) == null ? new ListFragmentMenu() : (ListFragmentMenu)fragmentManager.findFragmentByTag(stringListFragmentMenu);
-        listFragmentMenu.setGames(listGames);
-        listFragmentMenu.setPadding(intPadding);
-
-        if (savedInstanceState == null)
-        {
-            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-            fragmentTransaction.add(frameLayoutGame.getId(), fragmentGame, stringFragmentGame);
-            fragmentTransaction.add(frameLayoutGame.getId(), fragmentStart, stringFragmentStart);
-            fragmentTransaction.add(frameLayoutGame.getId(), fragmentSummary, stringFragmentSummary);
-
-            if (booleanTablet)
-            {
-                fragmentTransaction.add(frameLayoutGame.getId(), fragmentMenu, stringFragmentMenu);
-                fragmentTransaction.add(frameLayoutMenu.getId(), listFragmentMenu, stringListFragmentMenu);
-            }
-            else
-            {
-                fragmentTransaction.add(frameLayoutGame.getId(), listFragmentMenu, stringListFragmentMenu);
-            }
-
-            fragmentTransaction.commit();
-
-            fragmentManager.executePendingTransactions();
-        }
-
-        handler.post(runnableGetGames);
-        handler.post(runnableGetSummaries);
-        handler.post(runnableGetTurns);
-        setContentView(linearLayout);
-        setFragments();
-        setGame();
-        setLayoutParams();
-    }
-
-    @Override
-    public void onGameSetSelect(int gameSet)
-    {
-        booleanSetSelection = true;
-        intGameSet = gameSet;
-
-        setGames();
-    }
-
-    @Override
     protected void onSaveInstanceState(Bundle outState)
     {
         outState.putBoolean("booleanGame", booleanGame);
-        outState.putBoolean("booleanGetCells", booleanGetCells);
         outState.putBoolean("booleanSetSelection", booleanSetSelection);
         outState.putBoolean("booleanStart", booleanStart);
         outState.putBoolean("booleanStatus", booleanStatus);
@@ -422,6 +515,7 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
         outState.putString("listHits", gson.toJson(listHits, typeCells));
         outState.putString("listMisses", gson.toJson(listMisses, typeCells));
         outState.putString("listShips", gson.toJson(listShips, typeCells));
+        outState.putString("setGameIDs", gson.toJson(setGameIDs, typeGameIDs));
         outState.putString("stringGameID", stringGameID);
         outState.putString("stringGameName", stringGameName);
         outState.putString("stringOpponent", stringOpponent);
@@ -430,6 +524,40 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
         outState.putString("stringWinner", stringWinner);
 
         super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onShoot(final int cell)
+    {
+        handler.removeCallbacks(runnableGetTurns);
+
+        synchronized (mapTurns)
+        {
+            if (mapTurns.containsKey(stringGameID))
+            {
+                mapTurns.remove(stringGameID);
+            }
+        }
+
+        new AsyncTaskShoot().execute(stringGameID, mapPlayers.get(stringGameID).getPlayerID(), Integer.toString(cell));
+        handler.post(runnableGetTurns);
+    }
+
+    @Override
+    public void onStartClick(Fragment fragment)
+    {
+        booleanStart = true;
+
+        setFragments();
+        setLayoutParams();
+    }
+
+    @Override
+    protected void onStop()
+    {
+        super.onStop();
+
+        serialize();
     }
 
     private void serialize()
@@ -579,265 +707,15 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
         frameLayoutGame.setPadding(intPadding, intPadding, intPadding, intPadding);
     }
 
+    // classes
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    @Override
-    public void onGameClick(final Game game)
+    private class AsyncTaskGetCells extends AsyncTask<String, Void, Void>
     {
-        if (mapPlayers.containsKey(game.getGameID()))
-        {
-            if (!game.getGameID().equalsIgnoreCase(stringGameID) && game.getStatus() == battleship.IN_PROGRESS || game.getStatus() == battleship.GAME_OVER)
-            {
-                booleanGame = true;
-                stringGameID = game.getGameID();
-
-                new AsyncTaskGetCells().execute(stringGameID, mapPlayers.get(stringGameID).getPlayerID());
-                new AsyncTaskGetTurn().execute(stringGameID, mapPlayers.get(stringGameID).getPlayerID());
-                listFragmentMenu.setGame(stringGameID);
-                setFragments();
-            }
-        }
-        else  if (game.getStatus() == battleship.WAITING)
-        {
-            AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
-            alertDialog.setMessage("Enter player information and press Start.");
-            alertDialog.setTitle("Join Game");
-
-            final EditText editTextPlayerName = new EditText(this);
-            editTextPlayerName.setHint("Player Name");
-            editTextPlayerName.setText(stringPlayerName);
-
-            LinearLayout linearLayout = new LinearLayout(this);
-            linearLayout.addView(editTextPlayerName, new LayoutParams(MATCH_PARENT, WRAP_CONTENT));
-            linearLayout.setOrientation(VERTICAL);
-            linearLayout.setPadding(intPadding, intPadding, intPadding, intPadding);
-
-            alertDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener()
-            {
-                @Override
-                public void onClick(DialogInterface dialog, int which)
-                {
-                    dialog.cancel();
-                }
-            });
-            alertDialog.setPositiveButton("Start", new DialogInterface.OnClickListener()
-            {
-                @Override
-                public void onClick(DialogInterface dialog, int which)
-                {
-                    stringPlayerName = editTextPlayerName.getText().toString();
-
-                    new AsyncTaskJoinGame().execute(game.getGameID(), stringPlayerName);
-                    dialog.dismiss();
-                }
-            });
-            alertDialog.setView(linearLayout);
-            alertDialog.show();
-        }
-        else
-        {
-            booleanGame = false;
-            booleanSummary = true;
-
-
-
-            stringGameID = game.getGameID();
-
-            new AsyncTaskGetSummary().execute(game.getGameID());
-            listFragmentMenu.setGame(stringGameID);
-            setFragments();
-        }
-    }
-
-
-
-/*    private String getRowColumnString(int cell)
-    {
-        int row = cell / intColumnsCount + 1;
-
-        Stack<Integer> stack = new Stack<>();
-        StringBuilder stringBuilder = new StringBuilder();
-
-        while (row > 0)
-        {
-            stack.push(row % 26);
-
-            row /= 26;
-        }
-
-        while (stack.size() > 0)
-        {
-            stringBuilder.append((char)(stack.pop() + 64));
-        }
-
-        stringBuilder.append(cell % intColumnsCount + 1);
-
-        return stringBuilder.toString();
-    }*/
-
-
-
-
-
-
-    @Override
-    public void onShoot(final int cell)
-    {
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
-        alertDialog.setMessage("Shots Fired");
-        alertDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
-        {
-            @Override
-            public void onClick(DialogInterface dialog, int which)
-            {
-                new AsyncTaskShoot().execute(stringGameID, mapPlayers.get(stringGameID).getPlayerID(), Integer.toString(cell));
-                dialog.dismiss();
-            }
-        });
-        alertDialog.setTitle("Shot");
-        alertDialog.show();
-    }
-
-
-
-
-
-
-    @Override
-    public void onStartClick(Fragment fragment)
-    {
-        booleanStart = true;
-
-        setFragments();
-        setLayoutParams();
-    }
-
-    @Override
-    protected void onStop()
-    {
-        super.onStop();
-
-        serialize();
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    private class AsyncTaskJoinGame extends AsyncTask<String, Void, Void>
-    {
-        // fields
-
-        private GameIDPlayerName gameIDPlayerName;
-        private String stringGameID;
-
         // methods
 
         @Override
-        protected Void doInBackground(String... params)
+        protected Void doInBackground(final String... params)
         {
-            stringGameID = params[0];
-            gameIDPlayerName = new GameIDPlayerName(stringGameID, params[1]);
-
             runOnUiThread(new Runnable()
             {
                 @Override
@@ -848,9 +726,13 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
                         @Override
                         protected void onPostExecute(String s)
                         {
-                            processResponse(s);
+                            if (s != null)
+                            {
+                                processResponse(s);
+
+                            }
                         }
-                    }.execute(stringURL + "lobby/" + stringGameID, stringPut, gameIDPlayerName);
+                    }.execute(stringURL + "games/" + params[0] + "/boards?playerId=" + params[1], null, null);
                 }
             });
 
@@ -859,165 +741,126 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
 
         private void processResponse(String s)
         {
-            handler.removeCallbacks(runnableGetGames);
+            Cells cells = gson.fromJson(s, Cells.class);
 
-            booleanSetSelection = true;
-            PlayerID playerID = gson.fromJson(s, PlayerID.class);
-
-            if (intGameSet == battleship.WAITING || intGameSet == battleship.GAME_OVER)
+            for (int i : listPlayers)
             {
-                intGameSet = battleship.IN_PROGRESS;
+                listHits.get(i).clear();
+                listMisses.get(i).clear();
+                listShips.get(i).clear();
+
+                for (Cells.Cell c : cells.getCells(i))
+                {
+                    if (c.getCellSet() == battleship.HIT)
+                    {
+                        listHits.get(i).add(c.getCell());
+                    }
+                    else if (c.getCellSet() == battleship.MISS)
+                    {
+                        listMisses.get(i).add(c.getCell());
+                    }
+                    else if (c.getCellSet() == battleship.SHIP)
+                    {
+                        listShips.get(i).add(c.getCell());
+                    }
+                }
             }
 
-            ActivityMain.this.stringGameID = stringGameID;
+            fragmentGame.setGame(stringOpponent, stringPlayer, stringWinner, booleanStatus, booleanTurn, listHits, listMisses, listShips);
 
-            new AsyncTaskGetSummary().execute(stringGameID);
-            handler.post(runnableGetGames);
-            listFragmentMenu.setGame(stringGameID);
+            if (!booleanGame)
+            {
+                booleanGame = true;
+                booleanSummary = false;
+
+                setFragments();
+            }
+        }
+    }
+
+    private class AsyncTaskGetGames extends AsyncTask<String, Void, Void>
+    {
+        // methods
+
+        @Override
+        protected Void doInBackground(String... params)
+        {
+            runOnUiThread(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    new AsyncTaskRequest()
+                    {
+                        @Override
+                        protected void onPostExecute(String s)
+                        {
+                            if (s != null)
+                            {
+                                processResponse(s);
+
+                            }
+                        }
+                    }.execute(stringURL + "lobby", null, null);
+                }
+            });
+
+            return null;
+        }
+
+        private void processResponse(String s)
+        {
+            listGames = gson.fromJson(s, typeGames);
+
+            setGameIDs.clear();
+
+            for (Game g : listGames)
+            {
+                setGameIDs.add(g.getGameID());
+            }
 
             synchronized (mapPlayers)
             {
-                mapPlayers.put(stringGameID, new Player(1, playerID.getPlayerID()));
+                listGameIDs = new ArrayList(mapPlayers.keySet());
+
+                for (String t : listGameIDs)
+                {
+                    if (!setGameIDs.contains(t))
+                    {
+                        mapPlayers.remove(t);
+                    }
+                }
+            }
+
+            synchronized (mapTurns)
+            {
+                listGameIDs = new ArrayList(mapTurns.keySet());
+
+                for (String t : listGameIDs)
+                {
+                    if (!setGameIDs.contains(t))
+                    {
+                        mapTurns.remove(t);
+                    }
+                }
             }
 
             synchronized (mapSummaries)
             {
-                mapSummaries.put(stringGameID, null);
+                listGameIDs = new ArrayList(mapSummaries.keySet());
+
+                for (String t : listGameIDs)
+                {
+                    if (!setGameIDs.contains(t))
+                    {
+                        mapSummaries.remove(t);
+                    }
+                }
             }
+
+            setGames();
         }
     }
-
-    private class AsyncTaskShoot extends AsyncTask<String, Void, Void>
-    {
-        // fields
-
-        private PlayerIDCell playerIDCell;
-        private String stringGameID;
-
-        // methods
-
-        @Override
-        protected Void doInBackground(String... params)
-        {
-            playerIDCell = new PlayerIDCell(params[1], Integer.parseInt(params[2]));
-            stringGameID = params[0];
-
-            runOnUiThread(new Runnable()
-            {
-                @Override
-                public void run()
-                {
-                    new AsyncTaskRequest()
-                    {
-                        @Override
-                        protected void onPostExecute(String s)
-                        {
-                            processResponse(s);
-                        }
-                    }.execute(stringURL + "games/" + stringGameID, stringPost, playerIDCell);
-                }
-            });
-
-            return null;
-        }
-
-        private void processResponse(String s)
-        {
-            booleanTurn = false;
-            Shot shot = gson.fromJson(s, Shot.class);
-
-            fragmentGame.addShot(shot.getHit(), playerIDCell.getCell());
-        }
-
-            /*
-            if (isConnected())
-            {
-                playerIDCell = new PlayerIDCell(params[1], Integer.parseInt(params[2]), Integer.parseInt(params[3]));
-                HttpURLConnection httpURLConnection = null;
-                StringBuilder stringBuilder = new StringBuilder();
-
-                try
-                {
-                    URL url = new URL("games/" + params[0]);
-
-                    httpURLConnection = (HttpURLConnection)url.openConnection();
-                    httpURLConnection.setDoOutput(true);
-                    httpURLConnection.setRequestMethod("POST");
-                    httpURLConnection.setRequestProperty("Content-Type", "application/json");
-
-                    try (OutputStream outputStream = httpURLConnection.getOutputStream(); OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream); BufferedWriter bufferedWriter = new BufferedWriter(outputStreamWriter);)
-                    {
-                        bufferedWriter.write(gson.toJson(playerIDCell));
-                        bufferedWriter.flush();
-                    }
-
-                    if (httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_OK)
-                    {
-                        try (InputStream inputStream = httpURLConnection.getInputStream(); InputStreamReader inputStreamReader = new InputStreamReader(inputStream); BufferedReader bufferedReader = new BufferedReader(inputStreamReader))
-                        {
-                            String s;
-
-                            while ((s = bufferedReader.readLine()) != null)
-                            {
-                                stringBuilder.append(s);
-                            }
-
-                            booleanPostExecute = true;
-                        }
-                    }
-                    else
-                    {
-                        Log.e("responseCode", "Error " + httpURLConnection.getResponseCode() + ": Unable to connect to the server. " + httpURLConnection.getResponseMessage());
-                    }
-                }
-                catch (Exception e)
-                {
-                    Log.e("openConnection", "Error: Unable to connect to the server. " + e.getMessage());
-                }
-                finally
-                {
-                    if (httpURLConnection != null)
-                    {
-                        httpURLConnection.disconnect();
-                    }
-                }
-
-                return stringBuilder.toString();
-            }
-            else
-            {
-                return null;
-            }
-            */
-
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     private class AsyncTaskGetSummary extends AsyncTask<String, Void, Void>
     {
@@ -1047,46 +890,79 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
 
         private void processResponse(String s)
         {
-            // handle when new game and waiting for player
-
             Summary summary = gson.fromJson(s, Summary.class);
-            String gameID = summary.getGameID();
 
-            if (mapPlayers.containsKey(gameID))
+            if (mapSummaries.get(summary.getGameID()) != null && summary.getStatus() != mapSummaries.get(summary.getGameID()).getStatus())
             {
-                if (summary.getStatus() != battleship.WAITING)
+                handler.removeCallbacks(runnableGetGames);
+                handler.post(runnableGetGames);
+            }
+
+            if ((!mapPlayers.containsKey(summary.getGameID()) && summary.getGameID().equalsIgnoreCase(stringGameID)) || summary.getStatus() == battleship.WAITING)
+            {
+                if (mapSummaries.get(summary.getGameID()) == null || summary.getStatus() != mapSummaries.get(summary.getGameID()).getStatus() || summary.getShots() != mapSummaries.get(summary.getGameID()).getShots())
                 {
                     synchronized (mapSummaries)
                     {
-                        if (mapSummaries.containsKey(gameID))
+                        mapSummaries.put(summary.getGameID(), summary);
+                    }
+
+                    if (summary.getGameID().equalsIgnoreCase(stringGameID))
+                    {
+                        if (!booleanSummary)
                         {
-                            mapSummaries.remove(gameID);
+                            booleanGame = false;
+                            booleanSummary = true;
+                            setFragments();
                         }
-                    }
 
-                    synchronized (mapPlayers)
-                    {
-                        mapPlayers.get(gameID).setPlayerNames(Arrays.asList(summary.getPlayer1ID(), summary.getPlayer2ID()));
-                    }
-
-                    if (gameID.equalsIgnoreCase(stringGameID))
-                    {
-                        booleanStatus = booleanTurn = false;
-                        stringOpponent = mapPlayers.get(gameID).getOpponentName();
-                        stringPlayer = mapPlayers.get(gameID).getPlayerName();
-
-                        new AsyncTaskGetTurn().execute(gameID, mapPlayers.get(gameID).getPlayerID());
-                    }
-
-                    synchronized (mapTurns)
-                    {
-                        mapTurns.put(gameID, null);
+                        fragmentSummary.setText(summary.getGameName(), summary.getPlayer1Name(), summary.getPlayer2Name(), summary.getShots(), summary.getStatus(summary.getStatus()), summary.getWinner());
                     }
                 }
             }
             else
             {
-                fragmentSummary.setText(summary.getGameName(), summary.getPlayer1ID(), summary.getPlayer2ID(), summary.getShots(), summary.getStatus(summary.getStatus()), summary.getWinner());
+                synchronized (mapSummaries)
+                {
+                    if (mapSummaries.containsKey(summary.getGameID()))
+                    {
+                        mapSummaries.remove(summary.getGameID());
+                    }
+                }
+
+                if (mapPlayers.containsKey(summary.getGameID()))
+                {
+                    handler.removeCallbacks(runnableGetGames);
+                    handler.removeCallbacks(runnableGetTurns);
+
+                    synchronized (mapPlayers)
+                    {
+                        mapPlayers.get(summary.getGameID()).setPlayerNames(Arrays.asList(summary.getPlayer1Name(), summary.getPlayer2Name()));
+                    }
+
+                    synchronized (mapTurns)
+                    {
+                        mapTurns.put(summary.getGameID(), null);
+                    }
+
+                    if (summary.getGameID().equalsIgnoreCase(stringGameID))
+                    {
+                        booleanSetSelection = true;
+
+                        if (intGameSet == battleship.WAITING || intGameSet == battleship.GAME_OVER)
+                        {
+                            intGameSet = battleship.IN_PROGRESS;
+                        }
+
+                        stringOpponent = mapPlayers.get(summary.getGameID()).getOpponentName();
+                        stringPlayer = mapPlayers.get(summary.getGameID()).getPlayerName();
+
+                        listFragmentMenu.setGame(summary.getGameID());
+                    }
+
+                    handler.post(runnableGetGames);
+                    handler.post(runnableGetTurns);
+                }
             }
         }
     }
@@ -1115,7 +991,11 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
                         @Override
                         protected void onPostExecute(String s)
                         {
-                            processResponse(s);
+                            if (s != null)
+                            {
+                                processResponse(s);
+
+                            }
                         }
                     }.execute(stringURL + "games/" + stringGameID + "?playerId=" + stringPlayerID, null, null);
                 }
@@ -1127,16 +1007,31 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
         private void processResponse(String s)
         {
             Turn turn = gson.fromJson(s, Turn.class);
-            boolean status = turn.getWinner().equalsIgnoreCase("In Progress");
 
-            if (status)
+            if (mapTurns.get(stringGameID) != null && !turn.getWinner().equalsIgnoreCase("In Progress"))
+            {
+                handler.removeCallbacks(runnableGetGames);
+                handler.post(runnableGetGames);
+            }
+
+            if (mapTurns.get(stringGameID) == null || turn.getTurn() != mapTurns.get(stringGameID).getTurn() || !turn.getWinner().equalsIgnoreCase(mapTurns.get(stringGameID).getWinner()))
             {
                 synchronized (mapTurns)
                 {
                     mapTurns.put(stringGameID, turn);
                 }
+
+                if (stringGameID.equalsIgnoreCase(ActivityMain.this.stringGameID))
+                {
+                    booleanStatus = turn.getWinner().equalsIgnoreCase("In Progress");
+                    booleanTurn = turn.getTurn();
+                    stringWinner = turn.getWinner();
+
+                    new AsyncTaskGetCells().execute(stringGameID, stringPlayerID);
+                }
             }
-            else
+
+            if (turn.getTurn() || !turn.getWinner().equalsIgnoreCase("In Progress"))
             {
                 synchronized (mapTurns)
                 {
@@ -1145,83 +1040,23 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
                         mapTurns.remove(stringGameID);
                     }
                 }
-
-                synchronized (listGames)
-                {
-                    for (Game g : listGames)
-                    {
-                        if (g.getGameID().equalsIgnoreCase(stringGameID) && g.getStatus() != battleship.GAME_OVER)
-                        {
-                            g.setStatus(false);
-                            setGames();
-                        }
-                    }
-                }
-            }
-
-            if (stringGameID.equalsIgnoreCase(ActivityMain.this.stringGameID))
-            {
-                if (!status || (!booleanTurn && turn.getTurn()))
-                {
-                    booleanGetCells = true;
-                }
-
-                booleanStatus = status;
-                booleanTurn = turn.getTurn();
-                stringWinner = turn.getWinner();
-            }
-
-            if(booleanGetCells)
-            {
-                booleanGetCells = false;
-
-                new AsyncTaskGetCells().execute(stringGameID, stringPlayerID);
             }
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // classes
-
-    private class AsyncTaskGetCells extends AsyncTask<String, Void, Void>
+    private class AsyncTaskJoinGame extends AsyncTask<String, Void, Void>
     {
+        // fields
+
+        private GameIDPlayerName gameIDPlayerName;
+
         // methods
 
         @Override
         protected Void doInBackground(final String... params)
         {
+            gameIDPlayerName = new GameIDPlayerName(params[0], params[1]);
+
             runOnUiThread(new Runnable()
             {
                 @Override
@@ -1232,9 +1067,13 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
                         @Override
                         protected void onPostExecute(String s)
                         {
-                            processResponse(s);
+                            if (s != null)
+                            {
+                                processResponse(s);
+
+                            }
                         }
-                    }.execute(stringURL + "games/" + params[0] + "/boards?playerId=" + params[1], null, null);
+                    }.execute(stringURL + "lobby/" + params[0], stringPut, gameIDPlayerName);
                 }
             });
 
@@ -1243,66 +1082,33 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
 
         private void processResponse(String s)
         {
-            Cells cells = gson.fromJson(s, Cells.class);
+            handler.removeCallbacks(runnableGetGames);
+            handler.removeCallbacks(runnableGetSummaries);
 
-            for (int i : battleship.getPlayers())
+            booleanSetSelection = true;
+            PlayerID playerID = gson.fromJson(s, PlayerID.class);
+
+            if (intGameSet == battleship.WAITING || intGameSet == battleship.GAME_OVER)
             {
-                listHits.get(i).clear();
-                listMisses.get(i).clear();
-                listShips.get(i).clear();
-
-                for (Cells.Cell c : cells.getCells(i))
-                {
-                    if (c.getCellSet() == battleship.HIT)
-                    {
-                        listHits.get(i).add(c.getCell());
-                    }
-                    else if (c.getCellSet() == battleship.MISS)
-                    {
-                        listMisses.get(i).add(c.getCell());
-                    }
-                    else if (c.getCellSet() == battleship.SHIP)
-                    {
-                        listShips.get(i).add(c.getCell());
-                    }
-                }
+                intGameSet = battleship.IN_PROGRESS;
             }
 
-            fragmentGame.setGame(stringOpponent, stringPlayer, stringWinner, booleanStatus, booleanTurn, listHits, listMisses, listShips);
-        }
-    }
+            stringGameID = gameIDPlayerName.getGameID();
 
-    private class AsyncTaskGetGames extends AsyncTask<String, Void, Void>
-    {
-        // methods
-
-        @Override
-        protected Void doInBackground(String... params)
-        {
-            runOnUiThread(new Runnable()
+            synchronized (mapPlayers)
             {
-                @Override
-                public void run()
-                {
-                    new AsyncTaskRequest()
-                    {
-                        @Override
-                        protected void onPostExecute(String s)
-                        {
-                            processResponse(s);
-                        }
-                    }.execute(stringURL + "lobby", null, null);
-                }
-            });
+                mapPlayers.put(stringGameID, new Player(1, playerID.getPlayerID()));
+            }
 
-            return null;
-        }
+            synchronized (mapSummaries)
+            {
+                mapSummaries.put(stringGameID, null);
+            }
 
-        private void processResponse(String s)
-        {
-            listGames = gson.fromJson(s, typeGames);
+            listFragmentMenu.setGame(gameIDPlayerName.getGameID());
 
-            setGames();
+            handler.post(runnableGetGames);
+            handler.post(runnableGetSummaries);
         }
     }
 
@@ -1329,7 +1135,11 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
                         @Override
                         protected void onPostExecute(String s)
                         {
-                            processResponse(s);
+                            if (s != null)
+                            {
+                                processResponse(s);
+
+                            }
                         }
                     }.execute(stringURL + "lobby/", stringPost, gameNamePlayerName);
                 }
@@ -1343,8 +1153,8 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
             handler.removeCallbacks(runnableGetGames);
             handler.removeCallbacks(runnableGetSummaries);
 
-            booleanGame = booleanSetSelection = true;
-            booleanSummary = false;
+            booleanGame = false;
+            booleanSetSelection = booleanSummary = true;
             GameIDPlayerID gameIDPlayerID = gson.fromJson(s, GameIDPlayerID.class);
 
             if (intGameSet == battleship.IN_PROGRESS || intGameSet == battleship.GAME_OVER)
@@ -1365,6 +1175,8 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
             }
 
             listFragmentMenu.setGame(gameIDPlayerID.getGameID());
+            setFragments();
+
             handler.post(runnableGetGames);
             handler.post(runnableGetSummaries);
         }
@@ -1435,6 +1247,62 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
             }
 
             return null;
+        }
+    }
+
+    private class AsyncTaskShoot extends AsyncTask<String, Void, Void>
+    {
+        // fields
+
+        private PlayerIDCell playerIDCell;
+        private String stringGameID;
+
+        // methods
+
+        @Override
+        protected Void doInBackground(String... params)
+        {
+            playerIDCell = new PlayerIDCell(params[1], Integer.parseInt(params[2]));
+            stringGameID = params[0];
+
+            runOnUiThread(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    new AsyncTaskRequest()
+                    {
+                        @Override
+                        protected void onPostExecute(String s)
+                        {
+                            if (s != null)
+                            {
+                                processResponse(s);
+
+                            }
+                        }
+                    }.execute(stringURL + "games/" + stringGameID, stringPost, playerIDCell);
+                }
+            });
+
+            return null;
+        }
+
+        private void processResponse(String s)
+        {
+            handler.removeCallbacks(runnableGetTurns);
+
+            booleanTurn = false;
+            Shot shot = gson.fromJson(s, Shot.class);
+
+            fragmentGame.addShot(shot.getHit(), playerIDCell.getCell());
+
+            synchronized (mapTurns)
+            {
+                mapTurns.put(stringGameID, null);
+            }
+
+            handler.post(runnableGetTurns);
         }
     }
 }
