@@ -373,6 +373,8 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
                 synchronized (mapSummaries)
                 {
                     mapSummaries.put(stringGameID, null);
+
+                    serializeSummaries();
                 }
 
                 handler.post(runnableGetSummaries);
@@ -387,6 +389,8 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
                 synchronized (mapTurns)
                 {
                     mapTurns.put(stringGameID, null);
+
+                    serializeTurns();
                 }
 
                 handler.post(runnableGetTurns);
@@ -441,6 +445,8 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
             synchronized (mapSummaries)
             {
                 mapSummaries.put(stringGameID, null);
+
+                serializeSummaries();
             }
 
             handler.post(runnableGetSummaries);
@@ -536,6 +542,8 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
             if (mapTurns.containsKey(stringGameID))
             {
                 mapTurns.remove(stringGameID);
+
+                serializeTurns();
             }
         }
 
@@ -560,7 +568,7 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
         serialize();
     }
 
-    private void serialize()
+    private void serializePlayers()
     {
         try (FileOutputStream fileOutputStream = new FileOutputStream(new File(getFilesDir(), stringPlayers)); ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream))
         {
@@ -568,26 +576,39 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
         }
         catch(Exception e)
         {
-            Log.e("serialize", "Error: Unable to write the players. " + e.getMessage());
+            Log.e("serializePlayers", "Error: Unable to write the players. " + e.getMessage());
         }
+    }
 
+    private void serializeSummaries()
+    {
         try (FileOutputStream fileOutputStream = new FileOutputStream(new File(getFilesDir(), stringSummaries)); ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream))
         {
             objectOutputStream.writeObject(mapSummaries);
         }
         catch(Exception e)
         {
-            Log.e("serialize", "Error: Unable to write the summaries. " + e.getMessage());
+            Log.e("serializeSummaries", "Error: Unable to write the summaries. " + e.getMessage());
         }
+    }
 
+    private void serializeTurns()
+    {
         try (FileOutputStream fileOutputStream = new FileOutputStream(new File(getFilesDir(), stringTurns)); ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream))
         {
             objectOutputStream.writeObject(mapTurns);
         }
         catch(Exception e)
         {
-            Log.e("serialize", "Error: Unable to write the turns. " + e.getMessage());
+            Log.e("serializeTurns", "Error: Unable to write the turns. " + e.getMessage());
         }
+    }
+
+    private void serialize()
+    {
+        serializePlayers();
+        serializeSummaries();
+        serializeTurns();
     }
 
     private void setFragments()
@@ -828,6 +849,8 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
                     if (!setGameIDs.contains(t))
                     {
                         mapPlayers.remove(t);
+
+                        serializePlayers();
                     }
                 }
             }
@@ -841,6 +864,8 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
                     if (!setGameIDs.contains(t))
                     {
                         mapTurns.remove(t);
+
+                        serializeTurns();
                     }
                 }
             }
@@ -854,6 +879,8 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
                     if (!setGameIDs.contains(t))
                     {
                         mapSummaries.remove(t);
+
+                        serializeSummaries();
                     }
                 }
             }
@@ -905,6 +932,8 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
                     synchronized (mapSummaries)
                     {
                         mapSummaries.put(summary.getGameID(), summary);
+
+                        serializeSummaries();
                     }
 
                     if (summary.getGameID().equalsIgnoreCase(stringGameID))
@@ -927,6 +956,8 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
                     if (mapSummaries.containsKey(summary.getGameID()))
                     {
                         mapSummaries.remove(summary.getGameID());
+
+                        serializeSummaries();
                     }
                 }
 
@@ -943,6 +974,8 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
                     synchronized (mapTurns)
                     {
                         mapTurns.put(summary.getGameID(), null);
+
+                        serializeTurns();
                     }
 
                     if (summary.getGameID().equalsIgnoreCase(stringGameID))
@@ -1019,6 +1052,8 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
                 synchronized (mapTurns)
                 {
                     mapTurns.put(stringGameID, turn);
+
+                    serializeTurns();
                 }
 
                 if (stringGameID.equalsIgnoreCase(ActivityMain.this.stringGameID))
@@ -1038,6 +1073,8 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
                     if (mapTurns.containsKey(stringGameID))
                     {
                         mapTurns.remove(stringGameID);
+
+                        serializeTurns();
                     }
                 }
             }
@@ -1098,11 +1135,15 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
             synchronized (mapPlayers)
             {
                 mapPlayers.put(stringGameID, new Player(1, playerID.getPlayerID()));
+
+                serializePlayers();
             }
 
             synchronized (mapSummaries)
             {
                 mapSummaries.put(stringGameID, null);
+
+                serializeSummaries();
             }
 
             listFragmentMenu.setGame(gameIDPlayerName.getGameID());
@@ -1167,11 +1208,15 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
             synchronized (mapPlayers)
             {
                 mapPlayers.put(gameIDPlayerID.getGameID(), new Player(0, gameIDPlayerID.getPlayerID()));
+
+                serializePlayers();
             }
 
             synchronized (mapSummaries)
             {
                 mapSummaries.put(gameIDPlayerID.getGameID(), null);
+
+                serializeSummaries();
             }
 
             listFragmentMenu.setGame(gameIDPlayerID.getGameID());
@@ -1300,6 +1345,8 @@ public class ActivityMain extends AppCompatActivity implements OnGameClickListen
             synchronized (mapTurns)
             {
                 mapTurns.put(stringGameID, null);
+
+                serializeTurns();
             }
 
             handler.post(runnableGetTurns);
