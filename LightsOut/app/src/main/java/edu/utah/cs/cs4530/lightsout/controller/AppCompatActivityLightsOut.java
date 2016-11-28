@@ -370,7 +370,7 @@ bottom right
         buttonSelect.setLayoutParams(layoutParams);
 
         layoutParams = (LayoutParams)findViewById(R.id.textViewSelect).getLayoutParams();
-        layoutParams.setMargins(0, (int)(margin * 2), 0, 0);
+        layoutParams.setMargins(0, (int)margin, 0, 0);
 
         findViewById(R.id.textViewSelect).setLayoutParams(layoutParams);
     }
