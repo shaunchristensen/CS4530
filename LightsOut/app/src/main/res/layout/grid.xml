@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:orientation="vertical">
+    <LinearLayout
+        android:background="@drawable/gradient_horizontal"
+        android:id="@+id/linearLayoutRow0"
+        android:layout_height="0dp"
+        android:layout_width="match_parent"
+        android:layout_weight="1"
+        android:orientation="horizontal" />
+    <LinearLayout
+        android:background="@drawable/gradient_horizontal"
+        android:id="@+id/linearLayoutRow1"
+        android:layout_height="0dp"
+        android:layout_marginTop="1dp"
+        android:layout_width="match_parent"
+        android:layout_weight="1"
+        android:orientation="horizontal" />
+    <LinearLayout
+        android:background="@drawable/gradient_horizontal"
+        android:id="@+id/linearLayoutRow2"
+        android:layout_height="0dp"
+        android:layout_marginTop="1dp"
+        android:layout_width="match_parent"
+        android:layout_weight="1"
+        android:orientation="horizontal" />
+    <LinearLayout
+        android:background="@drawable/gradient_horizontal"
+        android:id="@+id/linearLayoutRow3"
+        android:layout_height="0dp"
+        android:layout_marginTop="1dp"
+        android:layout_width="match_parent"
+        android:layout_weight="1"
+        android:orientation="horizontal" />
+    <LinearLayout
+        android:background="@drawable/gradient_horizontal"
+        android:id="@+id/linearLayoutRow4"
+        android:layout_height="0dp"
+        android:layout_marginTop="1dp"
+        android:layout_width="match_parent"
+        android:layout_weight="1"
+        android:orientation="horizontal" />
+</LinearLayout>

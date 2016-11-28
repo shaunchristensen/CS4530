@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/linearLayoutLightsOut"
+    android:layout_height="wrap_content"
+    android:layout_width="wrap_content">
+    <Space
+        android:layout_height="match_parent"
+        android:layout_weight="4"
+        android:layout_width="0dp" />
+    <LinearLayout
+        android:background="#0000ff"
+        android:layout_height="match_parent"
+        android:layout_weight="18"
+        android:layout_width="0dp"
+        android:orientation="vertical">
+        <LinearLayout
+            android:layout_height="0dp"
+            android:layout_weight="4"
+            android:layout_width="match_parent">
+            <TextView
+                android:id="@+id/textViewLights"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="Lights"
+                android:textAllCaps="true"
+                android:textColor="#ffffff" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_height="0dp"
+            android:layout_weight="11"
+            android:layout_width="match_parent">
+            <LinearLayout
+                android:background="@drawable/gradient_diagonal"
+                android:id="@+id/linearLayoutGrid"
+                android:layout_height="match_parent"
+                android:layout_weight="14"
+                android:layout_width="0dp"
+                android:orientation="vertical">
+                <LinearLayout
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:layout_width="match_parent">
+                    <Space
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_width="0dp" />
+                    <View
+                        android:background="#c0c0c0"
+                        android:layout_height="match_parent"
+                        android:layout_width="1dp" />
+                    <Space
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_width="0dp" />
+                    <View
+                        android:background="#c0c0c0"
+                        android:layout_height="match_parent"
+                        android:layout_width="1dp" />
+                    <Space
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_width="0dp" />
+                    <View
+                        android:background="#c0c0c0"
+                        android:layout_height="match_parent"
+                        android:layout_width="1dp" />
+                    <Space
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_width="0dp" />
+                    <View
+                        android:background="#c0c0c0"
+                        android:layout_height="match_parent"
+                        android:layout_width="1dp" />
+                    <View
+                        android:background="#ff0000"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_width="0dp" />
+                </LinearLayout>
+                <View
+                    android:background="#c0c0c0"
+                    android:layout_height="1dp"
+                    android:layout_width="match_parent" />
+                <LinearLayout
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:layout_width="match_parent">
+                    <Space
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_width="0dp" />
+                    <View
+                        android:background="#c0c0c0"
+                        android:layout_height="match_parent"
+                        android:layout_width="1dp" />
+                    <Space
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_width="0dp" />
+                    <View
+                        android:background="#c0c0c0"
+                        android:layout_height="match_parent"
+                        android:layout_width="1dp" />
+                    <Space
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_width="0dp" />
+                    <View
+                        android:background="#c0c0c0"
+                        android:layout_height="match_parent"
+                        android:layout_width="1dp" />
+                    <Space
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_width="0dp" />
+                    <View
+                        android:background="#c0c0c0"
+                        android:layout_height="match_parent"
+                        android:layout_width="1dp" />
+                    <Space
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_width="0dp" />
+                </LinearLayout>
+                <View
+                    android:background="#c0c0c0"
+                    android:layout_height="1dp"
+                    android:layout_width="match_parent" />
+                <LinearLayout
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:layout_width="match_parent">
+                    <Space
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_width="0dp" />
+                    <View
+                        android:background="#c0c0c0"
+                        android:layout_height="match_parent"
+                        android:layout_width="1dp" />
+                    <Space
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_width="0dp" />
+                    <View
+                        android:background="#c0c0c0"
+                        android:layout_height="match_parent"
+                        android:layout_width="1dp" />
+                    <Space
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_width="0dp" />
+                    <View
+                        android:background="#c0c0c0"
+                        android:layout_height="match_parent"
+                        android:layout_width="1dp" />
+                    <Space
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_width="0dp" />
+                    <View
+                        android:background="#c0c0c0"
+                        android:layout_height="match_parent"
+                        android:layout_width="1dp" />
+                    <Space
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_width="0dp" />
+                </LinearLayout>
+            </LinearLayout>
+            <TextView
+                android:id="@+id/textViewOut"
+                android:layout_height="wrap_content"
+                android:layout_weight="4"
+                android:layout_width="0dp"
+                android:rotation="90"
+                android:text="Out"
+                android:textAllCaps="true"
+                android:textColor="#ffd700" />
+        </LinearLayout>
+    </LinearLayout>
+    <TextView
+        android:background="#00ff00"
+        android:id="@+id/textViewTM"
+        android:layout_height="match_parent"
+        android:layout_weight="2"
+        android:layout_width="0dp"
+        android:text="&#8482;"
+        android:textColor="#ffffff" />
+</LinearLayout>

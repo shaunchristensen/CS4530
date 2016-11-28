@@ -1,3 +1,10 @@
+/**
+ * Author:     Shaun Christensen
+ * Course:     CS 4530 - Mobile Application Programming: Android
+ * Date:       2016.11.18
+ * Assignment: Project F - Lights Out
+ */
+
 package edu.utah.cs.cs4530.lightsout.view;
 
 import android.content.Context;
@@ -9,6 +16,7 @@ public class Cell extends Button
 {
     // fields
 
+    private boolean booleanOn;
     private final int intCell;
 
     // constructors
@@ -29,15 +37,19 @@ public class Cell extends Button
         return intCell;
     }
 
-    public void setBackgroundResource(boolean on)
+    public void toggleCell()
     {
-        if (on)
+        if (booleanOn)
         {
-            setBackgroundResource(R.drawable.cell_on);
+            booleanOn = false;
+
+            setBackgroundResource(R.drawable.cell_off);
         }
         else
         {
-            setBackgroundResource(R.drawable.cell_off);
+            booleanOn = true;
+
+            setBackgroundResource(R.drawable.cell_on);
         }
     }
 }
