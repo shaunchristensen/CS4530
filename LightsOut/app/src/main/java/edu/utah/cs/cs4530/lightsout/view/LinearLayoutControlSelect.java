@@ -18,6 +18,6 @@ public class LinearLayoutControlSelect extends LinearLayoutControl
 
     public LinearLayoutControlSelect(Context context, AttributeSet attributeSet)
     {
-        super(context, attributeSet, context.getResources().getDrawable(R.drawable.gradient_radial, null).mutate());
+        super(context, attributeSet, context.getResources().getDrawable(R.drawable.gradient_button, null).mutate());
     }
 }

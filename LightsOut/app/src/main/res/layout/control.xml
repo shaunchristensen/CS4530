@@ -72,7 +72,7 @@
                     android:textColor="#696969" />
                 <View
                     android:id="@+id/viewOnOff"
-                    android:background="@drawable/gradient_vertical"
+                    android:background="@drawable/gradient_concave"
                     android:layout_height="wrap_content"
                     android:layout_width="match_parent" />
             </LinearLayout>
@@ -105,7 +105,7 @@
                     android:textColor="#696969" />
                 <View
                     android:id="@+id/viewStart"
-                    android:background="@drawable/gradient_vertical"
+                    android:background="@drawable/gradient_concave"
                     android:layout_height="wrap_content"
                     android:layout_width="match_parent" />
             </LinearLayout>
@@ -138,7 +138,7 @@
                     android:textColor="#696969" />
                 <View
                     android:id="@+id/viewSound"
-                    android:background="@drawable/gradient_vertical"
+                    android:background="@drawable/gradient_concave"
                     android:layout_height="wrap_content"
                     android:layout_width="match_parent" />
             </LinearLayout>
@@ -171,7 +171,7 @@
                     android:textColor="#696969" />
                 <View
                     android:id="@+id/viewHelp"
-                    android:background="@drawable/gradient_vertical"
+                    android:background="@drawable/gradient_concave"
                     android:layout_height="3dp"
                     android:layout_width="match_parent" />
             </LinearLayout>

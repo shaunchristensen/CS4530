@@ -8,6 +8,7 @@
 package edu.utah.cs.cs4530.lightsout.view;
 
 import android.content.Context;
+import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.LayerDrawable;
@@ -26,7 +27,7 @@ public class LinearLayoutControl extends LinearLayout
 
     public LinearLayoutControl(Context context, AttributeSet attributeSet)
     {
-        this(context, attributeSet, context.getResources().getDrawable(R.drawable.gradient_radial, null));
+        this(context, attributeSet, context.getResources().getDrawable(R.drawable.gradient_button, null));
     }
 
     public LinearLayoutControl(Context context, AttributeSet attributeSet, Drawable drawable)
@@ -40,19 +41,21 @@ public class LinearLayoutControl extends LinearLayout
 
     // methods
 
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec)
-    {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
+    @Override
+    protected void onDraw(Canvas canvas)
+    {
         int height = getHeight();
         int width = getWidth();
 
-        ((GradientDrawable)layerDrawable.getDrawable(0)).setCornerRadius(height);
         ((GradientDrawable)layerDrawable.getDrawable(1)).setCornerRadii(new float[] {height, height, 0, 0, 0, 0, height, height});
         ((GradientDrawable)layerDrawable.getDrawable(2)).setCornerRadii(new float[] {0, 0, height, height, height, height, 0, 0});
 
+        layerDrawable.getDrawable(0).setBounds((int)(height / 2f), (int)(height / 2f), (int)(width - height / 2f), height);
         layerDrawable.getDrawable(1).setBounds(0, 0, (int)(height / 2f), height);
         layerDrawable.getDrawable(2).setBounds((int)(width - height / 2f), 0, width, height);
+        layerDrawable.getDrawable(3).setBounds((int)(height / 2f), 0, (int)(width - height / 2f), (int)(height / 2f));
+
+        super.onDraw(canvas);
     }
 }
