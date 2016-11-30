@@ -11,20 +11,13 @@
 package edu.utah.cs.cs4530.lightsout.controller;
 
 import android.content.res.Configuration;
-import android.graphics.Paint;
-import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.TextPaint;
-import android.util.DisplayMetrics;
-import android.util.Log;
-import android.util.TypedValue;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
@@ -40,69 +33,15 @@ import edu.utah.cs.cs4530.lightsout.view.Cell;
 
 import static android.graphics.Typeface.createFromAsset;
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
-import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 
 public class AppCompatActivityLightsOut extends AppCompatActivity implements OnClickListener, OnGlobalLayoutListener
 {
-    /*
-
-lights out
-11/36 w
-16/36 w
-2/36 w
-7/36 w
-
-3/40 h
-5/40 h
-1/40
-8/40 h
-3/40 h
-*/
-
-    // #d3d3d3 light gray background
-    // #696969 dim gray
-    // #c0c0c0 silver
-
-    // off button
-    // #778899
-    // #d8bfd8
-    // #778899
-
-    // off button pressed
-    // #616f7d
-    // #b19cb1
-    // #616f7d
-
-    // on button
-    // #ff0000
-    // #906f7d
-
-    // #d10000
-    // #765b66
-    // on button pressed
-
-    // purple
-    // #8e4585
-    // #4b0082
-
-    // purple pressed
-    // #b583b5
-    // #3d006a
-
-    // yellow
-    // #ffff00
-    // #ffd700
-
-    // yellow pressed
-    // #d1d100
-    // #d1b000
+    // fields
 
     private boolean booleanPuzzle;
     private Button buttonHelp, buttonOnOff, buttonSelect, buttonSound, buttonStart;
-    private ImageView imageView;
     private final int intColumns = LightsOut.getColumns();
     private final int intRows = LightsOut.getRows();
-    private LinearLayout linearLayout;
     private List<Cell> listCells;
     private List<View> listButtons, listTextViews, listViews;;
     private Set<Integer> setCells;
@@ -115,6 +54,7 @@ lights out
         booleanPuzzle = true;
         Cell cell;
         int row;
+        LinearLayout linearLayout;
 
         setContentView(R.layout.lights_out);
 
@@ -132,8 +72,6 @@ lights out
 
         buttonStart = (Button)findViewById(R.id.buttonStart);
         buttonStart.setOnClickListener(this);
-
-        imageView = (ImageView)findViewById(R.id.tiger);
 
         listButtons = new ArrayList<>();
         listButtons.add(findViewById(R.id.buttonOnOff));
@@ -250,12 +188,13 @@ lights out
     {
         super.onConfigurationChanged(newConfig);
 
-        linearLayout.getViewTreeObserver().addOnGlobalLayoutListener(this);
+        findViewById(R.id.linearLayout).getViewTreeObserver().addOnGlobalLayoutListener(this);
     }
 
     @Override
     public void onGlobalLayout()
     {
+        LinearLayout linearLayout = (LinearLayout)findViewById(R.id.linearLayout);
         linearLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
 
         float width = linearLayout.getHeight() < linearLayout.getWidth() ? linearLayout.getWidth() / 2 : linearLayout.getWidth();
@@ -284,9 +223,7 @@ lights out
             listCells.get(i).setLayoutParams(layoutParams);
         }
 
-        layoutParams = new LayoutParams((int)(length * 8 + width * 3), MATCH_PARENT);
-
-        findViewById(R.id.linearLayoutSelect).setLayoutParams(layoutParams);
+        findViewById(R.id.linearLayoutSelect).setLayoutParams(new LayoutParams((int)(length * 8 + width * 3), MATCH_PARENT));
 
         for (int i = 0; i < listButtons.size(); i++)
         {
@@ -312,7 +249,7 @@ lights out
             listViews.get(i).setLayoutParams(layoutParams);
         }
 
-        imageView.setLayoutParams(new LayoutParams((int)(length * 2000 / 336 * 3), (int)(length * 3)));
+        findViewById(R.id.tiger).setLayoutParams(new LayoutParams((int)(length * 2000 / 336 * 3), (int)(length * 3)));
 
         layoutParams = new LayoutParams((int)(length * 18), (int)(length * 12));
         layoutParams.setMargins((int)length, (int)(length * 3), 0, 0);
@@ -333,12 +270,6 @@ lights out
         layoutParams.setMargins((int)(length / 2), 0, 0, 0);
 
         findViewById(R.id.imageViewTM).setLayoutParams(layoutParams);
-
-
-
-
-
-
 
         layoutParams = new LayoutParams((int)(length * 16), (int)(length * 5));
         layoutParams.setMargins((int)length, (int)length, (int)length, (int)length);
