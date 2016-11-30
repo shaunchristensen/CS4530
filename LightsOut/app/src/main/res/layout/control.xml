@@ -35,7 +35,6 @@
                 android:layout_width="wrap_content"
                 android:text="Select\u00A0"
                 android:textAllCaps="true"
-                android:textAppearance="@style/TextAppearance.AppCompat.Large"
                 android:textColor="#696969" />
         </LinearLayout>
     </LinearLayout>
@@ -70,7 +69,6 @@
                     android:layout_width="wrap_content"
                     android:text="On/Off\u00A0"
                     android:textAllCaps="true"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Large"
                     android:textColor="#696969" />
                 <View
                     android:id="@+id/viewOnOff"
@@ -104,7 +102,6 @@
                     android:layout_width="wrap_content"
                     android:text="Start\u00A0"
                     android:textAllCaps="true"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Large"
                     android:textColor="#696969" />
                 <View
                     android:id="@+id/viewStart"
@@ -138,7 +135,6 @@
                     android:layout_width="wrap_content"
                     android:text="Sound\u00A0"
                     android:textAllCaps="true"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Large"
                     android:textColor="#696969" />
                 <View
                     android:id="@+id/viewSound"
@@ -172,7 +168,6 @@
                     android:layout_width="wrap_content"
                     android:text="Help\u00A0"
                     android:textAllCaps="true"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Large"
                     android:textColor="#696969" />
                 <View
                     android:id="@+id/viewHelp"
