@@ -3,22 +3,23 @@
  * Course:     CS 4530 - Mobile Application Programming: Android
  * Date:       2016.11.18
  * Assignment: Project F - Lights Out
+ * Credits:    Alegrerya Sans Black Italic Font - http://www.1001fonts.com/alegreya-sans-font.html
+ *             Built Titling Light Font - http://www.dafont.com/built-titling.font
+ *             Tiger Electronics Logo - https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Tiger_Electronics_logo.svg/2000px-Tiger_Electronics_logo.svg.png
  */
-
-// Trebuchet MS and Verdana fonts credit http://www.fontpalace.com/
-// Tiger Electronics logo credit https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Tiger_Electronics_logo.svg/2000px-Tiger_Electronics_logo.svg.png
 
 package edu.utah.cs.cs4530.lightsout.controller;
 
 import android.content.res.Configuration;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.Typeface;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.GradientDrawable;
-import android.graphics.drawable.LayerDrawable;
-import android.graphics.drawable.RotateDrawable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextPaint;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
@@ -44,17 +45,6 @@ import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 public class AppCompatActivityLightsOut extends AppCompatActivity implements OnClickListener, OnGlobalLayoutListener
 {
     /*
-    3 11/16 w x 6 h
-
-top h * .05f
-
-gradient_diagonal .5 h
-1/59 w _ 1/59 w 9/59 w 1/59 w _ 1/59 w
-1/96 h 8/96 h 1/96 h
-
-bottom left
-36/59 w
-2.5/6 h
 
 lights out
 11/36 w
@@ -63,62 +53,33 @@ lights out
 7/36 w
 
 3/40 h
-4/40 h
+5/40 h
+1/40
 8/40 h
 3/40 h
-
-select
-9/36 w
-1/36 w
-16/16 w
-1/16 w
-9/16 w
-
-1/40 h
-5.5/40 h
-1/40 h
-
-select label
-2/40 h
-3/40 h
-9.5/40 h
-
-
-bottom right
-1//23 w
-9/23 w
-1/23w
-10/23 w
-2/23 w
-
-7/40 h
-.5/40 h x4
-2/40 h
-3/40 h
-5/40 h
 */
 
     // #d3d3d3 light gray background
     // #696969 dim gray
     // #c0c0c0 silver
 
-    // off button_control
+    // off button
     // #778899
     // #d8bfd8
     // #778899
 
-    // off button_control pressed
+    // off button pressed
     // #616f7d
     // #b19cb1
     // #616f7d
 
-    // on button_control
+    // on button
     // #ff0000
     // #906f7d
 
     // #d10000
     // #765b66
-    // on button_control pressed
+    // on button pressed
 
     // purple
     // #8e4585
@@ -155,7 +116,7 @@ bottom right
         Cell cell;
         int row;
 
-        setContentView(R.layout.lights_out_portrait);
+        setContentView(R.layout.lights_out);
 
         buttonHelp = (Button)findViewById(R.id.buttonHelp);
         buttonHelp.setOnClickListener(this);
@@ -231,19 +192,13 @@ bottom right
 
         setCells = new HashSet<>();
 
-        Typeface typeFace = createFromAsset(getAssets(), "fonts/Trebuchet MS.ttf");
+        Typeface typeFace = createFromAsset(getAssets(), "fonts/Alegreya Sans Black Italic.ttf");
 
-        ((TextView)findViewById(R.id.textViewLights)).setTypeface(typeFace);
-        ((TextView)findViewById(R.id.textViewOut)).setTypeface(typeFace);
-        ((TextView)findViewById(R.id.textViewTM)).setTypeface(typeFace);
-
-        typeFace = createFromAsset(getAssets(), "fonts/Verdana.ttf");
-
-        ((TextView)findViewById(R.id.textViewHelp)).setTypeface(typeFace, Typeface.BOLD_ITALIC);
-        ((TextView)findViewById(R.id.textViewOnOff)).setTypeface(typeFace, Typeface.BOLD_ITALIC);
-        ((TextView)findViewById(R.id.textViewSelect)).setTypeface(typeFace, Typeface.BOLD_ITALIC);
-        ((TextView)findViewById(R.id.textViewSound)).setTypeface(typeFace, Typeface.BOLD_ITALIC);
-        ((TextView)findViewById(R.id.textViewStart)).setTypeface(typeFace, Typeface.BOLD_ITALIC);
+        ((TextView)findViewById(R.id.textViewHelp)).setTypeface(typeFace);
+        ((TextView)findViewById(R.id.textViewOnOff)).setTypeface(typeFace);
+        ((TextView)findViewById(R.id.textViewSelect)).setTypeface(typeFace);
+        ((TextView)findViewById(R.id.textViewSound)).setTypeface(typeFace);
+        ((TextView)findViewById(R.id.textViewStart)).setTypeface(typeFace);
     }
 
     private void toggleCell(int cell)
@@ -303,39 +258,40 @@ bottom right
     {
         linearLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
 
-        float margin = linearLayout.getWidth() / 59f;
-        float width = (linearLayout.getWidth() - margin * 12) / 5;
+        float width = linearLayout.getHeight() < linearLayout.getWidth() ? linearLayout.getWidth() / 2 : linearLayout.getWidth();
+        float length = width / 59;
+        width = (width - length * 12) / 5;
 
         LayoutParams layoutParams;
 
         for (int i = 0; i < listCells.size(); i++)
         {
-            layoutParams = new LayoutParams(0, MATCH_PARENT, 1);
+            layoutParams = new LayoutParams((int)(length * 9.4), (int)(length * 7.6));
 
             if (i % intColumns == 0)
             {
-                layoutParams.setMargins((int)(margin * 2), (int)(margin), (int)(margin), (int)(margin));
+                layoutParams.setMargins((int)(length * 2), (int)(length), (int)(length), (int)(length));
             }
             else if (i % intColumns < intColumns - 1)
             {
-                layoutParams.setMargins((int)(margin), (int)(margin), (int)(margin), (int)(margin));
+                layoutParams.setMargins((int)(length), (int)(length), (int)(length), (int)(length));
             }
             else
             {
-                layoutParams.setMargins((int)(margin), (int)(margin), (int)(margin * 2), (int)(margin));
+                layoutParams.setMargins((int)(length), (int)(length), (int)(length * 2), (int)(length));
             }
 
             listCells.get(i).setLayoutParams(layoutParams);
         }
 
-        layoutParams = new LayoutParams((int)(margin * 8 + width * 3), WRAP_CONTENT);
+        layoutParams = new LayoutParams((int)(length * 8 + width * 3), MATCH_PARENT);
 
         findViewById(R.id.linearLayoutSelect).setLayoutParams(layoutParams);
 
         for (int i = 0; i < listButtons.size(); i++)
         {
-            layoutParams = new LayoutParams((int)(width - margin), (int)(margin * 2));
-            layoutParams.setMargins((int)(margin / 2), (int)(margin / 2), (int)(margin / 2), (int)(margin / 2));
+            layoutParams = new LayoutParams((int)(width - length), (int)(length * 2));
+            layoutParams.setMargins((int)(length / 2), (int)(length / 2), (int)(length / 2), (int)(length / 2));
 
             listButtons.get(i).setLayoutParams(layoutParams);
         }
@@ -343,34 +299,54 @@ bottom right
         for (int i = 0; i < listTextViews.size(); i++)
         {
             layoutParams = (LayoutParams)listTextViews.get(i).getLayoutParams();
-            layoutParams.setMargins(0, 0, (int)(margin * 2), 0);
+            layoutParams.setMargins(0, 0, (int)(length * 2), 0);
 
             listTextViews.get(i).setLayoutParams(layoutParams);
         }
 
         for (int i = 0; i < listViews.size(); i++)
         {
-            layoutParams = new LayoutParams(MATCH_PARENT, (int)margin);
-            layoutParams.setMargins(0, (int)(margin / 2), 0, (int)margin);
+            layoutParams = new LayoutParams(MATCH_PARENT, (int)length);
+            layoutParams.setMargins(0, (int)(length / 2), 0, (int)length);
 
             listViews.get(i).setLayoutParams(layoutParams);
         }
 
-        imageView.setLayoutParams(new LayoutParams((int)(margin * 2000 / 336 * 3), (int)(margin * 3)));
+        imageView.setLayoutParams(new LayoutParams((int)(length * 2000 / 336 * 3), (int)(length * 3)));
 
-        layoutParams = new LayoutParams((int)(margin * 24), (int)(margin * 11));
-        layoutParams.setMargins(0, (int)(margin * 3), 0, (int)(findViewById(R.id.linearLayoutSelect).getHeight() * .5625 - margin * 19));
+        layoutParams = new LayoutParams((int)(length * 18), (int)(length * 12));
+        layoutParams.setMargins((int)length, (int)(length * 3), 0, 0);
 
-// fix resize text
-        findViewById(R.id.linearLayoutLightsOut).setLayoutParams(layoutParams);
+        findViewById(R.id.linearLayoutLogo).setLayoutParams(layoutParams);
 
-        layoutParams = new LayoutParams((int)(margin * 16), (int)(margin * 5));
-        layoutParams.setMargins((int)margin, (int)margin, (int)margin, (int)margin);
+        layoutParams = new LayoutParams((int)(length * 16.5), (int)(length * 4.5));
+        layoutParams.setMargins(0, 0, 0, (int)(length / 2));
+
+        findViewById(R.id.imageViewLights).setLayoutParams(layoutParams);
+
+        layoutParams = new LayoutParams((int)(length * 4.5), (int)(length * 7));
+        layoutParams.setMargins((int)(length / 2), 0, 0, 0);
+
+        findViewById(R.id.imageViewViewOut).setLayoutParams(layoutParams);
+
+        layoutParams = new LayoutParams((int)length, (int)length);
+        layoutParams.setMargins((int)(length / 2), 0, 0, 0);
+
+        findViewById(R.id.imageViewTM).setLayoutParams(layoutParams);
+
+
+
+
+
+
+
+        layoutParams = new LayoutParams((int)(length * 16), (int)(length * 5));
+        layoutParams.setMargins((int)length, (int)length, (int)length, (int)length);
 
         buttonSelect.setLayoutParams(layoutParams);
 
         layoutParams = (LayoutParams)findViewById(R.id.textViewSelect).getLayoutParams();
-        layoutParams.setMargins(0, (int)margin, 0, 0);
+        layoutParams.setMargins(0, (int)length, 0, 0);
 
         findViewById(R.id.textViewSelect).setLayoutParams(layoutParams);
     }

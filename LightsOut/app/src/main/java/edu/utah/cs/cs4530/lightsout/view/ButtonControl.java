@@ -29,7 +29,7 @@ public class ButtonControl extends Button
 
     public ButtonControl(Context context, AttributeSet attributeSet)
     {
-        this(context, attributeSet, context.getResources().getDrawable(R.drawable.button_control, null), new int[] {Color.parseColor("#d1b000"), Color.parseColor("#d1d100")}, new int[] {Color.parseColor("#ffd700"), Color.parseColor("#ffff00")});
+        this(context, attributeSet, context.getResources().getDrawable(R.drawable.button, null), new int[] {Color.parseColor("#d1b000"), Color.parseColor("#d1d100")}, new int[] {Color.parseColor("#ffd700"), Color.parseColor("#ffff00")});
     }
 
     public ButtonControl(Context context, AttributeSet attributeSet, Drawable drawable, int[] colors0, int[] colors1)

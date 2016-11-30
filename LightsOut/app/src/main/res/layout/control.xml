@@ -1,40 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_height="match_parent"
-    android:layout_width="match_parent"
-    android:orientation="horizontal">
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
     <LinearLayout
         android:id="@+id/linearLayoutSelect"
         android:gravity="center_horizontal"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_width="wrap_content"
         android:orientation="vertical">
         <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_width="wrap_content">
             <include
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 layout="@layout/logo" />
         </LinearLayout>
-        <edu.utah.cs.cs4530.lightsout.view.LinearLayoutControlSelect
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content">
-        <edu.utah.cs.cs4530.lightsout.view.ButtonControlSelect
-            android:id="@+id/buttonSelect"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content" />
-        </edu.utah.cs.cs4530.lightsout.view.LinearLayoutControlSelect>
-        <TextView
-            android:id="@+id/textViewSelect"
-            android:layout_height="wrap_content"
+        <LinearLayout
+            android:gravity="center_horizontal"
+            android:layout_height="0dp"
+            android:layout_weight="1"
             android:layout_width="wrap_content"
-            android:text="Select\u00A0"
-            android:textAllCaps="true"
-            android:textColor="#696969" />
+            android:orientation="vertical">
+            <edu.utah.cs.cs4530.lightsout.view.LinearLayoutControlSelect
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content">
+                <edu.utah.cs.cs4530.lightsout.view.ButtonControlSelect
+                    android:id="@+id/buttonSelect"
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content" />
+            </edu.utah.cs.cs4530.lightsout.view.LinearLayoutControlSelect>
+            <TextView
+                android:id="@+id/textViewSelect"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="Select\u00A0"
+                android:textAllCaps="true"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                android:textColor="#696969" />
+        </LinearLayout>
     </LinearLayout>
     <LinearLayout
+        android:id="@+id/linearLayoutControl"
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:layout_width="0dp"
@@ -42,7 +48,7 @@
         <LinearLayout
             android:gravity="bottom"
             android:layout_height="0dp"
-            android:layout_weight="7.5"
+            android:layout_weight="8"
             android:layout_width="match_parent">
             <edu.utah.cs.cs4530.lightsout.view.LinearLayoutControl
                 android:layout_height="wrap_content"
@@ -64,10 +70,11 @@
                     android:layout_width="wrap_content"
                     android:text="On/Off\u00A0"
                     android:textAllCaps="true"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Large"
                     android:textColor="#696969" />
                 <View
                     android:id="@+id/viewOnOff"
-                    android:background="@drawable/gradient_horizontal"
+                    android:background="@drawable/gradient_vertical"
                     android:layout_height="wrap_content"
                     android:layout_width="match_parent" />
             </LinearLayout>
@@ -75,7 +82,7 @@
         <LinearLayout
             android:gravity="bottom"
             android:layout_height="0dp"
-            android:layout_weight="7.5"
+            android:layout_weight="8.5"
             android:layout_width="match_parent">
             <edu.utah.cs.cs4530.lightsout.view.LinearLayoutControl
                 android:layout_height="wrap_content"
@@ -97,10 +104,11 @@
                     android:layout_width="wrap_content"
                     android:text="Start\u00A0"
                     android:textAllCaps="true"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Large"
                     android:textColor="#696969" />
                 <View
                     android:id="@+id/viewStart"
-                    android:background="@drawable/gradient_horizontal"
+                    android:background="@drawable/gradient_vertical"
                     android:layout_height="wrap_content"
                     android:layout_width="match_parent" />
             </LinearLayout>
@@ -108,7 +116,7 @@
         <LinearLayout
             android:gravity="bottom"
             android:layout_height="0dp"
-            android:layout_weight="7.5"
+            android:layout_weight="8.5"
             android:layout_width="match_parent">
             <edu.utah.cs.cs4530.lightsout.view.LinearLayoutControl
                 android:layout_height="wrap_content"
@@ -130,10 +138,11 @@
                     android:layout_width="wrap_content"
                     android:text="Sound\u00A0"
                     android:textAllCaps="true"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Large"
                     android:textColor="#696969" />
                 <View
                     android:id="@+id/viewSound"
-                    android:background="@drawable/gradient_horizontal"
+                    android:background="@drawable/gradient_vertical"
                     android:layout_height="wrap_content"
                     android:layout_width="match_parent" />
             </LinearLayout>
@@ -141,7 +150,7 @@
         <LinearLayout
             android:gravity="bottom"
             android:layout_height="0dp"
-            android:layout_weight="7.5"
+            android:layout_weight="8.5"
             android:layout_width="match_parent">
             <edu.utah.cs.cs4530.lightsout.view.LinearLayoutControl
                 android:layout_height="wrap_content"
@@ -163,10 +172,11 @@
                     android:layout_width="wrap_content"
                     android:text="Help\u00A0"
                     android:textAllCaps="true"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Large"
                     android:textColor="#696969" />
                 <View
                     android:id="@+id/viewHelp"
-                    android:background="@drawable/gradient_horizontal"
+                    android:background="@drawable/gradient_vertical"
                     android:layout_height="3dp"
                     android:layout_width="match_parent" />
             </LinearLayout>
@@ -174,7 +184,7 @@
         <LinearLayout
             android:gravity="center_vertical"
             android:layout_height="0dp"
-            android:layout_weight="10"
+            android:layout_weight="6.5"
             android:layout_width="match_parent">
             <ImageView
                 android:background="@drawable/tiger"
@@ -183,4 +193,4 @@
                 android:layout_width="wrap_content" />
         </LinearLayout>
     </LinearLayout>
-</LinearLayout>
+</merge>

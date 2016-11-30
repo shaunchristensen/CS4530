@@ -6,21 +6,22 @@
     android:layout_height="match_parent"
     android:layout_width="match_parent"
     android:orientation="vertical">
-    <LinearLayout
-        android:background="@drawable/gradient_vertical"
+    <Space
         android:layout_height="0dp"
         android:layout_weight="5"
         android:layout_width="match_parent" />
-    <include
-        layout="@layout/grid"
+    <LinearLayout
         android:layout_height="0dp"
         android:layout_weight="50"
         android:layout_width="match_parent"
-        android:orientation="vertical" />
-    <include
-        layout="@layout/control"
+        android:orientation="vertical">
+        <include layout="@layout/grid" />
+    </LinearLayout>
+    <LinearLayout
         android:layout_height="0dp"
         android:layout_weight="45"
         android:layout_width="match_parent"
-        android:orientation="horizontal" />
+        android:orientation="horizontal">
+        <include layout="@layout/control" />
+    </LinearLayout>
 </LinearLayout>
