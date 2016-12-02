@@ -197,27 +197,53 @@ public class AppCompatActivityLightsOut extends AppCompatActivity implements OnC
         LinearLayout linearLayout = (LinearLayout)findViewById(R.id.linearLayout);
         linearLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
 
-        float width = linearLayout.getHeight() < linearLayout.getWidth() ? linearLayout.getWidth() / 2 : linearLayout.getWidth();
+        float height = linearLayout.getHeight();
+        float width = linearLayout.getWidth();
+
+        if (height < width)
+        {
+            height -= width / 10;
+            width /= 2;
+
+            linearLayout.setPadding(0, (int)(width / 10), 0, (int)(width / 10));
+        }
+        else
+        {
+            height /= 2;
+        }
+
         float length = width / 59;
+
+        height = (height - length * 9.5f) / 5;
         width = (width - length * 12) / 5;
 
+        int column, row;
         LayoutParams layoutParams;
 
         for (int i = 0; i < listCells.size(); i++)
         {
-            layoutParams = new LayoutParams((int)(length * 9.4), (int)(length * 7.6));
+            column = i % intColumns;
+            row = i / intColumns;
 
-            if (i % intColumns == 0)
+            layoutParams = new LayoutParams((int)width, (int)height);
+            layoutParams.setMargins((int)(length), (int)(length / 2), (int)(length), (int)(length / 2));
+
+            if (column == 0)
             {
-                layoutParams.setMargins((int)(length * 2), (int)(length), (int)(length), (int)(length));
+                layoutParams.leftMargin = (int)(length * 2);
             }
-            else if (i % intColumns < intColumns - 1)
+            else if (column == intColumns - 1)
             {
-                layoutParams.setMargins((int)(length), (int)(length), (int)(length), (int)(length));
+                layoutParams.rightMargin= (int)(length * 2);
             }
-            else
+
+            if (row == 0)
             {
-                layoutParams.setMargins((int)(length), (int)(length), (int)(length * 2), (int)(length));
+                layoutParams.topMargin = (int)length;
+            }
+            else if (row == intColumns - 1)
+            {
+                layoutParams.bottomMargin = (int)length;
             }
 
             listCells.get(i).setLayoutParams(layoutParams);
