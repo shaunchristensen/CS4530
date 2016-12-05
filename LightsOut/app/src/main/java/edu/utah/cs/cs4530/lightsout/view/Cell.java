@@ -41,15 +41,25 @@ public class Cell extends Button
     {
         if (booleanOn)
         {
-            booleanOn = false;
-
-            setBackgroundResource(R.drawable.cell_off);
+            turnOffCell();
         }
         else
         {
-            booleanOn = true;
-
-            setBackgroundResource(R.drawable.cell_on);
+            turnOnCell();
         }
+    }
+
+    public void turnOffCell()
+    {
+        booleanOn = false;
+
+        setBackgroundResource(R.drawable.cell_off);
+    }
+
+    public void turnOnCell()
+    {
+        booleanOn = true;
+
+        setBackgroundResource(R.drawable.cell_on);
     }
 }

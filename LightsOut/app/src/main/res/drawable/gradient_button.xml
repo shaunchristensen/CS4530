@@ -6,7 +6,7 @@
                 android:angle="90"
                 android:centerColor="#ffffff"
                 android:endColor="#ffffff"
-                android:startColor="#000000" />
+                android:startColor="#696969" />
         </shape>
     </item>
     <item>
@@ -14,7 +14,7 @@
             <gradient
                 android:centerX="100%"
                 android:centerColor="#ffffff"
-                android:endColor="#000000"
+                android:endColor="#696969"
                 android:gradientRadius="100%"
                 android:startColor="#ffffff"
                 android:type="radial" />
@@ -25,7 +25,7 @@
             <gradient
                 android:centerX="0%"
                 android:centerColor="#ffffff"
-                android:endColor="#000000"
+                android:endColor="#696969"
                 android:gradientRadius="100%"
                 android:startColor="#ffffff"
                 android:type="radial" />
@@ -36,7 +36,7 @@
             <gradient
                 android:angle="90"
                 android:centerColor="#ffffff"
-                android:endColor="#000000"
+                android:endColor="#696969"
                 android:startColor="#ffffff" />
         </shape>
     </item>
