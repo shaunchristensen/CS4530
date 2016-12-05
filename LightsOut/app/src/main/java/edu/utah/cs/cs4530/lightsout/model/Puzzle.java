@@ -1,16 +1,16 @@
+/**
+ * Author:     Shaun Christensen
+ * Course:     CS 4530 - Mobile Application Programming: Android
+ * Date:       2016.12.02
+ * Assignment: Project F - Lights Out
+ */
+
 package edu.utah.cs.cs4530.lightsout.model;
 
-import android.support.annotation.Nullable;
-
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-/**
- * Created by Shaun on 2016.12.02.
- */
 
 public class Puzzle
 {
@@ -22,7 +22,7 @@ public class Puzzle
 
     // constructors
 
-    public Puzzle(int moves, @Nullable List<Integer> hints, Set<Integer> cells)
+    public Puzzle(int moves, List<Integer> hints, Set<Integer> cells)
     {
         intMoves = moves;
         listHints = hints;

@@ -713,7 +713,7 @@ public class AppCompatActivityLightsOut extends AppCompatActivity implements OnC
             Log.e("deserialize", "Error: Unable to read the puzzle. " + e.getMessage());
         }
 
-        try (InputStream inputStream = getResources().openRawResource(R.raw.puzzles0); InputStreamReader inputStreamReader = new InputStreamReader(inputStream); BufferedReader bufferedReader = new BufferedReader(inputStreamReader))
+        try (InputStream inputStream = getResources().openRawResource(R.raw.puzzles); InputStreamReader inputStreamReader = new InputStreamReader(inputStream); BufferedReader bufferedReader = new BufferedReader(inputStreamReader))
         {
             String s;
             StringBuilder stringBuilder = new StringBuilder();

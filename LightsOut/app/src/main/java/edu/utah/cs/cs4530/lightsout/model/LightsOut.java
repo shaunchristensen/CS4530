@@ -9,16 +9,8 @@ package edu.utah.cs.cs4530.lightsout.model;
 
 import android.util.Log;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-
-import edu.utah.cs.cs4530.lightsout.R;
-
-import static java.lang.Math.min;
 
 public class LightsOut
 {
@@ -26,7 +18,7 @@ public class LightsOut
 
     private static final int intBuffer = 10;
     private static final int intColumns = 5;
-    private static final int intModes = 3;
+    private static final int intModes = 4;
     private static int intPuzzle;
     private static final int intRows = 5;
     private static List<Puzzle> listPuzzles;
@@ -74,18 +66,17 @@ public class LightsOut
 
     public static void setPuzzle(int puzzle)
     {
-        try
-        {
-            if (puzzle >- 0 && puzzle < listPuzzles.size())
-            {
-                intPuzzle = puzzle;
-            }
-        }
-        catch (Exception e)
+        if (puzzle < 0)
         {
             intPuzzle = 0;
-
-            Log.e("setPuzzle", "Error: Unable to set the puzzle. " + e.getMessage());
+        }
+        else if (puzzle < listPuzzles.size())
+        {
+            intPuzzle = puzzle;
+        }
+        else
+        {
+            intPuzzle = listPuzzles.size() - 1;
         }
     }
 
