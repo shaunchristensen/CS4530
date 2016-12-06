@@ -18,7 +18,7 @@ public class LightsOut
 
     private static final int intBuffer = 10;
     private static final int intColumns = 5;
-    private static final int intModes = 4;
+    private static final int intModes = 3;
     private static int intPuzzle;
     private static final int intRows = 5;
     private static List<Puzzle> listPuzzles;
@@ -28,6 +28,11 @@ public class LightsOut
     public static int getBuffer()
     {
         return intBuffer;
+    }
+
+    public static int getCells()
+    {
+        return intColumns * intRows;
     }
 
     public static int getColumns()
@@ -43,6 +48,11 @@ public class LightsOut
     public static int getPuzzle()
     {
         return intPuzzle;
+    }
+
+    public static int getPuzzles()
+    {
+        return getCells() * 2;
     }
 
     public static int getRows()
@@ -66,18 +76,7 @@ public class LightsOut
 
     public static void setPuzzle(int puzzle)
     {
-        if (puzzle < 0)
-        {
-            intPuzzle = 0;
-        }
-        else if (puzzle < listPuzzles.size())
-        {
-            intPuzzle = puzzle;
-        }
-        else
-        {
-            intPuzzle = listPuzzles.size() - 1;
-        }
+        intPuzzle = puzzle;
     }
 
     public static void setPuzzles(List<Puzzle> puzzles)

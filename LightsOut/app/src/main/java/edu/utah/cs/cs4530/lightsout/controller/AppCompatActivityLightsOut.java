@@ -39,7 +39,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.lang.reflect.Type;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -74,16 +74,18 @@ public class AppCompatActivityLightsOut extends AppCompatActivity implements OnC
 
 
     private MediaPlayer mediaPlayer;
-    private int intMediaPlayerID, intMode, intMoves, intSoundPoolID;
-    private Integer integerPuzzle;
+    private int intMediaPlayerID, intMode, intMoves, intPuzzle, intSoundPoolID;
     private Handler handler = new Handler();
     private SoundPool soundPool;
     private Gson gson = new Gson();
-    private Type typePuzzles = new TypeToken<List<Puzzle>>(){}.getType();
     private String stringPuzzle = "Puzzle";
-    private final int intBlinkCount = 4;
-    private final int intBlinkDuration = 2000;
+    private final int intBlinkingLightsCount = 4;
+    private final int intBlinkingLightsDuration = 2000;
     private final int intShowOfLightsDuration = 4000;
+    private Puzzle puzzle;
+    private List<Integer> listHints;
+    private final int intPuzzles = LightsOut.getPuzzles();
+    private final int intCells = LightsOut.getCells();
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -127,7 +129,7 @@ public class AppCompatActivityLightsOut extends AppCompatActivity implements OnC
 
         listCells = new ArrayList<>();
 
-        for (int i = 0; i < intColumns * intRows; i++)
+        for (int i = 0; i < intCells; i++)
         {
             cell = new Cell(this, i);
             cell.setOnTouchListener(this);
@@ -202,6 +204,8 @@ public class AppCompatActivityLightsOut extends AppCompatActivity implements OnC
 
     private void toggleCells(int cell)
     {
+        intMoves++;
+
         toggleCell(cell);
 
         if (cell / intColumns > 0)
@@ -226,20 +230,16 @@ public class AppCompatActivityLightsOut extends AppCompatActivity implements OnC
 
         if (setCells.size() == 0)
         {
-            if (intMode == 0 || intMode == 1)
+            if (booleanSound)
             {
-                integerPuzzle++;
-
-                if (intMode == 0 && integerPuzzle > LightsOut.getPuzzle())
-                {
-                    LightsOut.setPuzzle(integerPuzzle);
-                    serialize();
-                }
+                playMedia(R.raw.solve);
+            }
+            else
+            {
+                solve();
             }
 
             booleanHandler = booleanMediaPlayer = true;
-
-            playMedia(R.raw.solve);
         }
     }
 
@@ -392,7 +392,7 @@ public class AppCompatActivityLightsOut extends AppCompatActivity implements OnC
     {
         super.onResume();
 
-        soundPool = new SoundPool.Builder().setMaxStreams(intColumns).build();
+        soundPool = new SoundPool.Builder().setMaxStreams(intCells).build();
         intSoundPoolID = soundPool.load(this, R.raw.press, 1);
     }
 
@@ -406,31 +406,150 @@ public class AppCompatActivityLightsOut extends AppCompatActivity implements OnC
 
         if (intMediaPlayerID == R.raw.confirm)
         {
-            toggleCells();
+            confirm();
         }
         else if (intMediaPlayerID == R.raw.create)
         {
-            booleanStart = true;
+            create();
         }
         else if (intMediaPlayerID == R.raw.on)
         {
-            toggleCells();
+            on();
         }
         else if (intMediaPlayerID == R.raw.solve)
         {
-            toggleCells();
+            solve();
+        }
+    }
+
+    private void confirm()
+    {
+        if (intMode == 0)
+        {
+            if (intPuzzle < intCells)
+            {
+                blinkingLights(Arrays.asList(intPuzzle));
+            }
+            else
+            {
+                toggleCell(intCells - 1);
+                blinkingLights(Arrays.asList(intPuzzle - intCells));
+            }
+
+            handler.postDelayed(runnableStartPuzzle(), intBlinkingLightsDuration);
+            handler.postDelayed(runnableSetBooleanHandler(), intBlinkingLightsDuration);
+        }
+        else if (intMode == 1)
+        {
+            startPuzzle();
+        }
+    }
+
+    private void create()
+    {
+        startPuzzle();
+    }
+
+    private void on()
+    {
+        showOfLights();
+        handler.postDelayed(runnableToggleCells(Arrays.asList(7, 11, 12, 13, 17)), intShowOfLightsDuration);
+        handler.postDelayed(runnableSetBooleanHandler(), intShowOfLightsDuration);
+    }
+
+    private void solve()
+    {
+        if (intMode == 0)
+        {
+            if (intMoves > puzzle.getMoves() + intBuffer)
+            {
+                blinkingLights(Arrays.asList(0, 4, 6, 8, 12, 16, 18, 20, 24));
+                handler.postDelayed(runnableBlinkingLights(Arrays.asList(intPuzzle)), intBlinkingLightsDuration);
+                handler.postDelayed(runnableStartPuzzle(), intBlinkingLightsDuration * 2);
+                handler.postDelayed(runnableSetBooleanHandler(), intBlinkingLightsDuration * 2);
+            }
+            else if (intMoves > puzzle.getMoves())
+            {
+                List<Integer> cells = new ArrayList<>();
+
+                for (int i = 0; i < intMoves - puzzle.getMoves(); i++)
+                {
+                    cells.add(i);
+                }
+
+                blinkingLights(cells);
+
+                if (intPuzzle < intPuzzles - 1)
+                {
+                    intPuzzle++;
+                    puzzle = LightsOut.getPuzzle(intPuzzle);
+
+                    handler.postDelayed(runnableBlinkingLights(Arrays.asList(intPuzzle)), intBlinkingLightsDuration);
+                    handler.postDelayed(runnableStartPuzzle(), intBlinkingLightsDuration * 2);
+                    handler.postDelayed(runnableSetBooleanHandler(), intBlinkingLightsDuration * 2);
+
+                    if (intPuzzle > LightsOut.getPuzzle())
+                    {
+                        LightsOut.setPuzzle(intPuzzle);
+                        serialize();
+                    }
+                }
+                else
+                {
+                    handler.postDelayed(runnableToggleCells(Arrays.asList(7, 11, 12, 13, 7)), intBlinkingLightsDuration);
+                    handler.postDelayed(runnableSetBooleanHandler(), intBlinkingLightsDuration);
+
+                    booleanSelect = booleanStart = false;
+                }
+            }
+            else
+            {
+                showOfLights();
+
+                if (intPuzzle < intPuzzles - 1)
+                {
+                    intPuzzle++;
+                    puzzle = LightsOut.getPuzzle(intPuzzle);
+
+                    handler.postDelayed(runnableBlinkingLights(Arrays.asList(intPuzzle)), intShowOfLightsDuration);
+                    handler.postDelayed(runnableStartPuzzle(), intBlinkingLightsDuration + intShowOfLightsDuration);
+                    handler.postDelayed(runnableSetBooleanHandler(), intBlinkingLightsDuration + intShowOfLightsDuration);
+
+                    if (intPuzzle > LightsOut.getPuzzle())
+                    {
+                        LightsOut.setPuzzle(intPuzzle);
+                        serialize();
+                    }
+                }
+                else
+                {
+                    handler.postDelayed(runnableToggleCells(Arrays.asList(7, 11, 12, 13, 7)), intShowOfLightsDuration);
+                    handler.postDelayed(runnableSetBooleanHandler(), intShowOfLightsDuration);
+
+                    booleanSelect = booleanStart = false;
+                }
+            }
+        }
+        else
+        {
+            booleanMode = true;
+            booleanSelect = booleanStart = false;
+
+            showOfLights();
+            handler.postDelayed(runnableToggleCells(Arrays.asList(intMode)), intShowOfLightsDuration);
+            handler.postDelayed(runnableSetBooleanHandler(), intShowOfLightsDuration);
         }
     }
 
     private void toggleCells(Collection<Integer> cells)
     {
-        for (int i : cells)
+        for (int i : new ArrayList<>(cells))
         {
-            listCells.get(i).toggleCell();
+            toggleCell(i);
         }
     }
 
-    private Runnable runnableBooleanHandler()
+    private Runnable runnableSetBooleanHandler()
     {
         return new Runnable()
         {
@@ -454,6 +573,30 @@ public class AppCompatActivityLightsOut extends AppCompatActivity implements OnC
         };
     };
 
+    private Runnable runnableBlinkingLights(final Collection<Integer> cells)
+    {
+        return new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                blinkingLights(cells);
+            }
+        };
+    }
+
+    private Runnable runnableStartPuzzle()
+    {
+        return new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                startPuzzle();
+            }
+        };
+    }
+
     private Runnable runnableToggleCells(final Collection<Integer> cells)
     {
         return new Runnable()
@@ -468,15 +611,12 @@ public class AppCompatActivityLightsOut extends AppCompatActivity implements OnC
 
     private void playMedia(int ID)
     {
-        if (booleanSound)
-        {
-            booleanMediaPlayer = true;
-            intMediaPlayerID = ID;
+        booleanMediaPlayer = true;
+        intMediaPlayerID = ID;
 
-            mediaPlayer = MediaPlayer.create(this, ID);
-            mediaPlayer.setOnCompletionListener(this);
-            mediaPlayer.start();
-        }
+        mediaPlayer = MediaPlayer.create(this, ID);
+        mediaPlayer.setOnCompletionListener(this);
+        mediaPlayer.start();
     }
 
     private void playSound()
@@ -499,7 +639,6 @@ public class AppCompatActivityLightsOut extends AppCompatActivity implements OnC
                     if (booleanOn)
                     {
                         booleanOn = false;
-                        integerPuzzle = null;
 
                         toggleCells(setCells);
                     }
@@ -511,9 +650,18 @@ public class AppCompatActivityLightsOut extends AppCompatActivity implements OnC
                     if (booleanOff)
                     {
                         booleanMode = booleanOff = booleanSelect = booleanStart = false;
-                        booleanHandler = booleanMediaPlayer = booleanSound = true;
+                        booleanHandler = booleanMediaPlayer = booleanOn = booleanSound = true;
+                        intMode = 0;
+                        intPuzzle = LightsOut.getPuzzle();
 
-                        playMedia(R.raw.on);
+                        if (booleanSound)
+                        {
+                            playMedia(R.raw.on);
+                        }
+                        else
+                        {
+                            on();
+                        }
                     }
                     else
                     {
@@ -530,6 +678,7 @@ public class AppCompatActivityLightsOut extends AppCompatActivity implements OnC
                 // check hints size > 0
                 if (booleanHelp && booleanSelect && v == buttonHelp)
                 {
+                    flickerCells();
                     // click, flash hint cell 4 times, then press hint cell
 //                    pressCell(12);
                 }
@@ -537,20 +686,23 @@ public class AppCompatActivityLightsOut extends AppCompatActivity implements OnC
                 {
                     toggleCells(setCells);
 
-                    if (booleanSelect && booleanStart)
+                    if (booleanSelect || booleanStart)
                     {
+                        playSound();
+
+                        if (booleanStart && intMode == 0)
+                        {
+                            intPuzzle = -1;
+                        }
+                        else if (booleanSelect)
+                        {
+                            booleanSelect = false;
+
+                            toggleCell(intMode);
+                        }
+
                         booleanMode = true;
                         booleanStart = false;
-                        integerPuzzle = null;
-
-                        playSound();
-                    }
-                    else if (booleanSelect)
-                    {
-                        booleanSelect = false;
-
-                        playSound();
-                        toggleCell(intMode);
                     }
                     else
                     {
@@ -570,24 +722,105 @@ public class AppCompatActivityLightsOut extends AppCompatActivity implements OnC
                 {
                     booleanSound = !booleanSound;
 
-                    if (booleanSound && booleanSelect)
+                    if (booleanSound)
                     {
-                        playSound();
-                        toggleCells(setCells);
-                        handler.postDelayed(runnableToggleCells(setCells), 1);
+                        flickerCells();
                     }
                 }
                 else if (v == buttonStart)
                 {
-                    if (integerPuzzle == null)
+                    if (booleanStart)
                     {
-                        integerPuzzle = LightsOut.getPuzzle();
+                        toggleCells(setCells);
+                        startPuzzle();
+                        flickerCells();
                     }
+                    else if (booleanMode && booleanSelect)
+                    {
+                        if (intPuzzle < 0 || intPuzzle > LightsOut.getPuzzle())
+                        {
+                            if (booleanSound)
+                            {
+                                playMedia(R.raw.error);
+                            }
 
-                    booleanMode = false;
-                    toggleCells(setCells);
-                    toggleCells();
-                    // fix later
+                            intPuzzle = -1;
+
+                            toggleCells(setCells);
+                        }
+                        else
+                        {
+                            playSound();
+                            toggleCells(setCells);
+                            blinkingLights(Arrays.asList(intPuzzle));
+                            handler.postDelayed(runnableStartPuzzle(), intBlinkingLightsDuration);
+                            handler.postDelayed(runnableSetBooleanHandler(), intBlinkingLightsDuration);
+
+                            booleanMode = false;
+                            booleanStart = true;
+                            puzzle = LightsOut.getPuzzle(intPuzzle);
+                        }
+                    }
+                    else if (booleanSelect)
+                    {
+                        booleanMediaPlayer = booleanStart = true;
+                        puzzle = new Puzzle(0, new ArrayList<Integer>(), new HashSet<>(setCells));
+
+                        if (booleanSound)
+                        {
+                            playMedia(R.raw.create);
+                        }
+                        else
+                        {
+                            create();
+                        }
+
+                        toggleCells(setCells);
+                    }
+                    else if (booleanMode)
+                    {
+                        if (intMode == 0)
+                        {
+                            booleanHandler = booleanStart = true;
+                            intPuzzle = LightsOut.getPuzzle();
+                            puzzle = LightsOut.getPuzzle(intPuzzle);
+                        }
+                        else if (intMode == 1)
+                        {
+                            booleanStart = true;
+                            // create random puzzle here
+                        }
+
+                        booleanMode = false;
+                        booleanMediaPlayer = booleanSelect = true;
+
+                        if (booleanSound)
+                        {
+                            playMedia(R.raw.confirm);
+                        }
+                        else
+                        {
+                            confirm();
+                        }
+
+                        toggleCells(setCells);
+                    }
+                    else
+                    {
+                        if (booleanSound)
+                        {
+                            playMedia(R.raw.confirm);
+                        }
+                        else
+                        {
+                            confirm();
+                        }
+
+                        toggleCells(setCells);
+
+                        booleanHandler = booleanMediaPlayer = booleanSelect = booleanStart = true;
+                        puzzle = LightsOut.getPuzzle(intPuzzle);
+                    }
                 }
                 else if (booleanSelect && v instanceof Cell)
                 {
@@ -595,37 +828,67 @@ public class AppCompatActivityLightsOut extends AppCompatActivity implements OnC
 
                     if (booleanMode)
                     {
-                        if (integerPuzzle == null)
+                        if (intPuzzle < 0)
                         {
-                            integerPuzzle = cell.getCell();
+                            intPuzzle = cell.getCell();
 
                             playSound();
                             toggleCell(cell.getCell());
                         }
-                        else
+                        else if (intPuzzle == cell.getCell())
                         {
-                            if (integerPuzzle == cell.getCell())
+                            if (intPuzzle + intCells > LightsOut.getPuzzle())
                             {
-                                integerPuzzle += intColumns * intRows;
+                                if (booleanSound)
+                                {
+                                    playMedia(R.raw.error);
+                                }
 
-                                toggleCells();
+                                intPuzzle = -1;
+
+                                toggleCells(setCells);
                             }
                             else
                             {
-                                integerPuzzle = null;
-
-                                playMedia(R.raw.error);
+                                playSound();
                                 toggleCells(setCells);
+
+                                if (intPuzzle < intCells - 1)
+                                {
+                                    toggleCell(intCells - 1);
+                                }
+
+                                blinkingLights(Arrays.asList(intPuzzle));
+                                handler.postDelayed(runnableStartPuzzle(), intBlinkingLightsDuration);
+                                handler.postDelayed(runnableSetBooleanHandler(), intBlinkingLightsDuration);
+
+                                booleanMode = false;
+                                booleanStart = true;
+                                intPuzzle += intCells;
+                                puzzle = LightsOut.getPuzzle(intPuzzle);
                             }
+                        }
+                        else
+                        {
+                            if (booleanSound)
+                            {
+                                playMedia(R.raw.error);
+                            }
+
+                            intPuzzle = -1;
+
+                            toggleCells(setCells);
                         }
                     }
                     else if (booleanStart)
                     {
                         toggleCells(cell.getCell());
+                        flickerCells();
                     }
                     else
                     {
                         toggleCell(cell.getCell());
+                        flickerCells();
                     }
                 }
             }
@@ -634,72 +897,62 @@ public class AppCompatActivityLightsOut extends AppCompatActivity implements OnC
         return false;
     }
 
-    private void toggleCells()
+    private void flickerCells()
+    {
+        if (booleanSelect)
+        {
+            List<Integer> cells = new ArrayList<>(setCells);
+
+            playSound();
+            toggleCells(setCells);
+            handler.postDelayed(runnableToggleCells(cells), 1);
+        }
+    }
+
+    private void showOfLights()
     {
         int delay = 0;
-        int offset;
-        List<Integer> cells;
+        int offset = intShowOfLightsDuration / (intCells * 2);
+        List<Integer> cell;
+        List<Integer> cells = Arrays.asList(0, 5, 10, 15, 20, 21, 22, 23, 24, 19, 14, 9, 4, 3, 2, 1, 6, 11, 16, 17, 18, 13, 8, 7, 12);
 
-
-        if (booleanOn)
+        for (int i : cells)
         {
-            int cell, count;
+            cell = Arrays.asList(i);
 
-            if (booleanStart)
-            {
-                // over, equal, under
+            handler.postDelayed(runnablePlaySound(), delay);
+            handler.postDelayed(runnableToggleCells(cell), delay);
+            handler.postDelayed(runnableToggleCells(cell), delay + offset);
 
-            }
-            else
-            {
-                offset = intBlinkDuration / (intBlinkCount * 2);
-
-                toggleCells(setCells);
-
-                if (integerPuzzle > intColumns * intRows)
-                {
-                    cells = Arrays.asList(integerPuzzle - intColumns * intRows);
-
-                    listCells.get(listCells.size() - 1).toggleCell();
-                }
-                else
-                {
-                    cells = Arrays.asList(integerPuzzle);
-                }
-
-                for (int i = 0; i < intBlinkCount; i++)
-                {
-                    handler.postDelayed(runnableToggleCells(cells), delay);
-                    handler.postDelayed(runnableToggleCells(cells), delay + offset);
-
-                    delay += offset * 2;
-                }
-
-                handler.postDelayed(runnableBooleanHandler(), intBlinkDuration);
-            }
-            // if puzzle > size show cross, else blink/start puzzle
+            delay += offset * 2;
         }
-        else
+    }
+
+    // if puzzle > size show cross, else blink/start puzzle
+
+    private void blinkingLights(Collection<Integer> cells)
+    {
+        int delay = 0;
+        int offset = intBlinkingLightsDuration / (intBlinkingLightsCount * 2);
+
+        for (int i = 0; i < intBlinkingLightsCount; i++)
         {
-            booleanOn = true;
-            List<Integer> cell;
-            cells = Arrays.asList(0, 5, 10, 15, 20, 21, 22, 23, 24, 19, 14, 9, 4, 3, 2, 1, 6, 11, 16, 17, 18, 13, 8, 7, 12);
-            offset = intShowOfLightsDuration / (intColumns * intRows * 2);
+            handler.postDelayed(runnableToggleCells(cells), delay);
+            handler.postDelayed(runnableToggleCells(cells), delay + offset);
 
-            for (int i : cells)
-            {
-                cell = Arrays.asList(i);
-
-                handler.postDelayed(runnablePlaySound(), delay);
-                handler.postDelayed(runnableToggleCells(cell), delay);
-                handler.postDelayed(runnableToggleCells(cell), delay + offset);
-
-                delay += offset * 2;
-            }
-
-            handler.postDelayed(runnableToggleCells(Arrays.asList(7, 11, 12, 13, 17)), intShowOfLightsDuration);
-            handler.postDelayed(runnableBooleanHandler(), intShowOfLightsDuration);
+            delay += offset * 2;
         }
+
+        toggleCells(setCells);
+    }
+
+    private void startPuzzle()
+    {
+        booleanHelp = true;
+        intMoves = 0;
+        listHints = puzzle.getHints();
+
+        toggleCells(puzzle.getCells());
     }
 
     private void deserialize()
@@ -723,7 +976,7 @@ public class AppCompatActivityLightsOut extends AppCompatActivity implements OnC
                 stringBuilder.append(s);
             }
 
-            LightsOut.setPuzzles((List<Puzzle>)gson.fromJson(stringBuilder.toString(), typePuzzles));
+            LightsOut.setPuzzles((List<Puzzle>)gson.fromJson(stringBuilder.toString(), new TypeToken<List<Puzzle>>(){}.getType()));
         }
         catch (Exception e)
         {
@@ -735,7 +988,7 @@ public class AppCompatActivityLightsOut extends AppCompatActivity implements OnC
     {
         try (FileOutputStream fileOutputStream = new FileOutputStream(new File(getFilesDir(), stringPuzzle)); ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream))
         {
-            objectOutputStream.writeInt(integerPuzzle);
+            objectOutputStream.writeInt(intPuzzle);
         }
         catch(Exception e)
         {
