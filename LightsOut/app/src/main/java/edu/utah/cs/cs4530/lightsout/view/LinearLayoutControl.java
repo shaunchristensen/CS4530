@@ -41,7 +41,6 @@ public class LinearLayoutControl extends LinearLayout
 
     // methods
 
-
     @Override
     protected void onDraw(Canvas canvas)
     {

@@ -16,33 +16,33 @@ public class LightsOut
 {
     // fields
 
-    private static final int intBuffer = 10;
-    private static final int intColumns = 5;
-    private static final int intModes = 3;
+    private static final int intColumnsCount = 5;
+    private static final int intModesCount = 3;
+    private static final int intMovesBuffer = 10;
     private static int intPuzzle;
-    private static final int intRows = 5;
+    private static final int intRowsCount = 5;
     private static List<Puzzle> listPuzzles;
 
     // methods
 
-    public static int getBuffer()
+    public static int getCellsCount()
     {
-        return intBuffer;
+        return intColumnsCount * intRowsCount;
     }
 
-    public static int getCells()
+    public static int getColumnsCount()
     {
-        return intColumns * intRows;
+        return intColumnsCount;
     }
 
-    public static int getColumns()
+    public static int getModesCount()
     {
-        return intColumns;
+        return intModesCount;
     }
 
-    public static int getModes()
+    public static int getMovesBuffer()
     {
-        return intModes;
+        return intMovesBuffer;
     }
 
     public static int getPuzzle()
@@ -50,14 +50,23 @@ public class LightsOut
         return intPuzzle;
     }
 
-    public static int getPuzzles()
+    public static int getPuzzlesCount()
     {
-        return getCells() * 2;
+        try
+        {
+            return listPuzzles.size();
+        }
+        catch(Exception e)
+        {
+            Log.e("getPuzzles", "Error: Unable to get the puzzles count. " + e.getMessage());
+
+            return 0;
+        }
     }
 
-    public static int getRows()
+    public static int getRowsCount()
     {
-        return intRows;
+        return intRowsCount;
     }
 
     public static Puzzle getPuzzle(int puzzle)
